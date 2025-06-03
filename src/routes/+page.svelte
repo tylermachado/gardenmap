@@ -5,18 +5,12 @@
 	import type { LayerOption } from './+page';
 
 	let { data }: { data: PageData } = $props();
-	
+
 	let mapRef: Map | null = $state(null);
-	let selectedLayer: string = $state('all');
+	const layers = data.availableShapefiles;
+	let selectedLayer: LayerOption | null = $state(layers.length > 0 ? layers[0] : null);
+	let selectedLayerName: string = $state(layers[0]?.name || '');
 
-	const availableShapefiles = data.availableShapefiles;
-
-	const layers: LayerOption[] = [
-		{ id: 'all', name: 'All Layers' },
-		{ id: 'boundaries', name: 'Administrative Boundaries' },
-		{ id: 'roads', name: 'Road Networks' },
-		{ id: 'water', name: 'Water Bodies' }
-	];
 
 	const hardinessZoneColors = [
 		'#1a0d40',
@@ -35,8 +29,7 @@
 	];
 
 	function handleLayerChange(): void {
-		// Logic to toggle layers based on selection
-		console.log('Selected layer:', selectedLayer);
+		selectedLayer = layers.find(layer => layer.name === selectedLayerName) || null;
 
 		// You can call methods on the map instance here
 		const map: L.Map | null = mapRef?.getMap() ?? null;
@@ -57,16 +50,17 @@
 
 	<div class="controls">
 		<label for="layer-select">Select Layer:</label>
-		<select id="layer-select" bind:value={selectedLayer} on:change={handleLayerChange}>
+		<select id="layer-select" bind:value={selectedLayerName} onchange={handleLayerChange}>
 			{#each layers as layer}
-				<option value={layer.id}>{layer.name}</option>
+					<option value={layer.name}>{layer.name}</option>
 			{/each}
-		</select>
+	</select>
 	</div>
 
 	<div class="map-wrapper">
 		<Map
 			bind:this={mapRef}
+  		geojsonFile={selectedLayer?.path}
 			colorArray={hardinessZoneColors}
 			center={[39.8283, -98.5795]}
 			zoom={4}

@@ -9,6 +9,9 @@
 
   export let center: [number, number] = [40.7128, -74.0060]; // Default to NYC
   export let zoom: number = 10;
+  export let geojsonFile: string = ''; // New prop for GeoJSON file path
+
+  let currentGeoJsonLayer: L.GeoJSON | null = null;
 
   onMount((): (() => void) | void => {
     if (!browser) return;
@@ -32,8 +35,10 @@
           attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Load and display shapefile data
-        await loadShapefiles();
+        // Load and display shapefile data if geojsonFile is provided
+        if (geojsonFile) {
+          await loadShapefiles();
+        }
       } catch (error) {
         console.error('Error initializing map:', error);
       }
@@ -55,16 +60,25 @@
     '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
   ];
 
+  // Reactively reload GeoJSON when geojsonFile changes
+  $: if (geojsonFile && map && LeafletLib) {
+    loadShapefiles();
+  }
+
   async function loadShapefiles(): Promise<void> {
-    if (!browser || !LeafletLib || !map) return;
+    if (!browser || !LeafletLib || !map || !geojsonFile) return;
     
     try {
-      // Create a style function that uses your color array
+      // Remove previous layer if it exists
+      if (currentGeoJsonLayer) {
+        map.removeLayer(currentGeoJsonLayer);
+        currentGeoJsonLayer = null;
+      }
+
       let colorIndex = 0;
       const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
         const color = colorArray[colorIndex % colorArray.length];
         colorIndex++;
-        
         return {
           color: color,
           weight: 2,
@@ -74,8 +88,8 @@
         };
       };
 
-      // Load with your custom styling function
-      await loadGeoJSON('/geodata/phz.geojson', styleFunction);
+      // Load with your custom styling function using the prop
+      await loadGeoJSON(geojsonFile, styleFunction);
       
     } catch (error) {
       console.error('Error loading shapefile data:', error);
@@ -96,8 +110,17 @@
     addGeoJSONToMap(geojsonData, styleFunction);
   }
 
-  function addGeoJSONToMap(geojsonData: GeoJSON.FeatureCollection, styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions): void {
+  function addGeoJSONToMap(
+    geojsonData: GeoJSON.FeatureCollection, 
+    styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions
+  ): void {
     if (!LeafletLib || !map) return;
+
+    // Remove previous layer if it exists
+    if (currentGeoJsonLayer) {
+      map.removeLayer(currentGeoJsonLayer);
+      currentGeoJsonLayer = null;
+    }
 
     const geojsonLayer: L.GeoJSON = LeafletLib.geoJSON(geojsonData, {
       style: styleFunction || ((feature?: GeoJSON.Feature): L.PathOptions => ({
@@ -116,6 +139,7 @@
       }
     }).addTo(map);
 
+    currentGeoJsonLayer = geojsonLayer;
     map.fitBounds(geojsonLayer.getBounds());
   }
 

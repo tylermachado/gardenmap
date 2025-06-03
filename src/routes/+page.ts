@@ -6,11 +6,6 @@ export interface LayerOption {
 	description?: string;
 }
 
-declare module '/shapefiles.json' {
-  const value: LayerOption[];
-  export default value;
-}
-
 export const load: PageLoad = async ({ fetch }) => {
 	try {
 		// Using fetch, NOT import
@@ -18,7 +13,8 @@ export const load: PageLoad = async ({ fetch }) => {
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
-		const availableShapefiles: LayerOption[] = await response.json();
+		const data = await response.json();
+		const availableShapefiles: LayerOption[] = data.shapefiles || [];
 
 		return {
 			availableShapefiles
