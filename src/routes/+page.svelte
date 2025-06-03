@@ -1,23 +1,31 @@
-<script>
+<script lang="ts">
   import Map from '$lib/components/Map.svelte';
+  import type * as L from 'leaflet';
   
-  let mapRef;
-  let selectedLayer = 'all';
+  let mapRef: Map | null = null;
+  let selectedLayer: string = 'all';
 
-  const layers = [
+  interface LayerOption {
+    id: string;
+    name: string;
+  }
+
+  const layers: LayerOption[] = [
     { id: 'all', name: 'All Layers' },
     { id: 'boundaries', name: 'Administrative Boundaries' },
     { id: 'roads', name: 'Road Networks' },
     { id: 'water', name: 'Water Bodies' }
   ];
 
-  function handleLayerChange() {
+  function handleLayerChange(): void {
     // Logic to toggle layers based on selection
     console.log('Selected layer:', selectedLayer);
+    
     // You can call methods on the map instance here
-    const map = mapRef?.getMap();
+    const map: L.Map | null = mapRef?.getMap() ?? null;
     if (map) {
-      // Add layer filtering logic
+      // Add layer filtering logic here
+      console.log('Map instance available for layer operations');
     }
   }
 </script>

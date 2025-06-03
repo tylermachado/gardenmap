@@ -1,57 +1,82 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
-  import L from 'leaflet';
+  import { browser } from '$app/environment';
+  import type * as L from 'leaflet';
 
-  let mapContainer;
-  let map;
+  let mapContainer: HTMLDivElement;
+  let map: L.Map | null = null;
+  let LeafletLib: typeof L | null = null;
 
-  export let center = [40.7128, -74.0060]; // Default to NYC
-  export let zoom = 10;
+  export let center: [number, number] = [40.7128, -74.0060]; // Default to NYC
+  export let zoom: number = 10;
 
-  onMount(async () => {
-    // Import Leaflet CSS
-    await import('leaflet/dist/leaflet.css');
+  onMount((): (() => void) | void => {
+    if (!browser) return;
 
-    // Initialize the map
-    map = L.map(mapContainer).setView(center, zoom);
+    let cleanup: (() => void) | null = null;
 
-    // Add a tile layer (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    (async (): Promise<void> => {
+      try {
+        // Dynamically import Leaflet only on the client side
+        const leafletModule = await import('leaflet');
+        LeafletLib = leafletModule.default;
 
-    // Load and display shapefile data
-    loadShapefiles();
+        // Import Leaflet CSS
+        await import('leaflet/dist/leaflet.css');
 
-    return () => {
+        // Initialize the map
+        map = LeafletLib.map(mapContainer).setView(center, zoom);
+
+        // Add a tile layer (OpenStreetMap)
+        LeafletLib.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Load and display shapefile data
+        await loadShapefiles();
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    })();
+
+    cleanup = (): void => {
       if (map) {
         map.remove();
+        map = null;
       }
     };
+
+    return cleanup;
   });
 
-  async function loadShapefiles() {
+  async function loadShapefiles(): Promise<void> {
+    if (!browser || !LeafletLib || !map) return;
+    
     try {
       // Example: Load GeoJSON data (converted from shapefile)
-      const response = await fetch('/data/your-shapefile.geojson');
-      const geojsonData = await response.json();
+      const response: Response = await fetch('/data/your-shapefile.geojson');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const geojsonData: GeoJSON.FeatureCollection = await response.json();
 
       // Add GeoJSON layer to map
-      const geojsonLayer = L.geoJSON(geojsonData, {
+      const geojsonLayer: L.GeoJSON = LeafletLib.geoJSON(geojsonData, {
         style: {
           color: '#3388ff',
           weight: 2,
           opacity: 0.8,
           fillOpacity: 0.3
         },
-        onEachFeature: (feature, layer) => {
+        onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
           // Add popups with feature properties
-          if (feature.properties) {
-            layer.bindPopup(
-              Object.entries(feature.properties)
-                .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
-                .join('<br>')
-            );
+          if (feature.properties && 'bindPopup' in layer) {
+            const popupContent: string = Object.entries(feature.properties)
+              .map(([key, value]: [string, unknown]) => `<strong>${key}:</strong> ${value}`)
+              .join('<br>');
+            (layer as L.Layer & { bindPopup: (content: string) => void }).bindPopup(popupContent);
           }
         }
       }).addTo(map);
@@ -64,8 +89,24 @@
   }
 
   // Export map instance for parent component access
-  export function getMap() {
-    return map;
+  export function getMap(): L.Map | null {
+    return browser ? map : null;
+  }
+
+  // Additional utility functions with proper typing
+  export function addGeoJSONLayer(
+    data: GeoJSON.FeatureCollection, 
+    options?: L.GeoJSONOptions
+  ): L.GeoJSON | null {
+    if (!browser || !LeafletLib || !map) return null;
+    
+    return LeafletLib.geoJSON(data, options).addTo(map);
+  }
+
+  export function setView(center: [number, number], zoom: number): void {
+    if (map) {
+      map.setView(center, zoom);
+    }
   }
 </script>
 
