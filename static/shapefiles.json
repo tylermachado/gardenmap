@@ -1,0 +1,14 @@
+{
+  "shapefiles": [
+    {
+      "name": "Plant Hardiness Zones",
+      "path": "/geodata/phz.geojson",
+      "description": "USDA Plant Hardiness Zone boundaries"
+    },
+    {
+      "name": "Level III Ecoregions",
+      "path": "/geodata/ecoregions.geojson",
+      "description": "Level III ecoregions"
+    }
+  ]
+}

@@ -49,43 +49,74 @@
     return cleanup;
   });
 
+  // Your custom color array
+  export let colorArray: string[] = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FCEA2B',
+    '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
+  ];
+
   async function loadShapefiles(): Promise<void> {
     if (!browser || !LeafletLib || !map) return;
     
     try {
-      // Example: Load GeoJSON data (converted from shapefile)
-      const response: Response = await fetch('/data/your-shapefile.geojson');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const geojsonData: GeoJSON.FeatureCollection = await response.json();
-
-      // Add GeoJSON layer to map
-      const geojsonLayer: L.GeoJSON = LeafletLib.geoJSON(geojsonData, {
-        style: {
-          color: '#3388ff',
+      // Create a style function that uses your color array
+      let colorIndex = 0;
+      const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
+        const color = colorArray[colorIndex % colorArray.length];
+        colorIndex++;
+        
+        return {
+          color: color,
           weight: 2,
           opacity: 0.8,
-          fillOpacity: 0.3
-        },
-        onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
-          // Add popups with feature properties
-          if (feature.properties && 'bindPopup' in layer) {
-            const popupContent: string = Object.entries(feature.properties)
-              .map(([key, value]: [string, unknown]) => `<strong>${key}:</strong> ${value}`)
-              .join('<br>');
-            (layer as L.Layer & { bindPopup: (content: string) => void }).bindPopup(popupContent);
-          }
-        }
-      }).addTo(map);
+          fillColor: color,
+          fillOpacity: 0.5
+        };
+      };
 
-      // Fit map to layer bounds
-      map.fitBounds(geojsonLayer.getBounds());
+      // Load with your custom styling function
+      await loadGeoJSON('/geodata/phz.geojson', styleFunction);
+      
     } catch (error) {
       console.error('Error loading shapefile data:', error);
     }
+  }
+
+  async function loadGeoJSON(
+    url: string, 
+    styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions
+  ): Promise<void> {
+    const response: Response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const geojsonData: GeoJSON.FeatureCollection = await response.json();
+    addGeoJSONToMap(geojsonData, styleFunction);
+  }
+
+  function addGeoJSONToMap(geojsonData: GeoJSON.FeatureCollection, styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions): void {
+    if (!LeafletLib || !map) return;
+
+    const geojsonLayer: L.GeoJSON = LeafletLib.geoJSON(geojsonData, {
+      style: styleFunction || ((feature?: GeoJSON.Feature): L.PathOptions => ({
+        color: '#3388ff',
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: 0.3
+      })),
+      onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
+        if (feature.properties && 'bindPopup' in layer) {
+          const popupContent: string = Object.entries(feature.properties)
+            .map(([key, value]: [string, unknown]) => `<strong>${key}:</strong> ${value}`)
+            .join('<br>');
+          (layer as L.Layer & { bindPopup: (content: string) => void }).bindPopup(popupContent);
+        }
+      }
+    }).addTo(map);
+
+    map.fitBounds(geojsonLayer.getBounds());
   }
 
   // Export map instance for parent component access
