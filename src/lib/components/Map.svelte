@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { base } from '$app/paths';
+
   import { browser } from '$app/environment';
   import type * as L from 'leaflet';
 
@@ -89,7 +91,7 @@
       };
 
       // Load with your custom styling function using the prop
-      await loadGeoJSON(geojsonFile, styleFunction);
+      await loadGeoJSON(`${base}/${geojsonFile}`, styleFunction);
       
     } catch (error) {
       console.error('Error loading shapefile data:', error);
