@@ -9,7 +9,7 @@ export interface LayerOption {
 export const load: PageLoad = async ({ fetch }) => {
 	try {
 		// Using fetch, NOT import
-		const response = await fetch('/shapefiles.json');
+		const response = await fetch('/layers-list.json');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
