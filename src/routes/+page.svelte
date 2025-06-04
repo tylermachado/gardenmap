@@ -84,25 +84,25 @@
 		<h1 class="font-serif text-3xl font-bold text-stone-100">GardenersMap</h1>
 	</header>
 
-	<div class="mt-4 flex w-full flex-col gap-2 px-6">
+	<div class="mt-4 w-full flex flex-row gap-2 px-6">
 		<button
-			class="border:lime-950 w-full rounded bg-stone-200 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100"
+			class="cursor-pointer border border-lime-950 rounded bg-stone-100 px-4 py-2  text-lime-950 hover:bg-lime-950 hover:text-stone-100 whitespace-nowrap"
 			onclick={findMyLocation}
 		>
 			Find My Location
 		</button>
-		<div class="flex w-full gap-2">
+		<div class="flex w-full">
 			<input
 				type="text"
 				bind:value={searchQuery}
 				placeholder="Search for a location..."
-				class="flex-1 rounded border px-3 py-2"
+				class="flex-1 rounded-l border border-lime-950 border-r-0 px-3 py-2 focus:outline-none"
 				onkeydown={(e) => {
 					if (e.key === 'Enter') searchLocation();
 				}}
 			/>
 			<button
-				class="border:lime-950 rounded bg-stone-200 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100"
+				class="rounded-r border border-lime-950 border-l-0 bg-stone-100 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100"
 				onclick={searchLocation}
 			>
 				Search
@@ -114,7 +114,7 @@
 		<div class="controls col-span-2 flex flex-col items-start gap-0 bg-stone-300">
 			{#each layers as layer}
 				<button
-					class={`flex w-full items-center justify-between border-b border-stone-700 px-4 py-5 text-xl
+					class={`flex w-full items-center justify-end border-b border-stone-700 px-4 py-5 text-l
 						${
 							layer.name === selectedLayerName
 								? 'active bg-stone-100 font-bold'

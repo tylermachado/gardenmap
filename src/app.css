@@ -8,5 +8,11 @@
 
   h1, h2, h3 {
     font-family: var(--font-serif);
+    font-size: 1.33rem;
+    font-weight: 300;
+  }
+
+  button {
+    cursor: pointer;
   }
 }
