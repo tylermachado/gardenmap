@@ -46,8 +46,8 @@
 </svelte:head>
 
 <main class="bg-stone-300">
-	<header class ="bg-emerald-950  p-4">
-		<h1 class="text-3xl font-bold text-white">GardenersMap</h1>
+	<header class ="bg-lime-950  p-4">
+		<h1 class="text-3xl font-bold text-stone-100 font-serif">GardenersMap</h1>
 	</header>
 
 	<div class="grid grid-cols-4 gap-0 bg-stone-300">
@@ -57,7 +57,7 @@
 				<button
 					class={`w-full px-4 py-10 flex items-center justify-between text-xl
 						${layer.name === selectedLayerName 
-							? 'active font-bold bg-white' 
+							? 'active font-bold bg-stone-100' 
 							: 'bg-stone-300 hover:bg-stone-200  cursor-pointer'}`}
 					onclick={() => {
 						selectedLayerName = layer.name;
@@ -71,11 +71,11 @@
 					</button>
 			{/each}
 			<div class="p-4 w-full text-left items-start">
-				<p class="text-sm text-gray-700 text-left">{selectedLayer?.description}</p>	
+				<p class="text-sm text-gray-700 text-left"><span class="font-bold">About this layer:</span> {selectedLayer?.description}</p>	
 			</div>
 		</div>
 
-		<div class="map-wrapper col-span-3 p-6 bg-white">
+		<div class="map-wrapper col-span-3 p-6 bg-stone-100">
 			<Map
 				bind:this={mapRef}
 				geojsonFile={selectedLayer?.path}
