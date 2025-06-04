@@ -5,4 +5,8 @@
     --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
     --font-serif: 'Faculty Glyphic', ui-serif, Georgia, serif;
   }
+
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+  }
 }

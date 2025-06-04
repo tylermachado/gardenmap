@@ -3,12 +3,12 @@
     {
       "name": "Plant Hardiness Zones",
       "path": "/geodata/phz.geojson",
-      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+      "description": "USDA Plant Hardiness Zones are a standard for classifying the climate of a region based on its average annual minimum temperature. This data is useful for gardeners and landscapers to determine which plants are most likely to thrive in a given area."
     },
     {
       "name": "Level III Ecoregions",
       "path": "/geodata/ecoregions.geojson",
-      "description": "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+      "description": "Level III Ecoregions are areas defined by similar ecosystems and environmental conditions. This classification helps in understanding the ecological characteristics of different regions, which is essential for conservation and land management efforts."
     }
   ]
 }
