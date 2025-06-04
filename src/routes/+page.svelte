@@ -45,22 +45,37 @@
 	<meta name="description" content="Explore geographic data with interactive maps" />
 </svelte:head>
 
-<main>
-	<h1 class="text-3xl font-bold">Geographic Data Explorer</h1>
+<main class="bg-stone-300">
+	<header class ="bg-emerald-950  p-4">
+		<h1 class="text-3xl font-bold text-white">GardenersMap</h1>
+	</header>
 
+	<div class="grid grid-cols-4 gap-0 bg-stone-300">
 
-	<div class="grid grid-cols-4 gap-6">
-
-		<div class="controls col-span-1 p-6">
-			<label for="layer-select">Select Layer:</label>
-			<select id="layer-select" bind:value={selectedLayerName} onchange={handleLayerChange}>
-				{#each layers as layer}
-						<option value={layer.name}>{layer.name}</option>
-				{/each}
-		</select>
+		<div class="controls col-span-1 flex flex-col gap-0 bg-stone-300 items-start">
+			{#each layers as layer}
+				<button
+					class={`w-full px-4 py-10 flex items-center justify-between text-xl
+						${layer.name === selectedLayerName 
+							? 'active font-bold bg-white' 
+							: 'bg-stone-300 hover:bg-stone-200  cursor-pointer'}`}
+					onclick={() => {
+						selectedLayerName = layer.name;
+						handleLayerChange();
+					}}
+					>
+						<span>{layer.name}</span>
+						{#if layer.name === selectedLayerName}
+							<span class="ml-2">&rsaquo;</span>
+						{/if}
+					</button>
+			{/each}
+			<div class="p-4 w-full text-left items-start">
+				<p class="text-sm text-gray-700 text-left">{selectedLayer?.description}</p>	
+			</div>
 		</div>
 
-		<div class="map-wrapper col-span-3 p-6">
+		<div class="map-wrapper col-span-3 p-6 bg-white">
 			<Map
 				bind:this={mapRef}
 				geojsonFile={selectedLayer?.path}
@@ -72,15 +87,9 @@
 
 <style>
 	main {
-		padding: 1rem;
 		height: 100vh;
 		display: flex;
 		flex-direction: column;
-	}
-
-	h1 {
-		margin: 0 0 1rem 0;
-		color: #333;
 	}
 
 	.controls {
@@ -90,20 +99,7 @@
 		gap: 0.5rem;
 	}
 
-	.controls label {
-		font-weight: bold;
-	}
-
-	.controls select {
-		padding: 0.5rem;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-	}
-
 	.map-wrapper {
 		flex: 1;
-		border: 1px solid #ddd;
-		border-radius: 8px;
-		overflow: hidden;
 	}
 </style>
