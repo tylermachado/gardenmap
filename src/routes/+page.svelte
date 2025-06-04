@@ -46,25 +46,27 @@
 </svelte:head>
 
 <main>
-	<h1>Geographic Data Explorer</h1>
+	<h1 class="text-3xl font-bold">Geographic Data Explorer</h1>
 
-	<div class="controls">
-		<label for="layer-select">Select Layer:</label>
-		<select id="layer-select" bind:value={selectedLayerName} onchange={handleLayerChange}>
-			{#each layers as layer}
-					<option value={layer.name}>{layer.name}</option>
-			{/each}
-	</select>
-	</div>
 
-	<div class="map-wrapper">
-		<Map
-			bind:this={mapRef}
-  		geojsonFile={selectedLayer?.path}
-			colorArray={hardinessZoneColors}
-			center={[39.8283, -98.5795]}
-			zoom={4}
-		/>
+	<div class="grid grid-cols-4 gap-6">
+
+		<div class="controls col-span-1 p-6">
+			<label for="layer-select">Select Layer:</label>
+			<select id="layer-select" bind:value={selectedLayerName} onchange={handleLayerChange}>
+				{#each layers as layer}
+						<option value={layer.name}>{layer.name}</option>
+				{/each}
+		</select>
+		</div>
+
+		<div class="map-wrapper col-span-3 p-6">
+			<Map
+				bind:this={mapRef}
+				geojsonFile={selectedLayer?.path}
+				colorArray={hardinessZoneColors}
+			/>
+		</div>
 	</div>
 </main>
 

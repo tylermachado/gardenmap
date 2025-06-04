@@ -140,7 +140,6 @@
     }).addTo(map);
 
     currentGeoJsonLayer = geojsonLayer;
-    map.fitBounds(geojsonLayer.getBounds());
   }
 
   // Export map instance for parent component access
