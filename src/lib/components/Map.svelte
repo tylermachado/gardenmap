@@ -4,6 +4,7 @@
 
   import { browser } from '$app/environment';
   import type * as L from 'leaflet';
+  // @ts-ignore - Leaflet types are not always available
   import * as topojson from 'topojson-client';
 
   let mapContainer: HTMLDivElement;
@@ -170,17 +171,19 @@
   }
 </script>
 
-<div bind:this={mapContainer} class="map-container"></div>
+<div bind:this={mapContainer} class="map-container" style="width:100%;height:100%;overflow:hidden;"></div>
 
 <style>
   .map-container {
     width: 100%;
     height: 100%;
-    min-height: 500px;
+    min-height: 0; /* Remove min-height to allow parent to control height */
+    overflow: hidden;
   }
 
   :global(.leaflet-container) {
     height: 100%;
     width: 100%;
+    min-height: 0;
   }
 </style>

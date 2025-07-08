@@ -79,19 +79,25 @@
 	<meta name="description" content="Explore geographic data with interactive maps" />
 </svelte:head>
 
-<main class="bg-stone-300">
+<main class="bg-stone-300 min-h-screen flex flex-col">
 	<header class="bg-lime-950 p-4">
 		<h1 class="font-serif text-3xl font-bold text-stone-100">GardenersMap</h1>
 	</header>
 
-	<div class="mt-4 w-full flex flex-row gap-2 px-6">
+	<div class="mt-4 w-full flex flex-col sm:flex-row gap-2 px-6 items-center">
 		<button
-			class="cursor-pointer border border-lime-950 rounded bg-stone-100 px-4 py-2  text-lime-950 hover:bg-lime-950 hover:text-stone-100 whitespace-nowrap"
+			class="cursor-pointer border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100 whitespace-nowrap flex items-center justify-center sm:w-auto w-12 h-12"
 			onclick={findMyLocation}
+			aria-label="Find My Location"
 		>
-			Find My Location
+			<!-- Location icon SVG -->
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6 mx-auto">
+				<circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2" fill="none" />
+				<path stroke="currentColor" stroke-width="2" d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.07-7.07l-1.42 1.42M6.34 17.66l-1.42 1.42m12.02 0l-1.42-1.42M6.34 6.34L4.92 4.92" />
+			</svg>
+			<span class="hidden sm:inline ml-2">Find My Location</span>
 		</button>
-		<div class="flex w-full">
+		<div class="flex w-full mt-2 sm:mt-0">
 			<input
 				type="text"
 				bind:value={searchQuery}
@@ -110,23 +116,28 @@
 		</div>
 	</div>
 
-	<div class="mt-4 grid grid-cols-5 gap-0 border-t border-stone-700 bg-stone-300">
-		<div class="controls col-span-2 flex flex-col items-start gap-0 bg-stone-300">
+	<!-- Responsive: map on top, layers below on mobile; side-by-side on desktop -->
+	<div class="mt-4 flex flex-col sm:grid sm:grid-cols-5 gap-0 border-t border-stone-700 bg-stone-300 flex-1">
+		<!-- Map column: always first, left on desktop -->
+		<div class="map-wrapper sm:col-span-3 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden">
+			<div class="w-full h-full aspect-[2/1] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
+				<Map bind:this={mapRef} shapefile={selectedLayer?.path} colorArray={hardinessZoneColors} />
+			</div>
+		</div>
+		<!-- Info/controls column: always second, right on desktop -->
+		<div class="controls sm:col-span-2 flex flex-col items-start gap-0 bg-stone-300 w-full order-2 sm:order-2">
+			<!-- On mobile, move this below the map -->
 			{#each layers as layer}
 				<button
-					class={`flex w-full items-center justify-end border-b border-stone-700 px-4 py-5 text-l
-						${
-							layer.name === selectedLayerName
-								? 'active bg-stone-100 font-bold'
-								: 'cursor-pointer bg-stone-300  hover:bg-stone-200'
-						}`}
+					class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l
+						${layer.name === selectedLayerName ? 'active bg-stone-100 font-bold' : 'cursor-pointer bg-stone-300  hover:bg-stone-200'}`}
 					onclick={() => {
 						selectedLayerName = layer.name;
 						handleLayerChange();
 					}}
 				>
+					<span class="mr-2">&lsaquo;</span>
 					<span>{layer.name}</span>
-					<span class="ml-2">&rsaquo;</span>
 				</button>
 			{/each}
 			<div class="w-full items-start p-4 text-left">
@@ -147,10 +158,6 @@
 				</div>
 			</div>
 		</div>
-
-		<div class="map-wrapper col-span-3 bg-stone-100 p-6">
-			<Map bind:this={mapRef} shapefile={selectedLayer?.path} colorArray={hardinessZoneColors} />
-		</div>
 	</div>
 </main>
 
@@ -161,7 +168,5 @@
 		flex-direction: column;
 	}
 
-	.map-wrapper {
-		flex: 1;
-	}
+	/* Remove flex: 1 from .map-wrapper to allow aspect ratio to control height */
 </style>
