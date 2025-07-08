@@ -11,7 +11,7 @@
 
   export let center: [number, number] = [40.7128, -74.0060]; // Default to NYC
   export let zoom: number = 10;
-  export let geojsonFile: string = ''; // New prop for GeoJSON file path
+  export let shapefile: string = ''; // New prop for shapefile path
 
   let currentGeoJsonLayer: L.GeoJSON | null = null;
 
@@ -38,7 +38,7 @@
         }).addTo(map);
 
         // Load and display shapefile data if geojsonFile is provided
-        if (geojsonFile) {
+        if (shapefile) {
           await loadShapefiles();
         }
       } catch (error) {
@@ -63,12 +63,12 @@
   ];
 
   // Reactively reload GeoJSON when geojsonFile changes
-  $: if (geojsonFile && map && LeafletLib) {
+  $: if (shapefile && map && LeafletLib) {
     loadShapefiles();
   }
 
   async function loadShapefiles(): Promise<void> {
-    if (!browser || !LeafletLib || !map || !geojsonFile) return;
+    if (!browser || !LeafletLib || !map || !shapefile) return;
     
     try {
       // Remove previous layer if it exists
@@ -96,7 +96,7 @@
 
       // Load with your custom styling function using the prop
       // Ensure the URL always starts with a slash
-      let url = `${base}/${geojsonFile}`.replace(/\/+/g, '/');
+      let url = `${base}/${shapefile}`.replace(/\/+/g, '/');
       if (!url.startsWith('/')) url = '/' + url;
       await loadGeoJSON(url, styleFunction);
       
