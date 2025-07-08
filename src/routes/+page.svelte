@@ -149,7 +149,7 @@
 		</div>
 
 		<div class="map-wrapper col-span-3 bg-stone-100 p-6">
-			<Map bind:this={mapRef} geojsonFile={selectedLayer?.path} colorArray={hardinessZoneColors} />
+			<Map bind:this={mapRef} shapefile={selectedLayer?.path} colorArray={hardinessZoneColors} />
 		</div>
 	</div>
 </main>
