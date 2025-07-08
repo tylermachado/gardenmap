@@ -79,8 +79,12 @@
 
       let colorIndex = 0;
       const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
-        const color = colorArray[colorIndex % colorArray.length];
-        colorIndex++;
+        // Use 'zone' or 'US_L3CODE' for color assignment
+        const unique = feature?.properties?.zone ?? feature?.properties?.US_L3CODE ?? 0;
+        const hash = String(unique)
+          .split('')
+          .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const color = colorArray[hash % colorArray.length];
         return {
           color: color,
           weight: 2,
@@ -91,7 +95,10 @@
       };
 
       // Load with your custom styling function using the prop
-      await loadGeoJSON(`${base}/${geojsonFile}`, styleFunction);
+      // Ensure the URL always starts with a slash
+      let url = `${base}/${geojsonFile}`.replace(/\/+/g, '/');
+      if (!url.startsWith('/')) url = '/' + url;
+      await loadGeoJSON(url, styleFunction);
       
     } catch (error) {
       console.error('Error loading shapefile data:', error);
