@@ -4,6 +4,7 @@
 
   import { browser } from '$app/environment';
   import type * as L from 'leaflet';
+  import * as topojson from 'topojson-client';
 
   let mapContainer: HTMLDivElement;
   let map: L.Map | null = null;
@@ -69,17 +70,12 @@
 
   async function loadShapefiles(): Promise<void> {
     if (!browser || !LeafletLib || !map || !shapefile) return;
-    
     try {
-      // Remove previous layer if it exists
       if (currentGeoJsonLayer) {
         map.removeLayer(currentGeoJsonLayer);
         currentGeoJsonLayer = null;
       }
-
-      let colorIndex = 0;
       const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
-        // Use 'zone' or 'US_L3CODE' for color assignment
         const unique = feature?.properties?.zone ?? feature?.properties?.US_L3CODE ?? 0;
         const hash = String(unique)
           .split('')
@@ -93,29 +89,30 @@
           fillOpacity: 0.5
         };
       };
-
-      // Load with your custom styling function using the prop
-      // Ensure the URL always starts with a slash
       let url = `${base}/${shapefile}`.replace(/\/+/g, '/');
       if (!url.startsWith('/')) url = '/' + url;
-      await loadGeoJSON(url, styleFunction);
-      
+      await loadGeoOrTopoJSON(url, styleFunction);
     } catch (error) {
       console.error('Error loading shapefile data:', error);
     }
   }
 
-  async function loadGeoJSON(
-    url: string, 
+  async function loadGeoOrTopoJSON(
+    url: string,
     styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions
   ): Promise<void> {
     const response: Response = await fetch(url);
-    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    const geojsonData: GeoJSON.FeatureCollection = await response.json();
+    const data = await response.json();
+    let geojsonData: GeoJSON.FeatureCollection;
+    if (data.type === 'Topology') {
+      const objectName = Object.keys(data.objects)[0];
+      geojsonData = topojson.feature(data, data.objects[objectName]) as GeoJSON.FeatureCollection;
+    } else {
+      geojsonData = data as GeoJSON.FeatureCollection;
+    }
     addGeoJSONToMap(geojsonData, styleFunction);
   }
 
