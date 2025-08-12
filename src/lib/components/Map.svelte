@@ -32,9 +32,10 @@
         // Initialize the map
         map = LeafletLib.map(mapContainer).setView(center, zoom);
 
-        // Add a tile layer (OpenStreetMap)
-        LeafletLib.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
+        // Add a tile layer (Carto Positron Light)
+        LeafletLib.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap, © CARTO',
+          maxZoom: 19
         }).addTo(map);
 
         // Load and display shapefile data if geojsonFile is provided
