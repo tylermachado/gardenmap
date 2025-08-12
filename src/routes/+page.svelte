@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Map from '$lib/components/Map.svelte';
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
+	import Location from '$lib/icons/location.svg';
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
@@ -89,7 +90,8 @@
 			class="cursor-pointer border border-lime-950 rounded bg-stone-100 px-4 py-2  text-lime-950 hover:bg-lime-950 hover:text-stone-100 whitespace-nowrap"
 			onclick={findMyLocation}
 		>
-			Find My Location
+			<img src={Location} alt="Find My Location" class="h-s w-s text-blue-500" />
+
 		</button>
 		<div class="flex w-full">
 			<input
