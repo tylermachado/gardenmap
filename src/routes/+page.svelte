@@ -60,7 +60,7 @@
 	async function searchLocation() {
 		if (!searchQuery) return;
 		const response = await fetch(
-			`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`
+			`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=us`
 		);
 		const results = await response.json();
 		if (results && results.length > 0) {
