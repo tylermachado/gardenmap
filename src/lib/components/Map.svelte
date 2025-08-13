@@ -131,15 +131,15 @@
         weight: 2,
         opacity: 0.8,
         fillOpacity: 0.3
-      }))
-      // onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
-      //   if (feature.properties && 'bindPopup' in layer) {
-      //     const popupContent: string = Object.entries(feature.properties)
-      //       .map(([key, value]: [string, unknown]) => `<strong>${key}:</strong> ${value}`)
-      //       .join('<br>');
-      //     (layer as L.Layer & { bindPopup: (content: string) => void }).bindPopup(popupContent);
-      //   }
-      // }
+      })),
+      onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
+        if (feature.properties && 'bindPopup' in layer) {
+          const popupContent: string = Object.entries(feature.properties)
+            .map(([key, value]: [string, unknown]) => `<strong>${key}:</strong> ${value}`)
+            .join('<br>');
+          (layer as L.Layer & { bindPopup: (content: string) => void }).bindPopup(popupContent);
+        }
+      }
     }).addTo(map);
 
     currentGeoJsonLayer = geojsonLayer;

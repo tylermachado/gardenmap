@@ -30,6 +30,7 @@
 	},
 	"dependencies": {
 		"@fortawesome/free-solid-svg-icons": "^7.0.0",
+		"@turf/turf": "^7.2.0",
 		"leaflet": "^1.9.4",
 		"svelte-fa": "^4.0.4"
 	}

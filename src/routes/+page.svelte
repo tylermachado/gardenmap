@@ -13,13 +13,97 @@
 	let mapRef: Map | null = $state(null);
 	let selectedLayer: LayerOption | null = $state(layers.length > 0 ? layers[0] : null);
 	let selectedLayerName: string = $state(layers[0]?.name || '');
+
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
+	let searchResultAddress: any = $state({ city: 'New York', state: 'New York' });
+
+	// New state for per-point polygon lookup results
+	let pointLayerData: Record<string, Record<string, any>> = $state({});
+	let propertiesConfig: Record<string, string[]> = $state({});
+	const layerGeoCache: Record<string, GeoJSON.FeatureCollection> = {};
+
+	// Load properties.json once
+	(async () => {
+		try {
+			const res = await fetch('/properties.json');
+			if (res.ok) propertiesConfig = await res.json();
+		} catch (e) {
+			console.error('Failed loading properties.json', e);
+		}
+	})();
+
+	function normalizeLayerPath(path: string): string {
+		// paths in layers-list.json start with ../ relative to /static; convert to absolute
+		if (path.startsWith('../')) return path.replace('..', ''); // ../geodata/file -> /geodata/file
+		return path;
+	}
+
+	function keyFromPath(path: string): string {
+		const file = path.split('/').pop() || '';
+		return file.replace(/\.geojson$/i, '');
+	}
+
+	async function ensureLayerGeo(layerPath: string): Promise<GeoJSON.FeatureCollection | null> {
+		const normalized = normalizeLayerPath(layerPath);
+		if (layerGeoCache[normalized]) return layerGeoCache[normalized];
+		try {
+			const res = await fetch(normalized);
+			if (!res.ok) return null;
+			const data = (await res.json()) as GeoJSON.FeatureCollection;
+			layerGeoCache[normalized] = data;
+			return data;
+		} catch (e) {
+			console.error('Failed fetching layer', layerPath, e);
+			return null;
+		}
+	}
+
+	async function resolvePointData(lat: number, lon: number) {
+		try {
+			// dynamic import so initial bundle stays small
+			const { booleanPointInPolygon, point } = await import('@turf/turf');
+			const pt = point([lon, lat]); // GeoJSON uses [lon, lat]
+			const results: Record<string, Record<string, any>> = {};
+
+			for (const layer of layers) {
+				const fc = await ensureLayerGeo(layer.path);
+				if (!fc) continue;
+				const layerKey = keyFromPath(layer.path); // e.g. phz, ecoregions
+				const allowed = propertiesConfig[layerKey] || [];
+				for (const feature of fc.features) {
+					if (!feature.geometry) continue;
+					const gType = feature.geometry.type;
+					if (gType !== 'Polygon' && gType !== 'MultiPolygon') continue;
+					if (booleanPointInPolygon(pt, feature as any)) {
+						const props = feature.properties || {};
+						const filtered: Record<string, any> = {};
+						for (const key of allowed) if (key in props) filtered[key] = props[key];
+						results[layer.name] = filtered;
+						break; // stop at first containing polygon per layer
+					}
+				}
+			}
+			pointLayerData = results;
+		} catch (e) {
+			console.error('Failed resolving point data', e);
+		}
+	}
 
 	// any time map updates, pick a random number inclusively between 3 and 12 and set numFlowers
 	$effect(() => {
-		const dependencies = [mapRef];
+		// dependency reference to trigger effect when mapRef changes
+		if (mapRef) {
+			// no-op
+		}
 		numFlowers = Math.floor(Math.random() * 10) + 3;
+	});
+
+	// When searchResultAddress changes, console.log the new result
+	$effect(() => {
+		if (searchResultAddress) {
+			console.log('Search result address:', $state.snapshot(searchResultAddress));
+		}
 	});
 
 	const hardinessZoneColors = [
@@ -60,15 +144,19 @@
 	async function searchLocation() {
 		if (!searchQuery) return;
 		const response = await fetch(
-			`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=us`
+			`https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&addressdetails=1&q=${encodeURIComponent(searchQuery)}`
 		);
 		const results = await response.json();
 		if (results && results.length > 0) {
-			const { lat, lon } = results[0];
+			const { lat, lon, address } = results[0];
+			searchResultAddress = address; // Save address to state
 			const map: L.Map | null = mapRef?.getMap() ?? null;
+			const latNum = parseFloat(lat);
+			const lonNum = parseFloat(lon);
 			if (map) {
-				map.setView([parseFloat(lat), parseFloat(lon)], 14);
+				map.setView([latNum, lonNum], 14);
 			}
+			await resolvePointData(latNum, lonNum);
 		} else {
 			alert('Location not found.');
 		}
@@ -132,8 +220,32 @@
 				</button>
 			{/each}
 			<div class="w-full items-start p-4 text-left">
-				<h3>About This Data</h3>
-				<p class="text-left text-sm text-gray-700">{selectedLayer?.description}</p>
+				{#if searchResultAddress}
+					<h3>
+						{[
+							searchResultAddress.suburb,
+							searchResultAddress.city,
+							searchResultAddress.state
+						].filter(Boolean).join(', ')}
+					</h3>
+				{/if}
+				<!-- Insert polygon data results -->
+				{#if Object.keys(pointLayerData).length > 0}
+					<div class="mt-3 space-y-3">
+						{#each Object.entries(pointLayerData) as [layerName, props]}
+							<div class="rounded border border-stone-500 bg-stone-100 p-2">
+								<h4 class="font-semibold text-xs tracking-wide">{layerName}</h4>
+								<ul class="mt-1 text-[11px] leading-tight">
+									{#each Object.entries(props) as [k, v]}
+										<li><span class="font-mono text-stone-700">{k}</span>: {v}</li>
+									{/each}
+								</ul>
+							</div>
+						{/each}
+					</div>
+				{:else if searchResultAddress}
+					<p class="text-[11px] italic text-stone-600 mt-2">No polygon matches at this point.</p>
+				{/if}
 			</div>
 
 			<div class="w-full items-start p-4 text-left">
@@ -147,6 +259,11 @@
 						</div>
 					{/each}
 				</div>
+			</div>
+
+			<div class="w-full items-start p-4 text-left">
+				<h3>About This Data</h3>
+				<p class="text-left text-sm text-gray-700">{selectedLayer?.description}</p>
 			</div>
 		</div>
 
