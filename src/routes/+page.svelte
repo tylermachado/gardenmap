@@ -279,11 +279,11 @@
 						{/if}
 						{#if pointLayerData.ecoregions}
 							<div class="rounded border border-stone-500 bg-stone-100 p-2">
-								<h4 class="font-semibold text-xs tracking-wide">Ecoregion (Level 3)</h4>
+								<h4 class="font-semibold text-xs tracking-wide">Ecoregions</h4>
 								{#if pointLayerData.ecoregions.US_L3NAME}
 									<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Layer III</span>: {pointLayerData.ecoregions.US_L3NAME}</p>
-									<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Layer II</span>: {pointLayerData.ecoregions.US_L2NAME}</p>
-									<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Layer I</span>: {pointLayerData.ecoregions.US_L1NAME}</p>
+									<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Layer II</span>: {pointLayerData.ecoregions.NA_L2NAME}</p>
+									<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Layer I</span>: {pointLayerData.ecoregions.NA_L1NAME}</p>
 								{/if}
 							</div>
 						{/if}

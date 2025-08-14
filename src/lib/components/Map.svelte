@@ -40,6 +40,37 @@
           maxZoom: 19
         }).addTo(map);
 
+        // Store the initial view for resetting
+        const initialCenter = [...center] as [number, number];
+        const initialZoom = zoom;
+
+        // Custom Home Button Control
+        const HomeControl = LeafletLib.Control.extend({
+          options: { position: 'topleft' },
+          onAdd: function () {
+            const container = LeafletLib.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+            container.style.backgroundColor = 'white';
+            container.style.width = '34px';
+            container.style.height = '34px';
+            container.style.display = 'flex';
+            container.style.alignItems = 'center';
+            container.style.justifyContent = 'center';
+            container.title = 'Reset view';
+
+            // Simple "home" icon (SVG)
+            container.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M9 21V9h6v12"/></svg>`;
+
+            container.onclick = function () {
+              map.setView(initialCenter, initialZoom);
+            };
+
+            return container;
+          }
+        });
+
+        // Add the home button just after the zoom controls
+        map.addControl(new HomeControl());
+
         // Load and display shapefile data if geojsonFile is provided
         if (shapefile) {
           await loadShapefiles();
