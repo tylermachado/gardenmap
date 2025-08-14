@@ -34,9 +34,8 @@
 	})();
 
 	function normalizeLayerPath(path: string): string {
-		// paths in layers-list.json start with ../ relative to /static; convert to absolute
-		if (path.startsWith('../')) return path.replace('..', ''); // ../geodata/file -> /geodata/file
-		return path;
+		// Remove any leading slashes or ../
+		return path.replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
 	}
 
 	function keyFromPath(path: string): string {
