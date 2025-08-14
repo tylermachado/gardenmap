@@ -255,7 +255,7 @@
 								{/if}
 							</div>
 						{/if}
-git 					</div>
+ 					</div>
 				{:else if searchResultAddress}
 					<p class="text-[11px] italic text-stone-600 mt-2">No polygon matches at this point.</p>
 				{/if}
