@@ -26,7 +26,7 @@
 	// Load properties.json once
 	(async () => {
 		try {
-			const res = await fetch('/properties.json');
+			const res = await fetch('properties.json');
 			if (res.ok) propertiesConfig = await res.json();
 		} catch (e) {
 			console.error('Failed loading properties.json', e);
