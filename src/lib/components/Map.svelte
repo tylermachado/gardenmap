@@ -9,8 +9,8 @@
   let map: L.Map | null = null;
   let LeafletLib: typeof L | null = null;
 
-  export let center: [number, number] = [40.7128, -74.0060]; // Default to NYC
-  export let zoom: number = 10;
+  export let center: [number, number] = [39.8283, -98.5795]; // Center of continental US
+  export let zoom: number = 3.5;
   export let geojsonFile: string = ''; // New prop for GeoJSON file path
 
   let currentGeoJsonLayer: L.GeoJSON | null = null;
