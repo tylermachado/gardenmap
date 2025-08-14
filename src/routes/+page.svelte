@@ -79,7 +79,7 @@
 						const props = feature.properties || {};
 						const filtered: Record<string, any> = {};
 						for (const key of allowed) if (key in props) filtered[key] = props[key];
-						results[layer.name] = filtered;
+						results[layerKey] = filtered; // store by layer key (phz, ecoregions)
 						break; // stop at first containing polygon per layer
 					}
 				}
@@ -232,16 +232,27 @@
 				<!-- Insert polygon data results -->
 				{#if Object.keys(pointLayerData).length > 0}
 					<div class="mt-3 space-y-3">
-						{#each Object.entries(pointLayerData) as [layerName, props]}
+						{#if pointLayerData.phz}
 							<div class="rounded border border-stone-500 bg-stone-100 p-2">
-								<h4 class="font-semibold text-xs tracking-wide">{layerName}</h4>
+								<h4 class="font-semibold text-xs tracking-wide">Plant Hardiness Zone</h4>
 								<ul class="mt-1 text-[11px] leading-tight">
-									{#each Object.entries(props) as [k, v]}
-										<li><span class="font-mono text-stone-700">{k}</span>: {v}</li>
-									{/each}
+									{#if pointLayerData.phz.zone}
+										<li><span class="font-mono text-stone-700">zone</span>: {pointLayerData.phz.zone}</li>
+									{/if}
+									{#if pointLayerData.phz.trange}
+										<li><span class="font-mono text-stone-700">trange</span>: {pointLayerData.phz.trange}</li>
+									{/if}
 								</ul>
 							</div>
-						{/each}
+						{/if}
+						{#if pointLayerData.ecoregions}
+							<div class="rounded border border-stone-500 bg-stone-100 p-2">
+								<h4 class="font-semibold text-xs tracking-wide">Ecoregion (Level 3)</h4>
+								{#if pointLayerData.ecoregions.US_L3NAME}
+									<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">US_L3NAME</span>: {pointLayerData.ecoregions.US_L3NAME}</p>
+								{/if}
+							</div>
+						{/if}
 					</div>
 				{:else if searchResultAddress}
 					<p class="text-[11px] italic text-stone-600 mt-2">No polygon matches at this point.</p>
