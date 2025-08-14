@@ -4,6 +4,8 @@
 
   import { browser } from '$app/environment';
   import type * as L from 'leaflet';
+  // @ts-ignore - Leaflet types are not always available
+  import * as topojson from 'topojson-client';
 
   let mapContainer: HTMLDivElement;
   let map: L.Map | null = null;
@@ -11,7 +13,7 @@
 
   export let center: [number, number] = [39.8283, -98.5795]; // Center of continental US
   export let zoom: number = 3.5;
-  export let geojsonFile: string = ''; // New prop for GeoJSON file path
+  export let shapefile: string = ''; // New prop for GeoJSON file path
 
   let currentGeoJsonLayer: L.GeoJSON | null = null;
 
@@ -39,7 +41,7 @@
         }).addTo(map);
 
         // Load and display shapefile data if geojsonFile is provided
-        if (geojsonFile) {
+        if (shapefile) {
           await loadShapefiles();
         }
       } catch (error) {
@@ -64,24 +66,23 @@
   ];
 
   // Reactively reload GeoJSON when geojsonFile changes
-  $: if (geojsonFile && map && LeafletLib) {
+  $: if (shapefile && map && LeafletLib) {
     loadShapefiles();
   }
 
   async function loadShapefiles(): Promise<void> {
-    if (!browser || !LeafletLib || !map || !geojsonFile) return;
-    
+    if (!browser || !LeafletLib || !map || !shapefile) return;
     try {
-      // Remove previous layer if it exists
       if (currentGeoJsonLayer) {
         map.removeLayer(currentGeoJsonLayer);
         currentGeoJsonLayer = null;
       }
-
-      let colorIndex = 0;
       const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
-        const color = colorArray[colorIndex % colorArray.length];
-        colorIndex++;
+        const unique = feature?.properties?.zone ?? feature?.properties?.US_L3CODE ?? 0;
+        const hash = String(unique)
+          .split('')
+          .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const color = colorArray[hash % colorArray.length];
         return {
           color: color,
           weight: 2,
@@ -90,26 +91,30 @@
           fillOpacity: 0.5
         };
       };
-
-      // Load with your custom styling function using the prop
-      await loadGeoJSON(`${base}/${geojsonFile}`, styleFunction);
-      
+      let url = `${base}/${shapefile}`.replace(/\/+/g, '/');
+      if (!url.startsWith('/')) url = '/' + url;
+      await loadGeoOrTopoJSON(url, styleFunction);
     } catch (error) {
       console.error('Error loading shapefile data:', error);
     }
   }
 
-  async function loadGeoJSON(
-    url: string, 
+  async function loadGeoOrTopoJSON(
+    url: string,
     styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions
   ): Promise<void> {
     const response: Response = await fetch(url);
-    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    const geojsonData: GeoJSON.FeatureCollection = await response.json();
+    const data = await response.json();
+    let geojsonData: GeoJSON.FeatureCollection;
+    if (data.type === 'Topology') {
+      const objectName = Object.keys(data.objects)[0];
+      geojsonData = topojson.feature(data, data.objects[objectName]) as GeoJSON.FeatureCollection;
+    } else {
+      geojsonData = data as GeoJSON.FeatureCollection;
+    }
     addGeoJSONToMap(geojsonData, styleFunction);
   }
 
@@ -167,17 +172,19 @@
   }
 </script>
 
-<div bind:this={mapContainer} class="map-container"></div>
+<div bind:this={mapContainer} class="map-container" style="width:100%;height:100%;overflow:hidden;"></div>
 
 <style>
   .map-container {
     width: 100%;
     height: 100%;
-    min-height: 500px;
+    min-height: 0; /* Remove min-height to allow parent to control height */
+    overflow: hidden;
   }
 
   :global(.leaflet-container) {
     height: 100%;
     width: 100%;
+    min-height: 0;
   }
 </style>

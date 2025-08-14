@@ -89,6 +89,7 @@
 			console.error('Failed resolving point data', e);
 		}
 	}
+	let showLayersDropdown: boolean = $state(false);
 
 	// any time map updates, pick a random number inclusively between 3 and 12 and set numFlowers
 	$effect(() => {
@@ -168,20 +169,21 @@
 	<meta name="description" content="Explore geographic data with interactive maps" />
 </svelte:head>
 
-<main class="bg-stone-300">
+<main class="bg-stone-300 min-h-screen flex flex-col">
 	<header class="bg-lime-950 p-4">
 		<h1 class="font-serif text-3xl font-bold text-stone-100">GardenersMap</h1>
 	</header>
 
-	<div class="mt-4 w-full flex flex-row gap-2 px-6">
+	<div class="mt-4 w-full flex flex-row gap-2 px-6 items-center">
 		<button
-			class="cursor-pointer border border-lime-950 rounded bg-stone-100 px-4 py-2  text-lime-950 hover:bg-lime-950 hover:text-stone-100 whitespace-nowrap"
+			class="cursor-pointer border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100 whitespace-nowrap flex items-center justify-center sm:w-auto w-12 h-12"
 			onclick={findMyLocation}
+			aria-label="Find My Location"
 		>
 			<img src={Location} alt="Find My Location" class="h-s w-s text-blue-500" />
 
 		</button>
-		<div class="flex w-full">
+		<div class="flex w-full mt-2 sm:mt-0">
 			<input
 				type="text"
 				bind:value={searchQuery}
@@ -200,25 +202,55 @@
 		</div>
 	</div>
 
-	<div class="mt-4 grid grid-cols-5 gap-0 border-t border-stone-700 bg-stone-300">
-		<div class="controls col-span-2 flex flex-col items-start gap-0 bg-stone-300">
-			{#each layers as layer}
-				<button
-					class={`flex w-full items-center justify-end border-b border-stone-700 px-4 py-5 text-l
-						${
-							layer.name === selectedLayerName
-								? 'active bg-stone-100 font-bold'
-								: 'cursor-pointer bg-stone-300  hover:bg-stone-200'
-						}`}
-					onclick={() => {
-						selectedLayerName = layer.name;
-						handleLayerChange();
-					}}
-				>
-					<span>{layer.name}</span>
-					<span class="ml-2">&rsaquo;</span>
+	<!-- Responsive: map on top, layers below on mobile; side-by-side on desktop -->
+	<div class="mt-4 flex flex-col sm:grid sm:grid-cols-5 gap-0 border-t border-stone-700 bg-stone-300 flex-1">
+		<!-- Map column: always first, left on desktop -->
+		<div class="map-wrapper sm:col-span-3 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden">
+			<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
+				<Map bind:this={mapRef} shapefile={selectedLayer?.path} colorArray={hardinessZoneColors} />
+			</div>
+		</div>
+		<!-- Info/controls column: always second, right on desktop -->
+		<div class="controls sm:col-span-2 flex flex-col items-start gap-0 bg-stone-300 w-full order-2 sm:order-2">
+			<!-- On mobile, show a dropdown for layers -->
+			<div class="w-full sm:hidden px-4 py-2">
+				<button class="w-full border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between" onclick={() => showLayersDropdown = !showLayersDropdown} aria-haspopup="true" aria-expanded={showLayersDropdown}>
+					<span>Layers</span>
+					<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
 				</button>
-			{/each}
+				{#if showLayersDropdown}
+					<div class="absolute left-0 right-0 mt-2 z-10 bg-stone-100 border border-stone-700 rounded shadow-lg">
+						{#each layers as layer}
+							<button
+								class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${layer.name === selectedLayerName ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
+								onclick={() => {
+									selectedLayerName = layer.name;
+									handleLayerChange();
+									showLayersDropdown = false;
+								}}
+							>
+								<span class="mr-2">&lsaquo;</span>
+								<span>{layer.name}</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
+			<!-- On desktop, show the layer buttons as before -->
+			<div class="hidden sm:block w-full">
+				{#each layers as layer}
+					<button
+						class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${layer.name === selectedLayerName ? 'active bg-stone-100 font-bold' : 'cursor-pointer bg-stone-300  hover:bg-stone-200'}`}
+						onclick={() => {
+							selectedLayerName = layer.name;
+							handleLayerChange();
+						}}
+					>
+						<span class="mr-2">&lsaquo;</span>
+						<span>{layer.name}</span>
+					</button>
+				{/each}
+			</div>
 			<div class="w-full items-start p-4 text-left">
 				{#if searchResultAddress}
 					<h3>
@@ -279,10 +311,6 @@
 				<p class="text-left text-sm text-gray-700">{selectedLayer?.description}</p>
 			</div>
 		</div>
-
-		<div class="map-wrapper col-span-3 bg-stone-100 p-6">
-			<Map bind:this={mapRef} geojsonFile={selectedLayer?.path} colorArray={hardinessZoneColors} />
-		</div>
 	</div>
 </main>
 
@@ -293,7 +321,5 @@
 		flex-direction: column;
 	}
 
-	.map-wrapper {
-		flex: 1;
-	}
+	/* Remove flex: 1 from .map-wrapper to allow aspect ratio to control height */
 </style>
