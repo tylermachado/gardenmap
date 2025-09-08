@@ -13,9 +13,10 @@
 
   export let center: [number, number] = [39.8283, -98.5795]; // Center of continental US
   export let zoom: number = 3.5;
-  export let shapefile: string = ''; // New prop for GeoJSON file path
+  export let shapefiles: string[] = []; // Array of GeoJSON file paths for multiple layers
 
-  let currentGeoJsonLayer: L.GeoJSON | null = null;
+  let currentGeoJsonLayers: L.GeoJSON[] = [];
+  let searchMarker: L.Marker | null = null;
 
   onMount((): (() => void) | void => {
     if (!browser) return;
@@ -71,8 +72,8 @@
         // Add the home button just after the zoom controls
         map.addControl(new HomeControl());
 
-        // Load and display shapefile data if geojsonFile is provided
-        if (shapefile) {
+        // Load and display shapefile data if shapefiles array is provided
+        if (shapefiles.length > 0) {
           await loadShapefiles();
         }
       } catch (error) {
@@ -82,6 +83,11 @@
 
     cleanup = (): void => {
       if (map) {
+        // Remove search marker if it exists
+        if (searchMarker) {
+          map.removeLayer(searchMarker);
+          searchMarker = null;
+        }
         map.remove();
         map = null;
       }
@@ -96,35 +102,57 @@
     '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
   ];
 
-  // Reactively reload GeoJSON when geojsonFile changes
-  $: if (shapefile && map && LeafletLib) {
+  // Reactively reload GeoJSON when shapefiles array changes
+  $: if (shapefiles && shapefiles.length > 0 && map && LeafletLib) {
     loadShapefiles();
   }
 
   async function loadShapefiles(): Promise<void> {
-    if (!browser || !LeafletLib || !map || !shapefile) return;
+    if (!browser || !LeafletLib || !map || !shapefiles || shapefiles.length === 0) return;
+    
     try {
-      if (currentGeoJsonLayer) {
-        map.removeLayer(currentGeoJsonLayer);
-        currentGeoJsonLayer = null;
-      }
-      const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
-        const unique = feature?.properties?.zone ?? feature?.properties?.US_L3CODE ?? 0;
-        const hash = String(unique)
-          .split('')
-          .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const color = colorArray[hash % colorArray.length];
-        return {
-          color: color,
-          weight: 2,
-          opacity: 0.8,
-          fillColor: color,
-          fillOpacity: 0.5
+      // Remove all existing layers
+      currentGeoJsonLayers.forEach(layer => {
+        if (map) {
+          map.removeLayer(layer);
+        }
+      });
+      currentGeoJsonLayers = [];
+
+      // Load each shapefile as a separate layer
+      for (let i = 0; i < shapefiles.length; i++) {
+        const shapefile = shapefiles[i];
+        
+        // Ensure shapefile is a string
+        if (typeof shapefile !== 'string') {
+          console.error('Shapefile entry must be a string, got:', shapefile);
+          continue;
+        }
+        
+        const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
+          const unique = feature?.properties?.zone ?? feature?.properties?.US_L3CODE ?? 0;
+          const hash = String(unique)
+            .split('')
+            .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          const color = colorArray[hash % colorArray.length];
+          
+          // Adjust opacity based on layer index for better overlay visualization
+          const baseOpacity = 0.7 - (i * 0.1); // Decrease opacity for each subsequent layer
+          const baseFillOpacity = 0.4 - (i * 0.1);
+          
+          return {
+            color: color,
+            weight: 2,
+            opacity: Math.max(baseOpacity, 0.3), // Minimum opacity of 0.3
+            fillColor: color,
+            fillOpacity: Math.max(baseFillOpacity, 0.1) // Minimum fill opacity of 0.1
+          };
         };
-      };
-      let url = `${base}/${shapefile}`.replace(/\/+/g, '/');
-      if (!url.startsWith('/')) url = '/' + url;
-      await loadGeoOrTopoJSON(url, styleFunction);
+
+        let url = `${base}/${shapefile}`.replace(/\/+/g, '/');
+        if (!url.startsWith('/')) url = '/' + url;
+        await loadGeoOrTopoJSON(url, styleFunction, i);
+      }
     } catch (error) {
       console.error('Error loading shapefile data:', error);
     }
@@ -132,7 +160,8 @@
 
   async function loadGeoOrTopoJSON(
     url: string,
-    styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions
+    styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions,
+    layerIndex?: number
   ): Promise<void> {
     const response: Response = await fetch(url);
     if (!response.ok) {
@@ -142,24 +171,19 @@
     let geojsonData: GeoJSON.FeatureCollection;
     if (data.type === 'Topology') {
       const objectName = Object.keys(data.objects)[0];
-      geojsonData = topojson.feature(data, data.objects[objectName]) as GeoJSON.FeatureCollection;
+      geojsonData = topojson.feature(data, data.objects[objectName]) as any;
     } else {
       geojsonData = data as GeoJSON.FeatureCollection;
     }
-    addGeoJSONToMap(geojsonData, styleFunction);
+    addGeoJSONToMap(geojsonData, styleFunction, layerIndex);
   }
 
   function addGeoJSONToMap(
     geojsonData: GeoJSON.FeatureCollection, 
-    styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions
+    styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions,
+    layerIndex?: number
   ): void {
     if (!LeafletLib || !map) return;
-
-    // Remove previous layer if it exists
-    if (currentGeoJsonLayer) {
-      map.removeLayer(currentGeoJsonLayer);
-      currentGeoJsonLayer = null;
-    }
 
     const geojsonLayer: L.GeoJSON = LeafletLib.geoJSON(geojsonData, {
       style: styleFunction || ((feature?: GeoJSON.Feature): L.PathOptions => ({
@@ -178,7 +202,7 @@
       }
     }).addTo(map);
 
-    currentGeoJsonLayer = geojsonLayer;
+    currentGeoJsonLayers.push(geojsonLayer);
   }
 
   // Export map instance for parent component access
@@ -193,13 +217,57 @@
   ): L.GeoJSON | null {
     if (!browser || !LeafletLib || !map) return null;
     
-    return LeafletLib.geoJSON(data, options).addTo(map);
+    const layer = LeafletLib.geoJSON(data, options).addTo(map);
+    currentGeoJsonLayers.push(layer);
+    return layer;
+  }
+
+  export function clearAllLayers(): void {
+    if (!browser || !map) return;
+    
+    currentGeoJsonLayers.forEach(layer => {
+      map?.removeLayer(layer);
+    });
+    currentGeoJsonLayers = [];
+    
+    // Also remove search marker when clearing all layers
+    if (searchMarker) {
+      map.removeLayer(searchMarker);
+      searchMarker = null;
+    }
   }
 
   export function setView(center: [number, number], zoom: number): void {
     if (map) {
       map.setView(center, zoom);
     }
+  }
+
+  // Add marker at specified coordinates
+  export function addSearchMarker(lat: number, lng: number, popupText?: string): void {
+    if (!browser || !LeafletLib || !map) return;
+    
+    // Remove existing search marker if it exists
+    if (searchMarker) {
+      map.removeLayer(searchMarker);
+      searchMarker = null;
+    }
+    
+    // Create new marker
+    searchMarker = LeafletLib.marker([lat, lng]).addTo(map);
+    
+    // Add popup if text is provided
+    if (popupText) {
+      searchMarker.bindPopup(popupText).openPopup();
+    }
+  }
+
+  // Remove search marker
+  export function removeSearchMarker(): void {
+    if (!browser || !map || !searchMarker) return;
+    
+    map.removeLayer(searchMarker);
+    searchMarker = null;
   }
 </script>
 
