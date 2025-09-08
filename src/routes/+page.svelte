@@ -11,8 +11,8 @@
 
 	const layers = data.availableShapefiles;
 	let mapRef: Map | null = $state(null);
-	let selectedLayer: LayerOption | null = $state(layers.length > 0 ? layers[0] : null);
-	let selectedLayerName: string = $state(layers[0]?.name || '');
+	// Change to array of selected layers
+	let selectedLayers: LayerOption[] = $state([]);
 
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
@@ -90,6 +90,27 @@
 	}
 	let showLayersDropdown: boolean = $state(false);
 
+	// Helper function to check if layer is selected
+	function isLayerSelected(layer: LayerOption): boolean {
+		return selectedLayers.some(selected => selected.name === layer.name);
+	}
+
+	// Toggle layer selection
+	function toggleLayer(layer: LayerOption): void {
+		if (isLayerSelected(layer)) {
+			selectedLayers = selectedLayers.filter(selected => selected.name !== layer.name);
+		} else {
+			selectedLayers = [...selectedLayers, layer];
+		}
+
+		// You can call methods on the map instance here
+		const map: L.Map | null = mapRef?.getMap() ?? null;
+		if (map) {
+			// Add layer filtering logic here
+			console.log('Map instance available for layer operations', selectedLayers);
+		}
+	}
+
 	// any time map updates, pick a random number inclusively between 3 and 12 and set numFlowers
 	$effect(() => {
 		// dependency reference to trigger effect when mapRef changes
@@ -122,22 +143,26 @@
 		'#8b0000'
 	];
 
-	function handleLayerChange(): void {
-		selectedLayer = layers.find((layer) => layer.name === selectedLayerName) || null;
-
-		// You can call methods on the map instance here
-		const map: L.Map | null = mapRef?.getMap() ?? null;
-		if (map) {
-			// Add layer filtering logic here
-			console.log('Map instance available for layer operations');
-		}
-	}
-
 	function findMyLocation() {
 		// Implement the logic to find and center the map on the user's location
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
-			map.locate({ setView: true, maxZoom: 16 });
+			map.locate({ 
+				setView: true, 
+				maxZoom: 16,
+				enableHighAccuracy: true
+			});
+			
+			// Add event listener for successful location find
+			map.on('locationfound', (e: L.LocationEvent) => {
+				const { lat, lng } = e.latlng;
+				mapRef?.addSearchMarker(lat, lng, 'Your Location');
+			});
+			
+			// Add event listener for location error
+			map.on('locationerror', (e: L.ErrorEvent) => {
+				alert('Unable to find your location: ' + e.message);
+			});
 		}
 	}
 
@@ -148,13 +173,15 @@
 		);
 		const results = await response.json();
 		if (results && results.length > 0) {
-			const { lat, lon, address } = results[0];
+			const { lat, lon, address, display_name } = results[0];
 			searchResultAddress = address; // Save address to state
 			const map: L.Map | null = mapRef?.getMap() ?? null;
 			const latNum = parseFloat(lat);
 			const lonNum = parseFloat(lon);
 			if (map) {
 				map.setView([latNum, lonNum], 14);
+				// Add a marker at the searched location
+				mapRef?.addSearchMarker(latNum, lonNum, display_name || 'Search Result');
 			}
 			await resolvePointData(latNum, lonNum);
 		} else {
@@ -206,7 +233,7 @@
 		<!-- Map column: always first, left on desktop -->
 		<div class="map-wrapper sm:col-span-3 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden">
 			<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
-				<Map bind:this={mapRef} shapefile={selectedLayer?.path} colorArray={hardinessZoneColors} />
+				<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} />
 			</div>
 		</div>
 		<!-- Info/controls column: always second, right on desktop -->
@@ -214,21 +241,17 @@
 			<!-- On mobile, show a dropdown for layers -->
 			<div class="w-full sm:hidden px-4 py-2">
 				<button class="w-full border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between" onclick={() => showLayersDropdown = !showLayersDropdown} aria-haspopup="true" aria-expanded={showLayersDropdown}>
-					<span>Layers</span>
+					<span>Layers ({selectedLayers.length})</span>
 					<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
 				</button>
 				{#if showLayersDropdown}
 					<div class="absolute left-0 right-0 mt-2 z-10 bg-stone-100 border border-stone-700 rounded shadow-lg">
 						{#each layers as layer}
 							<button
-								class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${layer.name === selectedLayerName ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
-								onclick={() => {
-									selectedLayerName = layer.name;
-									handleLayerChange();
-									showLayersDropdown = false;
-								}}
+								class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
+								onclick={() => toggleLayer(layer)}
 							>
-								<span class="mr-2">&lsaquo;</span>
+								<span class="mr-2">{isLayerSelected(layer) ? '✓' : '○'}</span>
 								<span>{layer.name}</span>
 							</button>
 						{/each}
@@ -239,13 +262,10 @@
 			<div class="hidden sm:block w-full">
 				{#each layers as layer}
 					<button
-						class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${layer.name === selectedLayerName ? 'active bg-stone-100 font-bold' : 'cursor-pointer bg-stone-300  hover:bg-stone-200'}`}
-						onclick={() => {
-							selectedLayerName = layer.name;
-							handleLayerChange();
-						}}
+						class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer) ? 'active bg-stone-100 font-bold' : 'cursor-pointer bg-stone-300  hover:bg-stone-200'}`}
+						onclick={() => toggleLayer(layer)}
 					>
-						<span class="mr-2">&lsaquo;</span>
+						<span class="mr-2">{isLayerSelected(layer) ? '✓' : '○'}</span>
 						<span>{layer.name}</span>
 					</button>
 				{/each}
@@ -307,7 +327,16 @@
 
 			<div class="w-full items-start p-4 text-left">
 				<h3>About This Data</h3>
-				<p class="text-left text-sm text-gray-700">{selectedLayer?.description}</p>
+				{#if selectedLayers.length > 0}
+					{#each selectedLayers as layer}
+						<div class="mb-2">
+							<p class="font-semibold text-sm">{layer.name}</p>
+							<p class="text-left text-sm text-gray-700">{layer.description}</p>
+						</div>
+					{/each}
+				{:else}
+					<p class="text-left text-sm text-gray-700">Select one or more layers to view their data.</p>
+				{/if}
 			</div>
 		</div>
 	</div>
