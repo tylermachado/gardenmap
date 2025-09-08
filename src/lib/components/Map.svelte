@@ -112,15 +112,22 @@
     
     try {
       // Remove all existing layers
-      currentGeoJsonLayers.forEach(layer => {
+      console.log('Removing existing layers:', currentGeoJsonLayers.length);
+      currentGeoJsonLayers.forEach((layer, index) => {
         if (map) {
+          console.log(`Removing layer ${index}`);
           map.removeLayer(layer);
         }
       });
       currentGeoJsonLayers = [];
 
       // If no shapefiles to load, we're done (layers have been cleared)
-      if (shapefiles.length === 0) return;
+      if (shapefiles.length === 0) {
+        console.log('No shapefiles to load - all layers cleared');
+        return;
+      }
+
+      console.log('Loading shapefiles:', shapefiles);
 
       // Load each shapefile as a separate layer
       for (let i = 0; i < shapefiles.length; i++) {
@@ -131,6 +138,8 @@
           console.error('Shapefile entry must be a string, got:', shapefile);
           continue;
         }
+        
+        console.log(`Loading shapefile ${i}: ${shapefile}`);
         
         const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
           const unique = feature?.properties?.zone ?? feature?.properties?.US_L3CODE ?? 0;
@@ -198,6 +207,7 @@
     }).addTo(map);
 
     currentGeoJsonLayers.push(geojsonLayer);
+    console.log(`Added layer ${layerIndex ?? 'unknown'} to map. Total features:`, geojsonData.features.length);
   }
 
   // Export map instance for parent component access
