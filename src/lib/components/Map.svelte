@@ -103,12 +103,12 @@
   ];
 
   // Reactively reload GeoJSON when shapefiles array changes
-  $: if (shapefiles && shapefiles.length > 0 && map && LeafletLib) {
+  $: if (shapefiles && map && LeafletLib) {
     loadShapefiles();
   }
 
   async function loadShapefiles(): Promise<void> {
-    if (!browser || !LeafletLib || !map || !shapefiles || shapefiles.length === 0) return;
+    if (!browser || !LeafletLib || !map || !shapefiles) return;
     
     try {
       // Remove all existing layers
@@ -118,6 +118,9 @@
         }
       });
       currentGeoJsonLayers = [];
+
+      // If no shapefiles to load, we're done (layers have been cleared)
+      if (shapefiles.length === 0) return;
 
       // Load each shapefile as a separate layer
       for (let i = 0; i < shapefiles.length; i++) {
