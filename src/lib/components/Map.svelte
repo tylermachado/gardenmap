@@ -1,11 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { base } from '$app/paths';
-
   import { browser } from '$app/environment';
   import type * as L from 'leaflet';
   // @ts-ignore - Leaflet types are not always available
   import * as topojson from 'topojson-client';
+  
+  // Import color mappings
+  import usdaHardinessColors from '$lib/data/usda-hardiness-colors.json';
+  import epaEcoregionColorsData from '$lib/data/epa-ecoregion-colors-2.json';
 
   let mapContainer: HTMLDivElement;
   let map: L.Map | null = null;
@@ -110,22 +113,12 @@
     '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
   ];
 
-  // Official USDA Plant Hardiness Zone colors
-  const usda_hardiness_colors: { [key: string]: string } = {
-  '1a': '#D6D6FC', '1b': '#C4C4EF',
-  '2a': '#AAAAD6', '2b': '#E2B3E8', 
-  '3a': '#D595E5', '3b': '#C380D6',
-  '4a': '#9E6EF7', '4b': '#6073E5',
-  '5a': '#7DA0F8', '5b': '#7BC7DD',
-  '6a': '#68B856', '6b': '#8AC464',
-  '7a': '#B4D576', '7b': '#D0DB7E',
-  '8a': '#E9DB90', '8b': '#E5CB6A',
-  '9a': '#D5B860', '9b': '#EBB980',
-  '10a': '#DF9F4C', '10b': '#D87E38',
-  '11a': '#D66032', '11b': '#DB896B',
-  '12a': '#C46053', '12b': '#A5282E',
-  '13a': '#893A2A', '13b': '#6C220C'
-  };
+  // Create EPA ecoregion color lookup map from the array data
+  const epaEcoregionColors: { [key: string]: string } = {};
+  epaEcoregionColorsData.forEach(item => {
+    epaEcoregionColors[item.code] = item.hex;
+  });
+
 
   // Reactively reload GeoJSON when shapefiles array changes
   $: if (shapefiles && map && LeafletLib) {
@@ -174,9 +167,16 @@
           if (feature?.properties?.zone && typeof feature.properties.zone === 'string') {
             // Use official USDA colors for hardiness zones
             const zoneValue = feature.properties.zone as string;
-            color = usda_hardiness_colors[zoneValue] || usda_hardiness_colors['1a']; // fallback to zone 1a
-          } else {
-            // Use custom color array for other layers (like ecoregions)
+            color = usdaHardinessColors[zoneValue as keyof typeof usdaHardinessColors] || usdaHardinessColors['1a']; // fallback to zone 1a
+          } 
+          // Check if this is EPA Level III Ecoregion data by looking for US_L3CODE property
+          else if (feature?.properties?.US_L3CODE) {
+            // Use official EPA colors for ecoregions
+            const ecoregionCode = String(feature.properties.NA_L3CODE);
+            color = epaEcoregionColors[ecoregionCode] || '#A5DCF5'; // fallback to default color
+          } 
+          else {
+            // Use custom color array for other layers
             const hash = String(unique)
               .split('')
               .reduce((acc, char) => acc + char.charCodeAt(0), 0);

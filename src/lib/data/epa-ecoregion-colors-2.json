@@ -1,0 +1,950 @@
+[
+  {
+    "label": "1.1.1 Ellesmere and Devon Islands Ice Caps",
+    "code": "1.1.1",
+    "name": "Ellesmere and Devon Islands Ice Caps",
+    "hex": "#6993CC"
+  },
+  {
+    "label": "1.1.2 Baffin and Torngat Mountains",
+    "code": "1.1.2",
+    "name": "Baffin and Torngat Mountains",
+    "hex": "#8298CD"
+  },
+  {
+    "label": "10.0 NORTH AMERICAN DESERTS",
+    "code": "10.0",
+    "name": "NORTH AMERICAN DESERTS",
+    "hex": "#7FC349"
+  },
+  {
+    "label": "10.1 COLD DESERTS",
+    "code": "10.1",
+    "name": "COLD DESERTS",
+    "hex": "#58AE4F"
+  },
+  {
+    "label": "11.0 MEDITERRANEAN CALIFORNIA",
+    "code": "11.0",
+    "name": "MEDITERRANEAN CALIFORNIA",
+    "hex": "#CFE5AE"
+  },
+  {
+    "label": "11.1.1 California Coastal Sage, Chaparral, and Oak Woodlands",
+    "code": "11.1.1",
+    "name": "California Coastal Sage, Chaparral, and Oak Woodlands",
+    "hex": "#B7DA9B"
+  },
+  {
+    "label": "11.1.2 Central California Valley",
+    "code": "11.1.2",
+    "name": "Central California Valley",
+    "hex": "#B7DA9B"
+  },
+  {
+    "label": "11.1.3 Southern and Baja California Pine-Oak Mountains",
+    "code": "11.1.3",
+    "name": "Southern and Baja California Pine-Oak Mountains",
+    "hex": "#D5E9C3"
+  },
+  {
+    "label": "12.0 SOUTHERN SEMI-ARID HIGHLANDS",
+    "code": "12.0",
+    "name": "SOUTHERN SEMI-ARID HIGHLANDS",
+    "hex": "#56BD84"
+  },
+  {
+    "label": "12.1 WESTERN SIERRA MADRE PIEDMONT",
+    "code": "12.1",
+    "name": "WESTERN SIERRA MADRE PIEDMONT",
+    "hex": "#01AE9C"
+  },
+  {
+    "label": "12.1.1 Madrean Archipelago",
+    "code": "12.1.1",
+    "name": "Madrean Archipelago",
+    "hex": "#4DAC78"
+  },
+  {
+    "label": "12.1.2 Piedmonts and Plains with Grasslands, Xeric Shrub, and Oak and Conifer Forests",
+    "code": "12.1.2",
+    "name": "Piedmonts and Plains with Grasslands, Xeric Shrub, and Oak and Conifer Forests",
+    "hex": "#AFBC8C"
+  },
+  {
+    "label": "12.2 MEXICAN HIGH PLATEAU",
+    "code": "12.2",
+    "name": "MEXICAN HIGH PLATEAU",
+    "hex": "#8FC2B0"
+  },
+  {
+    "label": "12.2.1 Hills and Interior Plains with Xeric Shrub and Mesquite Low Forest",
+    "code": "12.2.1",
+    "name": "Hills and Interior Plains with Xeric Shrub and Mesquite Low Forest",
+    "hex": "#FED4A0"
+  },
+  {
+    "label": "13.0 TEMPERATE SIERRAS",
+    "code": "13.0",
+    "name": "TEMPERATE SIERRAS",
+    "hex": "#C6DE89"
+  },
+  {
+    "label": "13.1 UPPER GILA MOUNTAINS",
+    "code": "13.1",
+    "name": "UPPER GILA MOUNTAINS",
+    "hex": "#BAD07D"
+  },
+  {
+    "label": "13.1.1 Arizona/New Mexico Mountains",
+    "code": "13.1.1",
+    "name": "Arizona/New Mexico Mountains",
+    "hex": "#ADD581"
+  },
+  {
+    "label": "13.2 WESTERN SIERRA MADRE",
+    "code": "13.2",
+    "name": "WESTERN SIERRA MADRE",
+    "hex": "#E1F4FD"
+  },
+  {
+    "label": "13.2.1 Sierra Madre Occidental with Conifer, Oak, and Mixed Forests",
+    "code": "13.2.1",
+    "name": "Sierra Madre Occidental with Conifer, Oak, and Mixed Forests",
+    "hex": "#A9CA60"
+  },
+  {
+    "label": "13.3 EASTERN SIERRA MADRE",
+    "code": "13.3",
+    "name": "EASTERN SIERRA MADRE",
+    "hex": "#FFE6CB"
+  },
+  {
+    "label": "13.3.1 Sierra Madre Oriental with Conifer, Oak, and Mixed Forests",
+    "code": "13.3.1",
+    "name": "Sierra Madre Oriental with Conifer, Oak, and Mixed Forests",
+    "hex": "#BEDB8D"
+  },
+  {
+    "label": "13.4 TRANSVERSAL NEO-VOLCANIC SYSTEM",
+    "code": "13.4",
+    "name": "TRANSVERSAL NEO-VOLCANIC SYSTEM",
+    "hex": "#E9DECA"
+  },
+  {
+    "label": "13.4.1 Interior Plains and Piedmonts with Grasslands and Xeric Shrub",
+    "code": "13.4.1",
+    "name": "Interior Plains and Piedmonts with Grasslands and Xeric Shrub",
+    "hex": "#D9D46F"
+  },
+  {
+    "label": "13.4.2 Hills and Sierras with Conifer, Oak, and Mixed Forests",
+    "code": "13.4.2",
+    "name": "Hills and Sierras with Conifer, Oak, and Mixed Forests",
+    "hex": "#D9D46F"
+  },
+  {
+    "label": "13.5 SOUTHERN SIERRA MADRE",
+    "code": "13.5",
+    "name": "SOUTHERN SIERRA MADRE",
+    "hex": "#F3D788"
+  },
+  {
+    "label": "13.5.1 Sierras of Jalisco and Michoac\u00e1n with Conifer, Oak, and Mixed Forests",
+    "code": "13.5.1",
+    "name": "Sierras of Jalisco and Michoac\u00e1n with Conifer, Oak, and Mixed Forests",
+    "hex": "#95C28B"
+  },
+  {
+    "label": "13.5.2 Sierras of Guerrero and Oaxaca with Conifer, Oak, and Mixed Forests",
+    "code": "13.5.2",
+    "name": "Sierras of Guerrero and Oaxaca with Conifer, Oak, and Mixed Forests",
+    "hex": "#95C28B"
+  },
+  {
+    "label": "13.6 CENTRAL AMERICAN SIERRA MADRE AND CHIAPAS HIGHLANDS",
+    "code": "13.6",
+    "name": "CENTRAL AMERICAN SIERRA MADRE AND CHIAPAS HIGHLANDS",
+    "hex": "#B2D17D"
+  },
+  {
+    "label": "13.6.1 Central American Sierra Madre with Conifer, Oak, and Mixed Forests",
+    "code": "13.6.1",
+    "name": "Central American Sierra Madre with Conifer, Oak, and Mixed Forests",
+    "hex": "#B5D9CE"
+  },
+  {
+    "label": "13.6.2 Chiapas Highlands with Conifer, Oak, and Mixed Forest",
+    "code": "13.6.2",
+    "name": "Chiapas Highlands with Conifer, Oak, and Mixed Forest",
+    "hex": "#B5D9CE"
+  },
+  {
+    "label": "14.1.1 Coastal Plain with Low Tropical Deciduous Forest",
+    "code": "14.1.1",
+    "name": "Coastal Plain with Low Tropical Deciduous Forest",
+    "hex": "#F3C844"
+  },
+  {
+    "label": "14.1.2 Hills and Sierra with Low Tropical Deciduous Forest and Oak Forest",
+    "code": "14.1.2",
+    "name": "Hills and Sierra with Low Tropical Deciduous Forest and Oak Forest",
+    "hex": "#F3C844"
+  },
+  {
+    "label": "14.2 NORTHWESTERN PLAIN OF THE YUCATAN PENINSULA",
+    "code": "14.2",
+    "name": "NORTHWESTERN PLAIN OF THE YUCATAN PENINSULA",
+    "hex": "#87B98E"
+  },
+  {
+    "label": "14.2.1 Northwestern Yucatan Plain with Low Tropical Deciduous Forest",
+    "code": "14.2.1",
+    "name": "Northwestern Yucatan Plain with Low Tropical Deciduous Forest",
+    "hex": "#EDA7B7"
+  },
+  {
+    "label": "14.3 WESTERN PACIFIC COASTAL PLAIN, HILLS AND CANYONS",
+    "code": "14.3",
+    "name": "WESTERN PACIFIC COASTAL PLAIN, HILLS AND CANYONS",
+    "hex": "#87C875"
+  },
+  {
+    "label": "14.3.1 Sinaloa Coastal Plain with Low Thorn Tropical Forest and Wetlands",
+    "code": "14.3.1",
+    "name": "Sinaloa Coastal Plain with Low Thorn Tropical Forest and Wetlands",
+    "hex": "#9DD089"
+  },
+  {
+    "label": "15.0 TROPICAL WET FORESTS",
+    "code": "15.0",
+    "name": "TROPICAL WET FORESTS",
+    "hex": "#B9E5FA"
+  },
+  {
+    "label": "15.1 HUMID GULF OF MEXICO COASTAL PLAINS AND HILLS",
+    "code": "15.1",
+    "name": "HUMID GULF OF MEXICO COASTAL PLAINS AND HILLS",
+    "hex": "#4DAC78"
+  },
+  {
+    "label": "15.1.1  Gulf of Mexico Coastal Plain with Wetlands and High Tropical Rain Forest",
+    "code": "15.1.1",
+    "name": "Gulf of Mexico Coastal Plain with Wetlands and High Tropical Rain Forest",
+    "hex": "#8FC2B0"
+  },
+  {
+    "label": "15.1.2  Hills with Medium and High Evergreen Tropical Forest",
+    "code": "15.1.2",
+    "name": "Hills with Medium and High Evergreen Tropical Forest",
+    "hex": "#56B493"
+  },
+  {
+    "label": "15.2 PLAIN AND HILLS OF THE YUCATAN PENINSULA",
+    "code": "15.2",
+    "name": "PLAIN AND HILLS OF THE YUCATAN PENINSULA",
+    "hex": "#FED4A0"
+  },
+  {
+    "label": "15.2.1 Plain with Low and Medium Deciduous Tropical Forest",
+    "code": "15.2.1",
+    "name": "Plain with Low and Medium Deciduous Tropical Forest",
+    "hex": "#C6DE89"
+  },
+  {
+    "label": "15.2.2 Plain with Medium and High Semi-Evergreen Tropical Forest",
+    "code": "15.2.2",
+    "name": "Plain with Medium and High Semi-Evergreen Tropical Forest",
+    "hex": "#BAD07D"
+  },
+  {
+    "label": "15.2.3 Hills with High and Medium Semi-Evergreen Tropical Forest",
+    "code": "15.2.3",
+    "name": "Hills with High and Medium Semi-Evergreen Tropical Forest",
+    "hex": "#BAD980"
+  },
+  {
+    "label": "15.3 SIERRA LOS TUXTLAS",
+    "code": "15.3",
+    "name": "SIERRA LOS TUXTLAS",
+    "hex": "#ADD581"
+  },
+  {
+    "label": "15.4 EVERGLADES",
+    "code": "15.4",
+    "name": "EVERGLADES",
+    "hex": "#A9CA60"
+  },
+  {
+    "label": "15.4.1 Southern Florida Coastal Plain",
+    "code": "15.4.1",
+    "name": "Southern Florida Coastal Plain",
+    "hex": "#FFE6CB"
+  },
+  {
+    "label": "15.5 WESTERN PACIFIC PLAIN AND HILLS",
+    "code": "15.5",
+    "name": "WESTERN PACIFIC PLAIN AND HILLS",
+    "hex": "#BEDB8D"
+  },
+  {
+    "label": "15.5.1 Nayarit and Sinaloa Plain with Low Thorn Tropical Forest",
+    "code": "15.5.1",
+    "name": "Nayarit and Sinaloa Plain with Low Thorn Tropical Forest",
+    "hex": "#E9DECA"
+  },
+  {
+    "label": "15.5.2 Jalisco/Nayarit Hills and Plains with Medium Semi-Evergreen Tropical Forest",
+    "code": "15.5.2",
+    "name": "Jalisco/Nayarit Hills and Plains with Medium Semi-Evergreen Tropical Forest",
+    "hex": "#D9D46F"
+  },
+  {
+    "label": "15.6 COASTAL PLAIN AND HILLS OF SOCONUSCO",
+    "code": "15.6",
+    "name": "COASTAL PLAIN AND HILLS OF SOCONUSCO",
+    "hex": "#D9D46F"
+  },
+  {
+    "label": "15.6.1 Coastal Plain and Hills with High and Medium-High Evergreen Tropical Forest and Wetlands",
+    "code": "15.6.1",
+    "name": "Coastal Plain and Hills with High and Medium-High Evergreen Tropical Forest and Wetlands",
+    "hex": "#F3D788"
+  },
+  {
+    "label": "2.1.1 Sverdrup Islands Lowland",
+    "code": "2.1.1",
+    "name": "Sverdrup Islands Lowland",
+    "hex": "#A3B1DA"
+  },
+  {
+    "label": "2.1.2 Ellesmere Mountains and Eureka Hills",
+    "code": "2.1.2",
+    "name": "Ellesmere Mountains and Eureka Hills",
+    "hex": "#A3B1DA"
+  },
+  {
+    "label": "2.1.3 Parry Islands Plateau",
+    "code": "2.1.3",
+    "name": "Parry Islands Plateau",
+    "hex": "#8CA0C7"
+  },
+  {
+    "label": "2.1.4 Lancaster and Borden Peninsula Plateaus",
+    "code": "2.1.4",
+    "name": "Lancaster and Borden Peninsula Plateaus",
+    "hex": "#B6B8DD"
+  },
+  {
+    "label": "2.1.5 Foxe Uplands",
+    "code": "2.1.5",
+    "name": "Foxe Uplands",
+    "hex": "#869EC6"
+  },
+  {
+    "label": "2.1.6 Baffin Uplands",
+    "code": "2.1.6",
+    "name": "Baffin Uplands",
+    "hex": "#B0BBD8"
+  },
+  {
+    "label": "2.1.7 Gulf of Boothia and Foxe Basin Plains",
+    "code": "2.1.7",
+    "name": "Gulf of Boothia and Foxe Basin Plains",
+    "hex": "#9CACCE"
+  },
+  {
+    "label": "2.1.8 Victoria Island Lowlands",
+    "code": "2.1.8",
+    "name": "Victoria Island Lowlands",
+    "hex": "#BBB8DC"
+  },
+  {
+    "label": "2.1.9 Banks Island and Amundsen Gulf Lowlands",
+    "code": "2.1.9",
+    "name": "Banks Island and Amundsen Gulf Lowlands",
+    "hex": "#ACBCE1"
+  },
+  {
+    "label": "2.2.1 Arctic Coastal Plain",
+    "code": "2.2.1",
+    "name": "Arctic Coastal Plain",
+    "hex": "#C9D7EE"
+  },
+  {
+    "label": "2.2.2 Arctic Foothills",
+    "code": "2.2.2",
+    "name": "Arctic Foothills",
+    "hex": "#C9D7EE"
+  },
+  {
+    "label": "2.2.3 Subarctic Coastal Plains",
+    "code": "2.2.3",
+    "name": "Subarctic Coastal Plains",
+    "hex": "#AFBBE0"
+  },
+  {
+    "label": "2.2.4 Seward Peninsula",
+    "code": "2.2.4",
+    "name": "Seward Peninsula",
+    "hex": "#BCC9DD"
+  },
+  {
+    "label": "2.2.5 Bristol Bay-Nushagak Lowlands",
+    "code": "2.2.5",
+    "name": "Bristol Bay-Nushagak Lowlands",
+    "hex": "#A3B0D2"
+  },
+  {
+    "label": "2.2.6 Aleutian Islands",
+    "code": "2.2.6",
+    "name": "Aleutian Islands",
+    "hex": "#ACBFD1"
+  },
+  {
+    "label": "2.3.1 Brooks Range/Richardson Mountains",
+    "code": "2.3.1",
+    "name": "Brooks Range/Richardson Mountains",
+    "hex": "#019EDB"
+  },
+  {
+    "label": "2.4.1 Amundsen Plains",
+    "code": "2.4.1",
+    "name": "Amundsen Plains",
+    "hex": "#4AA6DD"
+  },
+  {
+    "label": "2.4.2 Aberdeen Plains",
+    "code": "2.4.2",
+    "name": "Aberdeen Plains",
+    "hex": "#4AA6DD"
+  },
+  {
+    "label": "2.4.3 Central Ungava Peninsula and Ottawa and Belcher Islands",
+    "code": "2.4.3",
+    "name": "Central Ungava Peninsula and Ottawa and Belcher Islands",
+    "hex": "#62ADDF"
+  },
+  {
+    "label": "2.4.4 Queen Maud Gulf and Chantrey Inlet Lowlands",
+    "code": "2.4.4",
+    "name": "Queen Maud Gulf and Chantrey Inlet Lowlands",
+    "hex": "#2CA0DA"
+  },
+  {
+    "label": "3.1.1 Interior Forested Lowlands and Uplands",
+    "code": "3.1.1",
+    "name": "Interior Forested Lowlands and Uplands",
+    "hex": "#5AC5F1"
+  },
+  {
+    "label": "3.1.2 Interior Bottomlands",
+    "code": "3.1.2",
+    "name": "Interior Bottomlands",
+    "hex": "#5AC5F1"
+  },
+  {
+    "label": "3.1.3 Yukon Flats",
+    "code": "3.1.3",
+    "name": "Yukon Flats",
+    "hex": "#31B8EB"
+  },
+  {
+    "label": "3.2.1 Ogilvie Mountains",
+    "code": "3.2.1",
+    "name": "Ogilvie Mountains",
+    "hex": "#00B9F2"
+  },
+  {
+    "label": "3.2.2 Mackenzie and Selwyn Mountains",
+    "code": "3.2.2",
+    "name": "Mackenzie and Selwyn Mountains",
+    "hex": "#00B9F2"
+  },
+  {
+    "label": "3.2.3 Peel River and Nahanni Plateaus",
+    "code": "3.2.3",
+    "name": "Peel River and Nahanni Plateaus",
+    "hex": "#00B0EC"
+  },
+  {
+    "label": "3.3.1 Great Bear Plains",
+    "code": "3.3.1",
+    "name": "Great Bear Plains",
+    "hex": "#94C8EC"
+  },
+  {
+    "label": "3.3.2 Hay and Slave River Lowlands",
+    "code": "3.3.2",
+    "name": "Hay and Slave River Lowlands",
+    "hex": "#94C8EC"
+  },
+  {
+    "label": "3.4.1 Kazan River and Selwyn Lake Uplands",
+    "code": "3.4.1",
+    "name": "Kazan River and Selwyn Lake Uplands",
+    "hex": "#42C8F4"
+  },
+  {
+    "label": "3.4.2 La Grande Hills and New Quebec Central Plateau",
+    "code": "3.4.2",
+    "name": "La Grande Hills and New Quebec Central Plateau",
+    "hex": "#42C8F4"
+  },
+  {
+    "label": "3.4.3 Smallwood Uplands",
+    "code": "3.4.3",
+    "name": "Smallwood Uplands",
+    "hex": "#62CDF6"
+  },
+  {
+    "label": "3.4.4 Ungava Bay Basin and George Plateau",
+    "code": "3.4.4",
+    "name": "Ungava Bay Basin and George Plateau",
+    "hex": "#02C0E4"
+  },
+  {
+    "label": "3.4.5 Coppermine River and Tazin Lake Uplands",
+    "code": "3.4.5",
+    "name": "Coppermine River and Tazin Lake Uplands",
+    "hex": "#00BFF3"
+  },
+  {
+    "label": "5.1.3 Central Laurentians and Mecatina Plateau",
+    "code": "5.1.3",
+    "name": "Central Laurentians and Mecatina Plateau",
+    "hex": "#46B860"
+  },
+  {
+    "label": "5.1.4 Newfoundland Island",
+    "code": "5.1.4",
+    "name": "Newfoundland Island",
+    "hex": "#46B860"
+  },
+  {
+    "label": "5.1.5 Hayes River Upland and Big Trout Lake",
+    "code": "5.1.5",
+    "name": "Hayes River Upland and Big Trout Lake",
+    "hex": "#46B860"
+  },
+  {
+    "label": "5.2 MIXED WOOD SHIELD",
+    "code": "5.2",
+    "name": "MIXED WOOD SHIELD",
+    "hex": "#B9E5FA"
+  },
+  {
+    "label": "5.2.2 Northern Minnesota Wetlands",
+    "code": "5.2.2",
+    "name": "Northern Minnesota Wetlands",
+    "hex": "#B9E5FA"
+  },
+  {
+    "label": "5.2.3 Algonquin/Southern Laurentians",
+    "code": "5.2.3",
+    "name": "Algonquin/Southern Laurentians",
+    "hex": "#B9E5FA"
+  },
+  {
+    "label": "5.3.1 Northern Appalachian and Atlantic Maritime Highlands",
+    "code": "5.3.1",
+    "name": "Northern Appalachian and Atlantic Maritime Highlands",
+    "hex": "#45BACA"
+  },
+  {
+    "label": "5.3.3 North Central Appalachians",
+    "code": "5.3.3",
+    "name": "North Central Appalachians",
+    "hex": "#45BACA"
+  },
+  {
+    "label": "6.1.1 Interior Highlands and Klondike Plateau",
+    "code": "6.1.1",
+    "name": "Interior Highlands and Klondike Plateau",
+    "hex": "#9FD18A"
+  },
+  {
+    "label": "6.1.2 Alaska Range",
+    "code": "6.1.2",
+    "name": "Alaska Range",
+    "hex": "#9FD18A"
+  },
+  {
+    "label": "6.1.3 Copper Plateau",
+    "code": "6.1.3",
+    "name": "Copper Plateau",
+    "hex": "#A8C98F"
+  },
+  {
+    "label": "6.1.4 Wrangell and St. Elias Mountains",
+    "code": "6.1.4",
+    "name": "Wrangell and St. Elias Mountains",
+    "hex": "#C3E0AE"
+  },
+  {
+    "label": "6.1.5 Watson Highlands",
+    "code": "6.1.5",
+    "name": "Watson Highlands",
+    "hex": "#A6CD99"
+  },
+  {
+    "label": "6.1.6 Yukon-Stikine Highlands/Boreal Mountains and Plateaus",
+    "code": "6.1.6",
+    "name": "Yukon-Stikine Highlands/Boreal Mountains and Plateaus",
+    "hex": "#B7DA9B"
+  },
+  {
+    "label": "6.2.10 Middle Rockies",
+    "code": "6.2.10",
+    "name": "Middle Rockies",
+    "hex": "#7FC349"
+  },
+  {
+    "label": "6.2.11 Klamath Mountains",
+    "code": "6.2.11",
+    "name": "Klamath Mountains",
+    "hex": "#7FC349"
+  },
+  {
+    "label": "6.2.12 Sierra Nevada",
+    "code": "6.2.12",
+    "name": "Sierra Nevada",
+    "hex": "#87C875"
+  },
+  {
+    "label": "6.2.13 Wasatch and Uinta Mountains",
+    "code": "6.2.13",
+    "name": "Wasatch and Uinta Mountains",
+    "hex": "#58AE4F"
+  },
+  {
+    "label": "6.2.14 Southern Rockies",
+    "code": "6.2.14",
+    "name": "Southern Rockies",
+    "hex": "#9DD089"
+  },
+  {
+    "label": "6.2.6 Cypress Upland",
+    "code": "6.2.6",
+    "name": "Cypress Upland",
+    "hex": "#25B179"
+  },
+  {
+    "label": "6.2.7 Cascades",
+    "code": "6.2.7",
+    "name": "Cascades",
+    "hex": "#25B179"
+  },
+  {
+    "label": "6.2.8 Eastern Cascades Slopes and Foothills",
+    "code": "6.2.8",
+    "name": "Eastern Cascades Slopes and Foothills",
+    "hex": "#25B179"
+  },
+  {
+    "label": "6.2.9 Blue Mountains",
+    "code": "6.2.9",
+    "name": "Blue Mountains",
+    "hex": "#7FC349"
+  },
+  {
+    "label": "8.1.1 Eastern Great Lakes and Hudson Lowlands",
+    "code": "8.1.1",
+    "name": "Eastern Great Lakes and Hudson Lowlands",
+    "hex": "#94BD54"
+  },
+  {
+    "label": "8.1.10 Erie Drift Plain",
+    "code": "8.1.10",
+    "name": "Erie Drift Plain",
+    "hex": "#8CC566"
+  },
+  {
+    "label": "8.1.2 Lake Erie Lowland",
+    "code": "8.1.2",
+    "name": "Lake Erie Lowland",
+    "hex": "#94BD54"
+  },
+  {
+    "label": "8.1.3 Northern Appalachian Plateau and Uplands",
+    "code": "8.1.3",
+    "name": "Northern Appalachian Plateau and Uplands",
+    "hex": "#94BD54"
+  },
+  {
+    "label": "8.1.4 North Central Hardwood Forests",
+    "code": "8.1.4",
+    "name": "North Central Hardwood Forests",
+    "hex": "#89BF6E"
+  },
+  {
+    "label": "8.1.5 Driftless Area",
+    "code": "8.1.5",
+    "name": "Driftless Area",
+    "hex": "#A0CD84"
+  },
+  {
+    "label": "8.1.6 S. Michigan/N. Indiana Drift Plains",
+    "code": "8.1.6",
+    "name": "S. Michigan/N. Indiana Drift Plains",
+    "hex": "#A4BF5F"
+  },
+  {
+    "label": "8.1.7 Northeastern Coastal Zone",
+    "code": "8.1.7",
+    "name": "Northeastern Coastal Zone",
+    "hex": "#AFD46C"
+  },
+  {
+    "label": "8.1.8 Maine/New Brunswick Plains and Hills",
+    "code": "8.1.8",
+    "name": "Maine/New Brunswick Plains and Hills",
+    "hex": "#92C355"
+  },
+  {
+    "label": "8.1.9 Maritime Lowlands",
+    "code": "8.1.9",
+    "name": "Maritime Lowlands",
+    "hex": "#8CC566"
+  },
+  {
+    "label": "8.2 CENTRAL USA PLAINS",
+    "code": "8.2",
+    "name": "CENTRAL USA PLAINS",
+    "hex": "#94C8EC"
+  },
+  {
+    "label": "8.2.1 Southeastern Wisconsin Till Plains",
+    "code": "8.2.1",
+    "name": "Southeastern Wisconsin Till Plains",
+    "hex": "#D6E2D8"
+  },
+  {
+    "label": "8.2.2 Huron/Erie Lake Plains",
+    "code": "8.2.2",
+    "name": "Huron/Erie Lake Plains",
+    "hex": "#D6E2D8"
+  },
+  {
+    "label": "8.2.3 Central Corn Belt Plains",
+    "code": "8.2.3",
+    "name": "Central Corn Belt Plains",
+    "hex": "#D6E2D8"
+  },
+  {
+    "label": "8.2.4 Eastern Corn Belt Plains",
+    "code": "8.2.4",
+    "name": "Eastern Corn Belt Plains",
+    "hex": "#42C8F4"
+  },
+  {
+    "label": "8.3 SOUTHEASTERN USA PLAINS",
+    "code": "8.3",
+    "name": "SOUTHEASTERN USA PLAINS",
+    "hex": "#62CDF6"
+  },
+  {
+    "label": "8.3.1 Northern Piedmont",
+    "code": "8.3.1",
+    "name": "Northern Piedmont",
+    "hex": "#00BFF3"
+  },
+  {
+    "label": "8.3.4 Piedmont",
+    "code": "8.3.4",
+    "name": "Piedmont",
+    "hex": "#CFE5AE"
+  },
+  {
+    "label": "8.3.5 Southeastern Plains",
+    "code": "8.3.5",
+    "name": "Southeastern Plains",
+    "hex": "#CFE5AE"
+  },
+  {
+    "label": "8.3.6 Mississippi Valley Loess Plains",
+    "code": "8.3.6",
+    "name": "Mississippi Valley Loess Plains",
+    "hex": "#CFE5AE"
+  },
+  {
+    "label": "8.4.1 Ridge and Valley",
+    "code": "8.4.1",
+    "name": "Ridge and Valley",
+    "hex": "#9ABCA0"
+  },
+  {
+    "label": "8.4.2 Central Appalachians",
+    "code": "8.4.2",
+    "name": "Central Appalachians",
+    "hex": "#9ABCA0"
+  },
+  {
+    "label": "8.4.3 Western Allegheny Plateau",
+    "code": "8.4.3",
+    "name": "Western Allegheny Plateau",
+    "hex": "#56BD84"
+  },
+  {
+    "label": "8.4.4 Blue Ridge",
+    "code": "8.4.4",
+    "name": "Blue Ridge",
+    "hex": "#67C399"
+  },
+  {
+    "label": "8.4.5 Ozark Highlands",
+    "code": "8.4.5",
+    "name": "Ozark Highlands",
+    "hex": "#01AE9C"
+  },
+  {
+    "label": "8.4.6 Boston Mountains",
+    "code": "8.4.6",
+    "name": "Boston Mountains",
+    "hex": "#82CCAE"
+  },
+  {
+    "label": "8.4.7 Arkansas Valley",
+    "code": "8.4.7",
+    "name": "Arkansas Valley",
+    "hex": "#4DAC78"
+  },
+  {
+    "label": "8.4.8 Ouachita Mountains",
+    "code": "8.4.8",
+    "name": "Ouachita Mountains",
+    "hex": "#AFBC8C"
+  },
+  {
+    "label": "8.4.9 Southwestern Appalachians",
+    "code": "8.4.9",
+    "name": "Southwestern Appalachians",
+    "hex": "#8FC2B0"
+  },
+  {
+    "label": "8.5.1 Middle Atlantic Coastal Plain",
+    "code": "8.5.1",
+    "name": "Middle Atlantic Coastal Plain",
+    "hex": "#C6DE89"
+  },
+  {
+    "label": "8.5.2 Mississippi Alluvial Plain",
+    "code": "8.5.2",
+    "name": "Mississippi Alluvial Plain",
+    "hex": "#C6DE89"
+  },
+  {
+    "label": "8.5.3 Southern Coastal Plain",
+    "code": "8.5.3",
+    "name": "Southern Coastal Plain",
+    "hex": "#BAD07D"
+  },
+  {
+    "label": "8.5.4 Atlantic Coastal Pine Barrens",
+    "code": "8.5.4",
+    "name": "Atlantic Coastal Pine Barrens",
+    "hex": "#BAD980"
+  },
+  {
+    "label": "9.0 GREAT PLAINS",
+    "code": "9.0",
+    "name": "GREAT PLAINS",
+    "hex": "#CCECFC"
+  },
+  {
+    "label": "9.2.1 Aspen Parkland/Northern Glaciated Plains",
+    "code": "9.2.1",
+    "name": "Aspen Parkland/Northern Glaciated Plains",
+    "hex": "#FFE6CB"
+  },
+  {
+    "label": "9.2.2 Lake Manitoba and Lake Agassiz Plain",
+    "code": "9.2.2",
+    "name": "Lake Manitoba and Lake Agassiz Plain",
+    "hex": "#FFE6CB"
+  },
+  {
+    "label": "9.2.3 Western Corn Belt Plains",
+    "code": "9.2.3",
+    "name": "Western Corn Belt Plains",
+    "hex": "#E7D0BA"
+  },
+  {
+    "label": "9.2.4 Central Irregular Plains",
+    "code": "9.2.4",
+    "name": "Central Irregular Plains",
+    "hex": "#E7C7B5"
+  },
+  {
+    "label": "9.3.1 Northwestern Glaciated Plains",
+    "code": "9.3.1",
+    "name": "Northwestern Glaciated Plains",
+    "hex": "#FFD499"
+  },
+  {
+    "label": "9.3.3 Northwestern Great Plains",
+    "code": "9.3.3",
+    "name": "Northwestern Great Plains",
+    "hex": "#FFD499"
+  },
+  {
+    "label": "9.3.4 Nebraska Sand Hills",
+    "code": "9.3.4",
+    "name": "Nebraska Sand Hills",
+    "hex": "#F3D788"
+  },
+  {
+    "label": "9.4 SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "code": "9.4",
+    "name": "SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "hex": "#C3E0AE"
+  },
+  {
+    "label": "9.4.1 High Plains",
+    "code": "9.4.1",
+    "name": "High Plains",
+    "hex": "#B7DA9B"
+  },
+  {
+    "label": "9.4.2 Central Great Plains",
+    "code": "9.4.2",
+    "name": "Central Great Plains",
+    "hex": "#F8D3AC"
+  },
+  {
+    "label": "9.4.3 Southwestern Tablelands",
+    "code": "9.4.3",
+    "name": "Southwestern Tablelands",
+    "hex": "#F8D3AC"
+  },
+  {
+    "label": "9.4.4 Flint Hills",
+    "code": "9.4.4",
+    "name": "Flint Hills",
+    "hex": "#F8D3AC"
+  },
+  {
+    "label": "9.4.5 Cross Timbers",
+    "code": "9.4.5",
+    "name": "Cross Timbers",
+    "hex": "#F9D5AA"
+  },
+  {
+    "label": "9.5.1 Western Gulf Coastal Plain",
+    "code": "9.5.1",
+    "name": "Western Gulf Coastal Plain",
+    "hex": "#F3C844"
+  },
+  {
+    "label": "9.6 TAMAULIPAS-TEXAS SEMIARID PLAIN",
+    "code": "9.6",
+    "name": "TAMAULIPAS-TEXAS SEMIARID PLAIN",
+    "hex": "#25B179"
+  },
+  {
+    "label": "9.6.1 Southern Texas Plains/Interior Plains and Hills with Xerophytic Shrub and Oak Forest",
+    "code": "9.6.1",
+    "name": "Southern Texas Plains/Interior Plains and Hills with Xerophytic Shrub and Oak Forest",
+    "hex": "#FDBA4D"
+  }
+]
