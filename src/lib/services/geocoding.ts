@@ -1,8 +1,19 @@
 import type { SearchResult } from '../types/layer.js';
 
 export class GeocodingService {
+  private static hasZipcode(query: string): boolean {
+    // Match 5-digit or 5+4 digit ZIP codes
+    const zipRegex = /\b\d{5}(?:-\d{4})?\b/;
+    return zipRegex.test(query);
+  }
+
   static async searchLocation(query: string): Promise<SearchResult | null> {
     if (!query) return null;
+    
+    // Require zipcode
+    if (!this.hasZipcode(query)) {
+      throw new Error('Please include a ZIP code in your search');
+    }
     
     try {
       const response = await fetch(
