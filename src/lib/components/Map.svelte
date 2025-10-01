@@ -32,6 +32,14 @@
         // Import Leaflet CSS
         await import('leaflet/dist/leaflet.css');
 
+        // Fix Leaflet's default marker icon paths for production builds
+        delete (LeafletLib.Icon.Default.prototype as any)._getIconUrl;
+        LeafletLib.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        });
+
         // Initialize the map
         map = LeafletLib.map(mapContainer).setView(center, zoom);
 
