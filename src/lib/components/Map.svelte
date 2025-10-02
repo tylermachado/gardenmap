@@ -8,7 +8,7 @@
   
   // Import color mappings
   import usdaHardinessColors from '$lib/data/usda-hardiness-colors.json';
-  import epaEcoregionColorsData from '$lib/data/epa-ecoregion-colors-2.json';
+  import epaEcoregionColorsData from '$lib/data/epa-ecoregion-colors.json';
 
   let mapContainer: HTMLDivElement;
   let map: L.Map | null = null;
