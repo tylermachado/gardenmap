@@ -26,24 +26,25 @@
 		<div class="mt-3 space-y-3">
 			{#if pointLayerData.phz}
 				<div class="rounded border border-stone-500 bg-stone-100 p-2">
-					<h4 class="font-semibold text-xs tracking-wide">Plant Hardiness Zone</h4>
+					<h4 class="font-semibold text-xs tracking-wide">USDA 2023 Plant Hardiness Zone</h4>
 					<ul class="mt-1 text-[11px] leading-tight">
 						{#if pointLayerData.phz.zone}
-							<li><span class="font-mono text-stone-700">zone</span>: {pointLayerData.phz.zone}</li>
+							<li><span class="font-mono text-stone-700">Hardiness Zone</span>: {pointLayerData.phz.zone}</li>
 						{/if}
 						{#if pointLayerData.phz.trange}
-							<li><span class="font-mono text-stone-700">trange</span>: {pointLayerData.phz.trange}</li>
+							<li><span class="font-mono text-stone-700">Temperature Range</span>: {pointLayerData.phz.trange}°F</li>
 						{/if}
 					</ul>
 				</div>
 			{/if}
 			{#if pointLayerData.ecoregions}
 				<div class="rounded border border-stone-500 bg-stone-100 p-2">
-					<h4 class="font-semibold text-xs tracking-wide">Ecoregions</h4>
-					{#if pointLayerData.ecoregions.US_L3NAME}
-						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Layer III</span>: {pointLayerData.ecoregions.US_L3NAME}</p>
-						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Layer II</span>: {pointLayerData.ecoregions.NA_L2NAME}</p>
-						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Layer I</span>: {pointLayerData.ecoregions.NA_L1NAME}</p>
+					<h4 class="font-semibold text-xs tracking-wide">North American Ecoregions - Level III: </h4>
+					{#if pointLayerData.ecoregions.NA_L3NAME}
+						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Level 3</span>: {pointLayerData.ecoregions.NA_L3NAME}</p>
+						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Level 2</span>: {pointLayerData.ecoregions.NA_L2NAME}</p>
+						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Level 1</span>: {pointLayerData.ecoregions.NA_L1NAME}</p>
+						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700"><a href="https://sgi-gardenlibrary.maps.arcgis.com/sharing/rest/content/items/79bca4b771a04cb0b61176cf6f778565/data">Click here for Ecoregion Descriptions</a></span></p>
 					{/if}
 				</div>
 			{/if}
