@@ -39,7 +39,7 @@
 			{/if}
 			{#if pointLayerData.ecoregions}
 				<div class="rounded border border-stone-500 bg-stone-100 p-2">
-					<h4 class="font-semibold text-xs tracking-wide">North American Ecoregions - Level III: </h4>
+					<h4 class="font-semibold text-xs tracking-wide">North American Ecoregions - Level III</h4>
 					{#if pointLayerData.ecoregions.NA_L3NAME}
 						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Level 3</span>: {pointLayerData.ecoregions.NA_L3NAME}</p>
 						<p class="mt-1 text-[11px] leading-tight"><span class="font-mono text-stone-700">Level 2</span>: {pointLayerData.ecoregions.NA_L2NAME}</p>
