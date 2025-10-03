@@ -172,7 +172,7 @@
           // Check if this is EPA Level III Ecoregion data by looking for US_L3CODE property
           else if (feature?.properties?.US_L3CODE) {
             // Use official EPA colors for ecoregions
-            const ecoregionCode = String(feature.properties.NA_L3CODE);
+            const ecoregionCode = String(feature.properties.US_L3CODE);
             color = epaEcoregionColors[ecoregionCode] || '#A5DCF5'; // fallback to default color
           } 
           else {
