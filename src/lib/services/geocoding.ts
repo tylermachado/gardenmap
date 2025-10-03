@@ -12,7 +12,7 @@ export class GeocodingService {
     
     // Require zipcode
     if (!this.hasZipcode(query)) {
-      throw new Error('Please include a ZIP code in your search');
+      throw new Error('Please include a valid US ZIP code in your search (5-digit, e.g. 12345)');
     }
     
     try {

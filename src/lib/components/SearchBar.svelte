@@ -18,7 +18,7 @@
 
 	function handleSearch() {
 		if (searchQuery && !hasZipcode(searchQuery)) {
-			errorMessage = 'Please include a ZIP code in your search';
+			errorMessage = 'Please include a valid US ZIP code in your search (5-digit, e.g. 12345)';
 			hasError = true;
 			searchQuery = ''; // Clear the search
 			return;
