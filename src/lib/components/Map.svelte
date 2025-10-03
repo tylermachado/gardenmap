@@ -1,11 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { base } from '$app/paths';
-
   import { browser } from '$app/environment';
   import type * as L from 'leaflet';
   // @ts-ignore - Leaflet types are not always available
   import * as topojson from 'topojson-client';
+  
+  // Import color mappings
+  import usdaHardinessColors from '$lib/data/usda-hardiness-colors.json';
+  import epaEcoregionColorsData from '$lib/data/epa-ecoregion-colors.json';
 
   let mapContainer: HTMLDivElement;
   let map: L.Map | null = null;
@@ -31,6 +34,14 @@
 
         // Import Leaflet CSS
         await import('leaflet/dist/leaflet.css');
+
+        // Fix Leaflet's default marker icon paths for production builds
+        delete (LeafletLib.Icon.Default.prototype as any)._getIconUrl;
+        LeafletLib.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        });
 
         // Initialize the map
         map = LeafletLib.map(mapContainer).setView(center, zoom);
@@ -102,6 +113,13 @@
     '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
   ];
 
+  // Create EPA ecoregion color lookup map from the array data
+  const epaEcoregionColors: { [key: string]: string } = {};
+  epaEcoregionColorsData.forEach(item => {
+    epaEcoregionColors[item.code] = item.hex;
+  });
+
+
   // Reactively reload GeoJSON when shapefiles array changes
   $: if (shapefiles && map && LeafletLib) {
     loadShapefiles();
@@ -143,19 +161,35 @@
         
         const styleFunction = (feature?: GeoJSON.Feature): L.PathOptions => {
           const unique = feature?.properties?.zone ?? feature?.properties?.US_L3CODE ?? 0;
-          const hash = String(unique)
-            .split('')
-            .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-          const color = colorArray[hash % colorArray.length];
+          let color: string;
+          
+          // Check if this is Plant Hardiness Zone data by looking for zone property
+          if (feature?.properties?.zone && typeof feature.properties.zone === 'string') {
+            // Use official USDA colors for hardiness zones
+            const zoneValue = feature.properties.zone as string;
+            color = usdaHardinessColors[zoneValue as keyof typeof usdaHardinessColors] || usdaHardinessColors['1a']; // fallback to zone 1a
+          } 
+          // Check if this is EPA Level III Ecoregion data by looking for US_L3CODE property
+          else if (feature?.properties?.US_L3CODE) {
+            // Use official EPA colors for ecoregions
+            const ecoregionCode = String(feature.properties.US_L3CODE);
+            color = epaEcoregionColors[ecoregionCode] || '#A5DCF5'; // fallback to default color
+          } 
+          else {
+            // Use custom color array for other layers
+            const hash = String(unique)
+              .split('')
+              .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            color = colorArray[hash % colorArray.length];
+          }
           
           // Adjust opacity based on layer index for better overlay visualization
-          const baseOpacity = 0.7 - (i * 0.1); // Decrease opacity for each subsequent layer
           const baseFillOpacity = 0.4 - (i * 0.1);
           
           return {
             color: color,
-            weight: 2,
-            opacity: Math.max(baseOpacity, 0.3), // Minimum opacity of 0.3
+            weight: 0, // Eliminate borders by setting weight to 0
+            opacity: 0, // Make borders completely transparent
             fillColor: color,
             fillOpacity: Math.max(baseFillOpacity, 0.1) // Minimum fill opacity of 0.1
           };
