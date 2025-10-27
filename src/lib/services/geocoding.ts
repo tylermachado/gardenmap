@@ -1,15 +1,37 @@
 import type { SearchResult } from '../types/layer.js';
 
 export class GeocodingService {
+  private static lastRequestTime = 0;
+  private static readonly RATE_LIMIT_MS = 1000; // 1 second between requests
+  private static readonly USER_AGENT = 'GardenMap/1.0 (https://github.com/tylermachado/gardenmap)';
+
   private static hasZipcode(query: string): boolean {
     // Match 5-digit or 5+4 digit ZIP codes
     const zipRegex = /\b\d{5}(?:-\d{4})?\b/;
     return zipRegex.test(query);
   }
 
+  private static async rateLimitedFetch(url: string): Promise<Response> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.RATE_LIMIT_MS) {
+      const delay = this.RATE_LIMIT_MS - timeSinceLastRequest;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    this.lastRequestTime = Date.now();
+    
+    return fetch(url, {
+      headers: {
+        'User-Agent': this.USER_AGENT
+      }
+    });
+  }
+
   static async reverseGeocode(lat: number, lon: number): Promise<SearchResult | null> {
     try {
-      const response = await fetch(
+      const response = await this.rateLimitedFetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&countrycodes=us`
       );
       
@@ -40,7 +62,7 @@ export class GeocodingService {
     }
     
     try {
-      const response = await fetch(
+      const response = await this.rateLimitedFetch(
         `https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&addressdetails=1&q=${encodeURIComponent(query)}`
       );
       

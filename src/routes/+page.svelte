@@ -109,26 +109,20 @@
 					// Reverse geocode to get address with ZIP code
 					const reverseResult = await GeocodingService.reverseGeocode(lat, lng);
 					
-					if (reverseResult && reverseResult.address && reverseResult.address.postcode) {
-						// Set the search query to the found ZIP code
-						searchQuery = reverseResult.address.postcode;
+					if (reverseResult && reverseResult.address) {
+						// Use the address data directly from reverse geocoding
+						searchResultAddress = reverseResult.address;
 						
-						// Get the ZIP code center point for address data, but keep marker at exact location
-						const zipResult = await GeocodingService.searchLocation(searchQuery);
-						if (zipResult) {
-							// Use ZIP code address data but keep exact user coordinates
-							searchResultAddress = zipResult.address;
-							
-							// Place marker at user's exact location, not ZIP center
-							mapRef?.addSearchMarker(lat, lng, 'Your Location');
-							
-							// Resolve point data using exact coordinates
-							await resolvePointData(lat, lng);
-						} else {
-							// Fallback if ZIP search fails
-							mapRef?.addSearchMarker(lat, lng, 'Your Location');
-							await resolvePointData(lat, lng);
+						// Set the search query to the found ZIP code if available
+						if (reverseResult.address.postcode) {
+							searchQuery = reverseResult.address.postcode;
 						}
+						
+						// Place marker at user's exact location
+						mapRef?.addSearchMarker(lat, lng, 'Your Location');
+						
+						// Resolve point data using exact coordinates
+						await resolvePointData(lat, lng);
 					} else {
 						// Fallback: just update the map and resolve point data directly
 						mapRef?.addSearchMarker(lat, lng, 'Your Location');
