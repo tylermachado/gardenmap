@@ -91,7 +91,7 @@
 		'#8b0000'
 	];
 
-	function findMyLocation() {
+	async function findMyLocation() {
 		// Implement the logic to find and center the map on the user's location
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
@@ -102,9 +102,44 @@
 			});
 			
 			// Add event listener for successful location find
-			map.on('locationfound', (e: L.LocationEvent) => {
+			map.on('locationfound', async (e: L.LocationEvent) => {
 				const { lat, lng } = e.latlng;
-				mapRef?.addSearchMarker(lat, lng, 'Your Location');
+				
+				try {
+					// Reverse geocode to get address with ZIP code
+					const reverseResult = await GeocodingService.reverseGeocode(lat, lng);
+					
+					if (reverseResult && reverseResult.address && reverseResult.address.postcode) {
+						// Set the search query to the found ZIP code
+						searchQuery = reverseResult.address.postcode;
+						
+						// Get the ZIP code center point for address data, but keep marker at exact location
+						const zipResult = await GeocodingService.searchLocation(searchQuery);
+						if (zipResult) {
+							// Use ZIP code address data but keep exact user coordinates
+							searchResultAddress = zipResult.address;
+							
+							// Place marker at user's exact location, not ZIP center
+							mapRef?.addSearchMarker(lat, lng, 'Your Location');
+							
+							// Resolve point data using exact coordinates
+							await resolvePointData(lat, lng);
+						} else {
+							// Fallback if ZIP search fails
+							mapRef?.addSearchMarker(lat, lng, 'Your Location');
+							await resolvePointData(lat, lng);
+						}
+					} else {
+						// Fallback: just update the map and resolve point data directly
+						mapRef?.addSearchMarker(lat, lng, 'Your Location');
+						await resolvePointData(lat, lng);
+					}
+				} catch (error) {
+					console.error('Failed to reverse geocode location:', error);
+					// Fallback: just update the map and resolve point data directly
+					mapRef?.addSearchMarker(lat, lng, 'Your Location');
+					await resolvePointData(lat, lng);
+				}
 			});
 			
 			// Add event listener for location error

@@ -7,6 +7,30 @@ export class GeocodingService {
     return zipRegex.test(query);
   }
 
+  static async reverseGeocode(lat: number, lon: number): Promise<SearchResult | null> {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&countrycodes=us`
+      );
+      
+      if (!response.ok) return null;
+      
+      const result = await response.json();
+      
+      if (!result || !result.address) return null;
+      
+      return {
+        lat,
+        lon,
+        address: result.address,
+        display_name: result.display_name
+      };
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+      return null;
+    }
+  }
+
   static async searchLocation(query: string): Promise<SearchResult | null> {
     if (!query) return null;
     

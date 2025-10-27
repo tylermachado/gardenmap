@@ -15,6 +15,7 @@
 		<h3>
 			{[
 				searchResultAddress.suburb,
+				searchResultAddress.town,
 				searchResultAddress.city,
 				searchResultAddress.state
 			].filter(Boolean).join(', ')}
