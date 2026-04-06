@@ -43,6 +43,7 @@ onMount(() => {
       map = LeafletLib.map(mapContainer!).setView(center, zoom);
       LeafletLib.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '© OpenStreetMap, © CARTO',
+        minZoom: 4,
         maxZoom: 19
       }).addTo(map);
       const initialCenter = [...center] as [number, number];
