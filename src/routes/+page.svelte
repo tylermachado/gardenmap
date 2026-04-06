@@ -175,9 +175,9 @@
 />
 
 <!-- Responsive: map on top, layers below on mobile; side-by-side on desktop -->
-<div class="mt-4 flex flex-col sm:grid sm:grid-cols-5 gap-0 border-t border-stone-700 bg-stone-300 flex-1">
+<div class="mt-4 flex flex-col sm:grid sm:grid-cols-4 gap-0 border-t border-stone-700 bg-stone-300 flex-1">
 	<!-- Map column: always first, left on desktop -->
-	<div class="map-wrapper sm:col-span-3 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden">
+	<div class="map-wrapper sm:col-span-2 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden">
 		<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
 			<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} />
 		</div>
