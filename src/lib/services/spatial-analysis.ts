@@ -1,3 +1,5 @@
+import * as topojson from 'topojson-client';
+import type { Topology } from 'topojson-specification';
 import type { LayerOption } from '../types/layer.js';
 
 export class SpatialAnalysisService {
@@ -44,9 +46,20 @@ export class SpatialAnalysisService {
     try {
       const res = await fetch(normalized);
       if (!res.ok) return null;
-      const data = await res.json() as GeoJSON.FeatureCollection;
-      this.layerGeoCache[normalized] = data;
-      return data;
+      const data = await res.json();
+
+      let fc: GeoJSON.FeatureCollection;
+      if (data.type === 'Topology') {
+        // TopoJSON — convert the first object to GeoJSON
+        const topo = data as Topology;
+        const objectKey = Object.keys(topo.objects)[0];
+        fc = topojson.feature(topo, topo.objects[objectKey]) as GeoJSON.FeatureCollection;
+      } else {
+        fc = data as GeoJSON.FeatureCollection;
+      }
+
+      this.layerGeoCache[normalized] = fc;
+      return fc;
     } catch (e) {
       console.error('Failed fetching layer', layerPath, e);
       return null;
@@ -59,7 +72,7 @@ export class SpatialAnalysisService {
   
   private static keyFromPath(path: string): string {
     const file = path.split('/').pop() || '';
-    return file.replace(/\.geojson$/i, '');
+    return file.replace(/\.(geo)?json$/i, '');
   }
   
   private static isPolygonFeature(feature: GeoJSON.Feature): boolean {
