@@ -6,6 +6,8 @@
 	
 	import { GeocodingService } from '$lib/services/geocoding.js';
 	import { SpatialAnalysisService } from '$lib/services/spatial-analysis.js';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
@@ -43,6 +45,54 @@
 			pointLayerData = results;
 		} catch (e) {
 			console.error('Failed resolving point data', e);
+		}
+	}
+
+	function updateUrlWithLocation(lat: number, lng: number, zoom?: number): void {
+		const map = mapRef?.getMap();
+		const zoomLevel = zoom ?? map?.getZoom() ?? 10;
+		const params = new URLSearchParams();
+		params.set('lat', lat.toFixed(6));
+		params.set('lng', lng.toFixed(6));
+		params.set('zoom', zoomLevel.toString());
+		goto(`?${params.toString()}`, { replaceState: true });
+	}
+
+	// Load location from URL params on mount
+	$effect.pre(() => {
+		const searchParams = $page.url.searchParams;
+		const urlLat = searchParams.get('lat');
+		const urlLng = searchParams.get('lng');
+		const urlZoom = searchParams.get('zoom');
+		
+		if (urlLat && urlLng) {
+			const lat = parseFloat(urlLat);
+			const lng = parseFloat(urlLng);
+			const zoom = urlZoom ? parseInt(urlZoom) : undefined;
+			if (!isNaN(lat) && !isNaN(lng)) {
+				// Only load if we haven't already set a location
+				if (!searchResultDisplayName) {
+					loadLocationFromUrl(lat, lng, zoom);
+				}
+			}
+		}
+	});
+
+	async function loadLocationFromUrl(lat: number, lng: number, zoom?: number) {
+		try {
+			const reverseResult = await GeocodingService.reverseGeocode(lat, lng);
+			if (reverseResult && reverseResult.address) {
+				searchResultAddress = reverseResult.address;
+				updateMarkerDisplayName();
+				const map = mapRef?.getMap();
+				if (map) {
+					map.setView([lat, lng], zoom ?? 10);
+				}
+				mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
+				await resolvePointData(lat, lng);
+			}
+		} catch (error) {
+			console.error('Failed to load location from URL:', error);
 		}
 	}
 
@@ -124,12 +174,16 @@
 						// Update marker on map
 						mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
 						
+						// Update URL with location
+						updateUrlWithLocation(lat, lng);
+						
 						// Resolve point data using exact coordinates
 						await resolvePointData(lat, lng);
 					} else {
 						// Fallback: just update the map and resolve point data directly
 						searchResultDisplayName = 'Your Location';
 						mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
+						updateUrlWithLocation(lat, lng);
 						await resolvePointData(lat, lng);
 					}
 				} catch (error) {
@@ -137,6 +191,7 @@
 					// Fallback: just update the map and resolve point data directly
 					searchResultDisplayName = 'Your Location';
 					mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
+					updateUrlWithLocation(lat, lng);
 					await resolvePointData(lat, lng);
 				}
 			});
@@ -167,6 +222,9 @@
 		// Update marker on map
 		mapRef?.updateSearchMarker(lat, lon, searchResultDisplayName);
 		
+		// Update URL with location
+		updateUrlWithLocation(lat, lon);
+		
 		await resolvePointData(lat, lon);
 	}
 
@@ -194,6 +252,8 @@
 				updateMarkerDisplayName();
 				// Update marker on map
 				mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
+				// Update URL with location
+				updateUrlWithLocation(lat, lng);
 			} else {
 				searchResultAddress = null;
 				searchResultDisplayName = '';
