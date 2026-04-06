@@ -58,7 +58,7 @@
 			<input
 				type="text"
 				bind:value={searchQuery}
-				placeholder="Search for a location with ZIP code..."
+				placeholder="Enter your zip code"
 				class="flex-1 rounded-l border border-r-0 px-3 py-2 focus:outline-none {errorMessage ? 'border-red-500' : 'border-lime-950'}"
 				onkeydown={handleKeydown}
 			/>
