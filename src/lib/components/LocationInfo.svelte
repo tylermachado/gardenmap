@@ -8,18 +8,26 @@
 	}
 
 	let { searchResultAddress, pointLayerData, numFlowers }: LocationInfoProps = $props();
+
+	const addressLabel = $derived(
+		[
+			searchResultAddress?.suburb,
+			searchResultAddress?.town,
+			searchResultAddress?.city,
+			searchResultAddress?.state
+		]
+			.filter(Boolean)
+			.join(', ')
+	);
+
+	const flowerSlots = $derived(
+		Array.from({ length: Math.max(3, Math.min(12, numFlowers)) }, (_, i) => i)
+	);
 </script>
 
 <div class="w-full items-start p-4 text-left">
 	{#if searchResultAddress}
-		<h3>
-			{[
-				searchResultAddress.suburb,
-				searchResultAddress.town,
-				searchResultAddress.city,
-				searchResultAddress.state
-			].filter(Boolean).join(', ')}
-		</h3>
+		<h3>{addressLabel}</h3>
 	{/if}
 	
 	<!-- Insert polygon data results -->
@@ -58,7 +66,7 @@
 <div class="w-full items-start p-4 text-left">
 	<h3 class="w-full items-start text-left">Plants That Thrive Here</h3>
 	<div class="grid w-full grid-cols-4 gap-2 p-4">
-		{#each Array(Math.max(3, Math.min(12, numFlowers))) as _, i}
+		{#each flowerSlots as _}
 			<div class="flex aspect-square items-center justify-center">
 				<span class="text-2xl">
 					<img src={PlantIcon1} alt="Plant" class="h-xl w-xl text-blue-500" />
