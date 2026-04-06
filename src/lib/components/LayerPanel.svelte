@@ -44,19 +44,6 @@
 	{/if}
 </div>
 
-<!-- On desktop, show the layer buttons as before -->
-<div class="hidden sm:block w-full">
-	{#each layers as layer}
-		<button
-			class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer) ? 'active bg-stone-100 font-bold' : 'cursor-pointer bg-stone-300 hover:bg-stone-200'}`}
-			onclick={() => onToggleLayer(layer)}
-		>
-			<span class="mr-2">{isLayerSelected(layer) ? '✓' : '○'}</span>
-			<span>{layer.name}</span>
-		</button>
-	{/each}
-</div>
-
 <!-- Layer descriptions -->
 <div class="w-full items-start p-4 text-left">
 	<h3>About This Data</h3>
