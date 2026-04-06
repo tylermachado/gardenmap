@@ -21,6 +21,7 @@
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
 	let searchResultAddress: any = $state(null);
+	let searchResultDisplayName: string = $state('');
 
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
@@ -112,26 +113,30 @@
 					if (reverseResult && reverseResult.address) {
 						// Use the address data directly from reverse geocoding
 						searchResultAddress = reverseResult.address;
+						updateMarkerDisplayName();
+						searchResultDisplayName = 'Your Location';
 						
 						// Set the search query to the found ZIP code if available
 						if (reverseResult.address.postcode) {
 							searchQuery = reverseResult.address.postcode;
 						}
 						
-						// Place marker at user's exact location
-						mapRef?.addSearchMarker(lat, lng, 'Your Location');
+						// Update marker on map
+						mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
 						
 						// Resolve point data using exact coordinates
 						await resolvePointData(lat, lng);
 					} else {
 						// Fallback: just update the map and resolve point data directly
-						mapRef?.addSearchMarker(lat, lng, 'Your Location');
+						searchResultDisplayName = 'Your Location';
+						mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
 						await resolvePointData(lat, lng);
 					}
 				} catch (error) {
 					console.error('Failed to reverse geocode location:', error);
 					// Fallback: just update the map and resolve point data directly
-					mapRef?.addSearchMarker(lat, lng, 'Your Location');
+					searchResultDisplayName = 'Your Location';
+					mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
 					await resolvePointData(lat, lng);
 				}
 			});
@@ -152,14 +157,62 @@
 
 		const { lat, lon, address, display_name } = result;
 		searchResultAddress = address; // Save address to state
+		searchResultDisplayName = display_name || 'Search Result';
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		
 		if (map) {
 			map.setView([lat, lon], 14);
-			mapRef?.addSearchMarker(lat, lon, display_name || 'Search Result');
 		}
 		
+		// Update marker on map
+		mapRef?.updateSearchMarker(lat, lon, searchResultDisplayName);
+		
 		await resolvePointData(lat, lon);
+	}
+
+	function updateMarkerDisplayName(): void {
+		if (searchResultAddress) {
+			searchResultDisplayName = [
+				searchResultAddress?.suburb,
+				searchResultAddress?.town,
+				searchResultAddress?.city,
+				searchResultAddress?.state
+			]
+				.filter(Boolean)
+				.join(', ');
+		} else {
+			searchResultDisplayName = '';
+		}
+	}
+
+	async function handleMapClick(lat: number, lng: number) {
+		// Try to reverse geocode for address information
+		try {
+			const reverseResult = await GeocodingService.reverseGeocode(lat, lng);
+			if (reverseResult && reverseResult.address) {
+				searchResultAddress = reverseResult.address;
+				updateMarkerDisplayName();
+				// Update marker on map
+				mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
+			} else {
+				searchResultAddress = null;
+				searchResultDisplayName = '';
+				mapRef?.updateSearchMarker(lat, lng, '');
+			}
+		} catch (error) {
+			console.error('Failed to reverse geocode clicked location:', error);
+			searchResultAddress = null;
+			searchResultDisplayName = '';
+			mapRef?.updateSearchMarker(lat, lng, '');
+		}
+		
+		// Clear search query since user clicked instead of searched
+		searchQuery = '';
+		
+		// Resolve spatial analysis data for this point
+		if (searchResultDisplayName) {
+			await resolvePointData(lat, lng);
+		}
 	}
 </script>
 
@@ -179,7 +232,7 @@
 	<!-- Map column: always first, left on desktop -->
 	<div class="map-wrapper sm:col-span-2 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden">
 		<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
-			<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} />
+			<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} />
 		</div>
 	</div>
 	<!-- Info/controls column: always second, right on desktop -->

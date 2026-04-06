@@ -13,7 +13,7 @@ import epaEcoregionColorsData from '$lib/data/epa-ecoregion-colors.json';
 const { center = [39.8283, -98.5795], zoom = 3.5, shapefiles = [], colorArray = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FCEA2B',
   '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
-] } = $props();
+], onMapClick } = $props();
 
 let mapContainer: HTMLDivElement | null = null;
 let map: L.Map | null = null;
@@ -67,6 +67,11 @@ onMount(() => {
         }
       });
       map.addControl(new HomeControl());
+      map.on('click', (e: L.LeafletMouseEvent) => {
+        if (onMapClick) {
+          onMapClick(e.latlng.lat, e.latlng.lng);
+        }
+      });
       if (shapefiles.length > 0) {
         await loadShapefiles();
       }
@@ -140,6 +145,18 @@ $effect(() => {
     loadShapefiles();
   }
 });
+
+export function updateSearchMarker(lat: number, lng: number, displayName: string): void {
+  if (!browser || !LeafletLib || !map) return;
+  if (searchMarker) {
+    map.removeLayer(searchMarker);
+    searchMarker = null;
+  }
+  if (displayName) {
+    searchMarker = LeafletLib.marker([lat, lng]).addTo(map);
+    searchMarker.bindPopup(displayName).openPopup();
+  }
+}
 
 async function loadGeoOrTopoJSON(
   url: string,
