@@ -170,7 +170,6 @@
 						// Use the address data directly from reverse geocoding
 						searchResultAddress = reverseResult.address;
 						updateMarkerDisplayName();
-						searchResultDisplayName = 'Your Location';
 						
 						// Set the search query to the found ZIP code if available
 						if (reverseResult.address.postcode) {
@@ -218,7 +217,7 @@
 
 		const { lat, lon, address, display_name } = result;
 		searchResultAddress = address; // Save address to state
-		searchResultDisplayName = display_name || 'Search Result';
+		updateMarkerDisplayName();
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		
 		if (map) {
