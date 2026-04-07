@@ -46,8 +46,9 @@
 
 <!-- Layer descriptions -->
 <div class="w-full items-start p-4 text-left">
-	<h3>About This Data</h3>
+	
 	{#if selectedLayers.length > 0}
+	<h3>About This Data</h3>
 		{#each selectedLayers as layer}
 			<div class="mb-2">
 				<p class="font-semibold text-sm">{layer.name}</p>

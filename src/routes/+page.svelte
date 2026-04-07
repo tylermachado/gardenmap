@@ -332,16 +332,16 @@
 	</div>
 	<!-- Info/controls column: always second, right on desktop -->
 	<div class="controls sm:col-span-2 flex flex-col items-start gap-0 bg-stone-300 w-full order-2 sm:order-2">
-		<LayerPanel 
-			layers={layers}
-			selectedLayers={selectedLayers}
-			onToggleLayer={toggleLayer}
-		/>
-		
 		<LocationInfo 
 			searchResultAddress={searchResultAddress}
 			pointLayerData={pointLayerData}
 			numFlowers={numFlowers}
+		/>
+
+		<LayerPanel 
+			layers={layers}
+			selectedLayers={selectedLayers}
+			onToggleLayer={toggleLayer}
 		/>
 	</div>
 </div>
