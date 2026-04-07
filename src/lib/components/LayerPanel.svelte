@@ -55,6 +55,6 @@
 			</div>
 		{/each}
 	{:else}
-		<p class="text-left text-sm text-gray-700">Select one or more layers to view their data.</p>
+		<p class="text-left text-sm text-gray-700">Select a layer to view its data.</p>
 	{/if}
 </div>

@@ -102,12 +102,14 @@
 		return selectedLayers.some(selected => selected.name === layer.name);
 	}
 
-	// Toggle layer selection
+	// Toggle layer selection (single layer only)
 	function toggleLayer(layer: LayerOption): void {
 		if (isLayerSelected(layer)) {
-			selectedLayers = selectedLayers.filter(selected => selected.name !== layer.name);
+			// If clicking the same layer, deselect it
+			selectedLayers = [];
 		} else {
-			selectedLayers = [...selectedLayers, layer];
+			// If clicking a different layer, select only that layer
+			selectedLayers = [layer];
 		}
 		
 		// Close dropdown after selection
