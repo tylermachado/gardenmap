@@ -237,6 +237,7 @@
 		if (searchResultAddress) {
 			searchResultDisplayName = [
 				searchResultAddress?.suburb,
+				searchResultAddress?.village,
 				searchResultAddress?.town,
 				searchResultAddress?.city,
 				searchResultAddress?.state

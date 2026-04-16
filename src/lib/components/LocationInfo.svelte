@@ -20,6 +20,7 @@
 	const addressLabel = $derived(
 		[
 			searchResultAddress?.suburb,
+			searchResultAddress?.village,
 			searchResultAddress?.town,
 			searchResultAddress?.city,
 			searchResultAddress?.state
@@ -46,11 +47,15 @@
 					<h4 class="font-semibold text-xs tracking-wide">USDA 2023 Plant Hardiness Zone</h4>
 					<ul class="mt-1 text-[11px] leading-tight">
 						{#if pointLayerData.phz.zone}
-							<li class="font-mono"><span class="text-stone-700">Hardiness Zone</span>: {pointLayerData.phz.zone}</li>
+							<li class="font-mono"><span class="text-stone-700">USDA 2023 Plant Hardiness Zone</span>: {pointLayerData.phz.zone}</li>
 						{/if}
 						{#if pointLayerData.phz.trange}
-							<li class="font-mono"><span class="text-stone-700">Temperature Range</span>: {pointLayerData.phz.trange}°F</li>
+							<li class="font-mono"><span class="text-stone-700">Average Annual Low Temperature</span>: {pointLayerData.phz.trange}°F</li>
 						{/if}
+						{#if pointLayerData.phz.zone}
+							<li class="font-mono"><span class="text-stone-700"><a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="underline">More information about USDA Plant Hardiness Zones</a></span></li>
+						{/if}
+						
 					</ul>
 				</div>
 			{/if}
@@ -72,7 +77,8 @@
 </div>
 
 <div class="w-full items-start p-4 text-left">
-	<h3 class="w-full items-start text-left">Plants That Thrive Here</h3>
+	<h3 class="w-full items-start text-left">Candidate Plants</h3>
+	<p>native to this ecoregion <em>and</em> generally considered winter hardy in this zone</p>
 	<div class="grid w-full grid-cols-4 gap-2 p-4">
 		{#each flowerSlots as _}
 			<div class="flex aspect-square items-center justify-center">
