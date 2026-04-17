@@ -1,13 +1,12 @@
 <script lang="ts">
-	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
+	import CandidatePlants from '$lib/components/CandidatePlants.svelte';
 
 	interface LocationInfoProps {
 		searchResultAddress: any;
 		pointLayerData: Record<string, Record<string, any>>;
-		numFlowers: number;
 	}
 
-	let { searchResultAddress, pointLayerData, numFlowers }: LocationInfoProps = $props();
+	let { searchResultAddress, pointLayerData }: LocationInfoProps = $props();
 
 	function toTitleCase(str: string): string {
 		return str
@@ -29,9 +28,6 @@
 			.join(', ')
 	);
 
-	const flowerSlots = $derived(
-		Array.from({ length: Math.max(3, Math.min(12, numFlowers)) }, (_, i) => i)
-	);
 </script>
 
 <div class="w-full items-start p-4 text-left">
@@ -76,16 +72,6 @@
 	{/if}
 </div>
 
-<div class="w-full items-start p-4 text-left">
-	<h3 class="w-full items-start text-left">Candidate Plants</h3>
-	<p>native to this ecoregion <em>and</em> generally considered winter hardy in this zone</p>
-	<div class="grid w-full grid-cols-4 gap-2 p-4">
-		{#each flowerSlots as _}
-			<div class="flex aspect-square items-center justify-center">
-				<span class="text-2xl">
-					<img src={PlantIcon1} alt="Plant" class="h-xl w-xl text-blue-500" />
-				</span>
-			</div>
-		{/each}
-	</div>
-</div>
+<CandidatePlants
+	zipcode={searchResultAddress?.postcode}
+/>
