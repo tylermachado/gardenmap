@@ -10,17 +10,16 @@
 	interface CandidatePlantsProps {
 		ecoregion: string | undefined;
 		phzZone: string | undefined;
-        zipcode: string | undefined;
 	}
 
-	let { ecoregion, phzZone, zipcode }: CandidatePlantsProps = $props();
+	let { ecoregion, phzZone }: CandidatePlantsProps = $props();
 
 	let plants: Plant[] = $state([]);
 	let loading = $state(false);
 	let error: string | null = $state(null);
 
 	$effect(() => {
-		if (!ecoregion || !phzZone || !zipcode) {
+		if (!ecoregion || !phzZone) {
 			plants = [];
 			return;
 		}
@@ -28,8 +27,7 @@
 		loading = true;
 		error = null;
 
-		// TODO: replace with real API endpoint
-		fetch(`http://100.109.30.31:8000/plants?zipcode=${encodeURIComponent(zipcode)}&offset=0&limit=15`)
+		fetch(`/api/plants?offset=0&ecoregion=${encodeURIComponent(ecoregion)}&zone=${encodeURIComponent(phzZone)}`)
 			.then((res) => {
 				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 				return res.json() as Promise<Plant[]>;
