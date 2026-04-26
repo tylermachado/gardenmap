@@ -48,7 +48,7 @@
 							<li class="font-mono"><span class="text-stone-700">USDA 2023 Plant Hardiness Zone</span>: {pointLayerData.phz.zone}</li>
 						{/if}
 						{#if pointLayerData.phz.trange}
-							<li class="font-mono"><span class="text-stone-700">Average Annual Low Temperature</span>: {pointLayerData.phz.trange}°F</li>
+							<li class="font-mono"><span class="text-stone-700">Average Annual Lowest Temperature</span>: {pointLayerData.phz.trange}°F</li>
 						{/if}
 						{#if pointLayerData.phz.zone}
 							<li class="font-mono"><span class="text-stone-700"><a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="underline">More information about USDA Plant Hardiness Zones</a></span></li>
