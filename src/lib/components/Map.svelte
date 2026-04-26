@@ -60,6 +60,7 @@ onMount(() => {
           container.style.justifyContent = 'center';
           container.title = 'Reset view';
           container.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M9 21V9h6v12"/></svg>`;
+          LeafletLib.DomEvent.disableClickPropagation(container);
           container.onclick = function () {
             map!.setView(initialCenter, initialZoom);
           };
