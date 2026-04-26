@@ -55,8 +55,8 @@
 </script>
 
 <div class="w-full items-start p-4 text-left">
-	<h3 class="w-full items-start text-left">Candidate Plants</h3>
-	<p>native to this ecoregion <em>and</em> generally considered winter hardy in this zone</p>
+	<h3 class="w-full items-start text-left">Native Plant Species</h3>
+	<p>Plants native to this ecoregion <em>and</em> generally considered winter hardy in this zone</p>
 
 	{#if loading}
 		<p class="mt-2 text-[11px] italic text-stone-600">Loading plants…</p>

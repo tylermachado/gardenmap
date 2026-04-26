@@ -62,9 +62,9 @@
 					<h4 class="font-semibold text-xs tracking-wide">North American Ecoregions - Level III</h4>
 					{#if pointLayerData.ecoregions.NA_L3NAME}
 						<ul class="mt-1 text-[11px] leading-tight space-y-1">
-							<li class="font-mono"><span class="text-stone-700">Level 3</span>: {toTitleCase(pointLayerData.ecoregions.NA_L3NAME)}</li>
-							<li class="font-mono"><span class="text-stone-700">Level 2</span>: {toTitleCase(pointLayerData.ecoregions.NA_L2NAME)}</li>
-							<li class="font-mono"><span class="text-stone-700">Level 1</span>: {toTitleCase(pointLayerData.ecoregions.NA_L1NAME)}</li>
+							<li class="font-mono"><span class="text-stone-700">Level 1</span>: {pointLayerData.ecoregions.NA_L1CODE} {toTitleCase(pointLayerData.ecoregions.NA_L1NAME)}</li>
+							<li class="font-mono"><span class="text-stone-700">Level 2</span>: {pointLayerData.ecoregions.NA_L2CODE} {toTitleCase(pointLayerData.ecoregions.NA_L2NAME)}</li>
+							<li class="font-mono"><span class="text-stone-700">Level 3</span>: {pointLayerData.ecoregions.NA_L3CODE} {toTitleCase(pointLayerData.ecoregions.NA_L3NAME)}</li>
 							<li class="font-mono"><span class="text-stone-700"><a href="https://sgi-gardenlibrary.maps.arcgis.com/sharing/rest/content/items/79bca4b771a04cb0b61176cf6f778565/data" target="_blank" rel="noopener noreferrer" class="underline">View detailed Ecoregion Descriptions</a></span></li>
 						</ul>
 					{/if}
