@@ -40,6 +40,8 @@ export class GeocodingService {
       const result = await response.json();
       
       if (!result || !result.address) return null;
+
+      if (result.address.country_code !== 'us') return null;
       
       return {
         lat,

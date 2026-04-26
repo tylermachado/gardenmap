@@ -198,8 +198,10 @@
 	}
 
 	async function handleMapClick(lat: number, lng: number) {
+		const result = await GeocodingService.reverseGeocode(lat, lng);
+		if (!result) return; // not a US address, ignore the click
 		searchQuery = '';
-		await setLocation(lat, lng);
+		await setLocation(lat, lng, result.address);
 	}
 
 	function handleLocationReset() {
