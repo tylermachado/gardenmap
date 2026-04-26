@@ -8,18 +8,19 @@
 	}
 
 	interface CandidatePlantsProps {
-		ecoregion: string | undefined;
-		phzZone: string | undefined;
+		ecoregion?: string;
+		phzZone?: string;
+		zipcode?: string;
 	}
 
-	let { ecoregion, phzZone }: CandidatePlantsProps = $props();
+	let { ecoregion, phzZone, zipcode }: CandidatePlantsProps = $props();
 
 	let plants: Plant[] = $state([]);
 	let loading = $state(false);
 	let error: string | null = $state(null);
 
 	$effect(() => {
-		if (!ecoregion || !phzZone) {
+		if (!ecoregion && !phzZone && !zipcode) {
 			plants = [];
 			return;
 		}
@@ -27,7 +28,12 @@
 		loading = true;
 		error = null;
 
-		fetch(`/api/plants?offset=0&ecoregion=${encodeURIComponent(ecoregion)}&zone=${encodeURIComponent(phzZone)}`)
+		const params = new URLSearchParams({ offset: '0' });
+		if (ecoregion) params.set('ecoregion', ecoregion);
+		if (phzZone) params.set('zone', phzZone);
+		if (zipcode) params.set('zipcode', zipcode);
+
+		fetch(`/api/plants?${params.toString()}`)
 			.then((res) => {
 				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 				return res.json() as Promise<Plant[]>;
@@ -57,12 +63,12 @@
 		<div class="grid w-full grid-cols-4 gap-2 p-4">
 			{#each plants as plant (plant.id)}
 				<div class="flex aspect-square flex-col items-center justify-center gap-1">
-					<img src={PlantIcon1} alt={plant.name} class="h-xl w-xl" />
-					<span class="text-center text-[10px] leading-tight">{plant.name}</span>
+					<img src={PlantIcon1} alt={plant.scientific_name} class="h-xl w-xl" />
+					<span class="text-center text-[10px] leading-tight">{plant.scientific_name}</span>
 				</div>
 			{/each}
 		</div>
-	{:else if ecoregion && phzZone}
+	{:else if ecoregion || phzZone || zipcode}
 		<p class="mt-2 text-[11px] italic text-stone-600">No candidate plants found.</p>
 	{/if}
 </div>

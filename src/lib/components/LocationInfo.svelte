@@ -73,6 +73,5 @@
 </div>
 
 <CandidatePlants
-	ecoregion={pointLayerData.ecoregions?.NA_L3NAME}
-	phzZone={pointLayerData.phz?.zone}
+	zipcode={searchResultAddress?.postcode}
 />

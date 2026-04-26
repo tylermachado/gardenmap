@@ -4,17 +4,23 @@ export const GET: RequestHandler = async ({ url }) => {
 	const offset = url.searchParams.get('offset') || '0';
 	const ecoregion = url.searchParams.get('ecoregion');
 	const zone = url.searchParams.get('zone');
+	const zipcode = url.searchParams.get('zipcode');
 
 	try {
-		const response = await fetch(
-			`http://100.109.30.31:8000/plants?offset=${offset}&ecoregion=${encodeURIComponent(ecoregion || '')}&zone=${encodeURIComponent(zone || '')}`
-		);
+		const params = new URLSearchParams({ offset });
+		if (ecoregion) params.set('ecoregion', ecoregion);
+		if (zone) params.set('zone', zone);
+		if (zipcode) params.set('zipcode', zipcode);
+        params.set('limit', '10');
+
+		const response = await fetch(`http://100.109.30.31:8000/plants?${params.toString()}`);
 
 		if (!response.ok) {
 			throw new Error(`API request failed: ${response.status}`);
 		}
 
 		const data = await response.json();
+		console.log('plants data:', `http://100.109.30.31:8000/plants?${params.toString()}`);
 		return new Response(JSON.stringify(data), {
 			headers: { 'Content-Type': 'application/json' }
 		});
