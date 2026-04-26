@@ -1,4 +1,4 @@
-import type { SearchResult } from '../types/layer.js';
+import type { SearchResult, NominatimAddress } from '../types/layer.js';
 
 export class GeocodingService {
   private static lastRequestTime = 0;

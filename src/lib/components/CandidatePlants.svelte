@@ -4,7 +4,10 @@
 	interface Plant {
 		id: string;
 		name: string;
-		scientificName?: string;
+		scientific_name?: string;
+        common_name: Array<
+            string
+        >;
 	}
 
 	interface CandidatePlantsProps {
@@ -60,11 +63,14 @@
 	{:else if error}
 		<p class="mt-2 text-[11px] italic text-red-600">{error}</p>
 	{:else if plants.length > 0}
-		<div class="grid w-full grid-cols-4 gap-2 p-4">
+		<div class="grid w-full grid-cols-5 gap-2 p-4">
 			{#each plants as plant (plant.id)}
 				<div class="flex aspect-square flex-col items-center justify-center gap-1">
 					<img src={PlantIcon1} alt={plant.scientific_name} class="h-xl w-xl" />
-					<span class="text-center text-[10px] leading-tight">{plant.scientific_name}</span>
+					<span class="text-center text-[12px] leading-tight">{plant.scientific_name}</span>
+                   <span class="text-center text-[10px] leading-tight italic">
+                        {plant.common_name.join(', ')}
+                    </span>
 				</div>
 			{/each}
 		</div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { LayerOption } from '../types/layer.js';
+	import { isLayerSelected } from '../types/layer.js';
 
 	interface LayerPanelProps {
 		layers: LayerOption[];
@@ -9,11 +10,6 @@
 
 	let { layers, selectedLayers, onToggleLayer }: LayerPanelProps = $props();
 	let showLayersDropdown: boolean = $state(false);
-
-	// Helper function to check if layer is selected
-	function isLayerSelected(layer: LayerOption): boolean {
-		return selectedLayers.some(selected => selected.name === layer.name);
-	}
 </script>
 
 <!-- On mobile, show a dropdown for layers -->
@@ -33,10 +29,10 @@
 		<div class="absolute left-0 right-0 mt-2 z-10 bg-stone-100 border border-stone-700 rounded shadow-lg">
 			{#each layers as layer}
 				<button
-					class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
+					class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer, selectedLayers) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
 					onclick={() => onToggleLayer(layer)}
 				>
-					<span class="mr-2">{isLayerSelected(layer) ? '✓' : '○'}</span>
+					<span class="mr-2">{isLayerSelected(layer, selectedLayers) ? '✓' : '○'}</span>
 					<span>{layer.name}</span>
 				</button>
 			{/each}

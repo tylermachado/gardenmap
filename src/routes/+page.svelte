@@ -11,7 +11,8 @@
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
-	import type { LayerOption } from '$lib/types/layer.js';
+	import type { LayerOption, NominatimAddress } from '$lib/types/layer.js';
+	import { isLayerSelected } from '$lib/types/layer.js';
 
 	let { data }: { data: PageData } = $props();
 
@@ -23,22 +24,23 @@
 
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
-	let searchResultAddress: any = $state(null);
-	let searchResultDisplayName: string = $state('');
+	let searchResultAddress = $state<NominatimAddress | null>(null);
+	let currentCoords: { lat: number; lng: number } | null = $state(null);
+	const searchResultDisplayName = $derived(
+		[
+			searchResultAddress?.suburb,
+			searchResultAddress?.village,
+			searchResultAddress?.town,
+			searchResultAddress?.city,
+			searchResultAddress?.state
+		]
+			.filter(Boolean)
+			.join(', ')
+	);
 
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
-	let propertiesConfig: Record<string, string[]> = $state({});
-
-	// Load properties.json once
-	(async () => {
-		try {
-			const res = await fetch('properties.json');
-			if (res.ok) propertiesConfig = await res.json();
-		} catch (e) {
-			console.error('Failed loading properties.json', e);
-		}
-	})();
+	const propertiesConfig = data.propertiesConfig;
 
 	async function resolvePointData(lat: number, lon: number) {
 		try {
@@ -72,7 +74,7 @@
 			const zoom = urlZoom ? parseInt(urlZoom) : undefined;
 			if (!isNaN(lat) && !isNaN(lng)) {
 				// Only load if we haven't already set a location
-				if (!searchResultDisplayName) {
+				if (!currentCoords) {
 					loadLocationFromUrl(lat, lng, zoom);
 				}
 			}
@@ -81,30 +83,19 @@
 
 	async function loadLocationFromUrl(lat: number, lng: number, zoom?: number) {
 		try {
-			const reverseResult = await GeocodingService.reverseGeocode(lat, lng);
-			if (reverseResult && reverseResult.address) {
-				searchResultAddress = reverseResult.address;
-				updateMarkerDisplayName();
-				const map = mapRef?.getMap();
-				if (map) {
-					map.setView([lat, lng], zoom ?? 10);
-				}
-				mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
-				await resolvePointData(lat, lng);
+			await setLocation(lat, lng);
+			const map = mapRef?.getMap();
+			if (map) {
+				map.setView([lat, lng], zoom ?? 10);
 			}
 		} catch (error) {
 			console.error('Failed to load location from URL:', error);
 		}
 	}
 
-	// Helper function to check if layer is selected
-	function isLayerSelected(layer: LayerOption): boolean {
-		return selectedLayers.some(selected => selected.name === layer.name);
-	}
-
 	// Toggle layer selection (single layer only)
 	function toggleLayer(layer: LayerOption): void {
-		if (isLayerSelected(layer)) {
+		if (isLayerSelected(layer, selectedLayers)) {
 			// If clicking the same layer, deselect it
 			selectedLayers = [];
 		} else {
@@ -149,60 +140,23 @@
 	];
 
 	async function findMyLocation() {
-		// Implement the logic to find and center the map on the user's location
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
-			map.locate({ 
-				setView: true, 
+			map.locate({
+				setView: true,
 				maxZoom: 16,
 				enableHighAccuracy: true
 			});
-			
-			// Add event listener for successful location find
-			map.on('locationfound', async (e: L.LocationEvent) => {
+
+			map.once('locationfound', async (e: L.LocationEvent) => {
 				const { lat, lng } = e.latlng;
-				
-				try {
-					// Reverse geocode to get address with ZIP code
-					const reverseResult = await GeocodingService.reverseGeocode(lat, lng);
-					
-					if (reverseResult && reverseResult.address) {
-						// Use the address data directly from reverse geocoding
-						searchResultAddress = reverseResult.address;
-						updateMarkerDisplayName();
-						
-						// Set the search query to the found ZIP code if available
-						if (reverseResult.address.postcode) {
-							searchQuery = reverseResult.address.postcode;
-						}
-						
-						// Update marker on map
-						mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
-						
-						// Update URL with location
-						updateUrlWithLocation(lat, lng);
-						
-						// Resolve point data using exact coordinates
-						await resolvePointData(lat, lng);
-					} else {
-						// Fallback: just update the map and resolve point data directly
-						searchResultDisplayName = 'Your Location';
-						mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
-						updateUrlWithLocation(lat, lng);
-						await resolvePointData(lat, lng);
-					}
-				} catch (error) {
-					console.error('Failed to reverse geocode location:', error);
-					// Fallback: just update the map and resolve point data directly
-					searchResultDisplayName = 'Your Location';
-					mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
-					updateUrlWithLocation(lat, lng);
-					await resolvePointData(lat, lng);
+				await setLocation(lat, lng);
+				if (searchResultAddress?.postcode) {
+					searchQuery = searchResultAddress.postcode;
 				}
 			});
-			
-			// Add event listener for location error
-			map.on('locationerror', (e: L.ErrorEvent) => {
+
+			map.once('locationerror', (e: L.ErrorEvent) => {
 				alert('Unable to find your location: ' + e.message);
 			});
 		}
@@ -215,70 +169,33 @@
 			return;
 		}
 
-		const { lat, lon, address, display_name } = result;
-		searchResultAddress = address; // Save address to state
-		updateMarkerDisplayName();
+		const { lat, lon, address } = result;
+		await setLocation(lat, lon, address);
 		const map: L.Map | null = mapRef?.getMap() ?? null;
-		
 		if (map) {
 			map.setView([lat, lon], 14);
 		}
-		
-		// Update marker on map
-		mapRef?.updateSearchMarker(lat, lon, searchResultDisplayName);
-		
-		// Update URL with location
-		updateUrlWithLocation(lat, lon);
-		
-		await resolvePointData(lat, lon);
 	}
 
-	function updateMarkerDisplayName(): void {
-		if (searchResultAddress) {
-			searchResultDisplayName = [
-				searchResultAddress?.suburb,
-				searchResultAddress?.village,
-				searchResultAddress?.town,
-				searchResultAddress?.city,
-				searchResultAddress?.state
-			]
-				.filter(Boolean)
-				.join(', ');
-		} else {
-			searchResultDisplayName = '';
-		}
+	async function setLocation(
+		lat: number,
+		lng: number,
+		address?: NominatimAddress | null
+	): Promise<void> {
+		const resolved =
+			address !== undefined
+				? address
+				: (await GeocodingService.reverseGeocode(lat, lng))?.address ?? null;
+		searchResultAddress = resolved;
+		currentCoords = { lat, lng };
+		mapRef?.addSearchMarker(lat, lng, searchResultDisplayName || undefined);
+		updateUrlWithLocation(lat, lng);
+		await resolvePointData(lat, lng);
 	}
 
 	async function handleMapClick(lat: number, lng: number) {
-		// Try to reverse geocode for address information
-		try {
-			const reverseResult = await GeocodingService.reverseGeocode(lat, lng);
-			if (reverseResult && reverseResult.address) {
-				searchResultAddress = reverseResult.address;
-				updateMarkerDisplayName();
-				// Update marker on map
-				mapRef?.updateSearchMarker(lat, lng, searchResultDisplayName);
-				// Update URL with location
-				updateUrlWithLocation(lat, lng);
-			} else {
-				searchResultAddress = null;
-				searchResultDisplayName = '';
-				mapRef?.updateSearchMarker(lat, lng, '');
-			}
-		} catch (error) {
-			console.error('Failed to reverse geocode clicked location:', error);
-			searchResultAddress = null;
-			searchResultDisplayName = '';
-			mapRef?.updateSearchMarker(lat, lng, '');
-		}
-		
-		// Clear search query since user clicked instead of searched
 		searchQuery = '';
-		
-		// Resolve spatial analysis data for this point
-		if (searchResultDisplayName) {
-			await resolvePointData(lat, lng);
-		}
+		await setLocation(lat, lng);
 	}
 </script>
 
@@ -318,12 +235,12 @@
 				<div class="absolute top-full right-0 mt-2 bg-stone-100 border border-stone-700 rounded shadow-lg w-48" style="z-index: 1001;">
 					{#each layers as layer}
 						<button
-							class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
+							class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer, selectedLayers) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
 							onclick={() => {
 								toggleLayer(layer);
 							}}
 						>
-							<span class="mr-2">{isLayerSelected(layer) ? '✓' : '○'}</span>
+							<span class="mr-2">{isLayerSelected(layer, selectedLayers) ? '✓' : '○'}</span>
 							<span>{layer.name}</span>
 						</button>
 					{/each}
@@ -336,7 +253,6 @@
 		<LocationInfo 
 			searchResultAddress={searchResultAddress}
 			pointLayerData={pointLayerData}
-			numFlowers={numFlowers}
 		/>
 
 		<LayerPanel 

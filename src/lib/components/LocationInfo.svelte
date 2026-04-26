@@ -1,8 +1,9 @@
 <script lang="ts">
 	import CandidatePlants from '$lib/components/CandidatePlants.svelte';
+	import type { NominatimAddress } from '$lib/types/layer.js';
 
 	interface LocationInfoProps {
-		searchResultAddress: any;
+		searchResultAddress: NominatimAddress | null;
 		pointLayerData: Record<string, Record<string, any>>;
 	}
 
@@ -22,7 +23,8 @@
 			searchResultAddress?.village,
 			searchResultAddress?.town,
 			searchResultAddress?.city,
-			searchResultAddress?.state
+			searchResultAddress?.state,
+			searchResultAddress?.postcode
 		]
 			.filter(Boolean)
 			.join(', ')
