@@ -13,13 +13,14 @@ import epaEcoregionColorsData from '$lib/data/epa-ecoregion-colors.json';
 const { center = [39.8283, -98.5795], zoom = 3.5, shapefiles = [], colorArray = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FCEA2B',
   '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
-], onMapClick } = $props();
+], onMapClick, onLocationReset } = $props();
 
 let mapContainer: HTMLDivElement | null = null;
 let map: L.Map | null = null;
 let LeafletLib: typeof L | null = null;
 let currentGeoJsonLayers: L.GeoJSON[] = [];
 let searchMarker: L.Marker | null = null;
+let isReplacingMarker = false;
 
 const epaEcoregionColors: { [key: string]: string } = {};
 epaEcoregionColorsData.forEach(item => {
@@ -228,13 +229,23 @@ export function setView(center: [number, number], zoom: number): void {
 export function addSearchMarker(lat: number, lng: number, popupText?: string): void {
   if (!browser || !LeafletLib || !map) return;
   if (searchMarker) {
+    isReplacingMarker = true;
     map.removeLayer(searchMarker);
     searchMarker = null;
+    isReplacingMarker = false;
   }
   searchMarker = LeafletLib.marker([lat, lng]).addTo(map);
   if (popupText) {
     searchMarker.bindPopup(popupText).openPopup();
   }
+  searchMarker.on('popupclose', () => {
+    if (isReplacingMarker) return;
+    if (searchMarker) {
+      map?.removeLayer(searchMarker);
+      searchMarker = null;
+    }
+    if (onLocationReset) onLocationReset();
+  });
 }
 export function removeSearchMarker(): void {
   if (!browser || !map || !searchMarker) return;

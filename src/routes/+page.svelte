@@ -8,6 +8,7 @@
 	import { SpatialAnalysisService } from '$lib/services/spatial-analysis.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { untrack } from 'svelte';
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
@@ -73,10 +74,13 @@
 			const lng = parseFloat(urlLng);
 			const zoom = urlZoom ? parseInt(urlZoom) : undefined;
 			if (!isNaN(lat) && !isNaN(lng)) {
-				// Only load if we haven't already set a location
-				if (!currentCoords) {
-					loadLocationFromUrl(lat, lng, zoom);
-				}
+				// untrack currentCoords so it doesn't retrigger this effect when reset;
+				// only URL changes should drive a reload from params
+				untrack(() => {
+					if (!currentCoords) {
+						loadLocationFromUrl(lat, lng, zoom);
+					}
+				});
 			}
 		}
 	});
@@ -197,6 +201,14 @@
 		searchQuery = '';
 		await setLocation(lat, lng);
 	}
+
+	function handleLocationReset() {
+		searchResultAddress = null;
+		currentCoords = null;
+		pointLayerData = {};
+		searchQuery = '';
+		goto('?', { replaceState: true });
+	}
 </script>
 
 <svelte:head>
@@ -215,7 +227,7 @@
 	<!-- Map column: always first, left on desktop -->
 	<div class="map-wrapper sm:col-span-2 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden relative">
 		<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
-			<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} />
+			<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
 		</div>
 		
 		<!-- Floating layers dropdown for desktop -->
