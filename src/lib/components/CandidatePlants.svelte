@@ -27,14 +27,14 @@
 		[...new Set(plants.flatMap((p) => p.sun_and_shade ?? []))].sort()
 	);
 	const moistureOptions = $derived(
-		[...new Set(plants.map((p) => p.moisture_use).filter(Boolean) as string[])].sort()
+		[...new Set(plants.flatMap((p) => p.soil_moisture ?? []))].sort()
 	);
 
 	const filteredPlants = $derived(
 		plants.filter((p) => {
 			if (filterPlantType && !(p.plant_type ?? []).includes(filterPlantType)) return false;
 			if (filterSunShade && !(p.sun_and_shade ?? []).includes(filterSunShade)) return false;
-			if (filterMoisture && p.moisture_use !== filterMoisture) return false;
+			if (filterMoisture && !(p.soil_moisture ?? []).includes(filterMoisture)) return false;
 			return true;
 		})
 	);
