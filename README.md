@@ -16,13 +16,27 @@ npm run preview      # preview production build
 
 ---
 
+## Configuration
+
+Copy `.env.example` to `.env` and set the values before running the app:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Description |
+|---|---|
+| `PLANTS_API_URL` | Base URL of the upstream plants API (no trailing slash). Consumed by `src/routes/api/plants/+server.ts`. |
+
+---
+
 ## API Reference
 
 ### `GET /api/plants`
 
 Proxy endpoint for the upstream plants API. Returns a list of plant records filtered by the provided geographic identifiers.
 
-**Base URL (upstream):** `http://100.109.30.31:8000/plants`
+**Base URL (upstream):** configured via the `PLANTS_API_URL` environment variable (see [Configuration](#configuration))
 
 #### Query Parameters
 
@@ -60,7 +74,7 @@ Returns a JSON array of [Plant](#plant) objects, or an error object on failure.
 
 ### Upstream Filter Parameters
 
-These query parameters are supported by the upstream API at `http://100.109.30.31:8000/plants` but are not yet forwarded by the SvelteKit proxy. They can be added to `+server.ts` as needed.
+These query parameters are supported by the upstream API (the URL configured via `PLANTS_API_URL`) but are not yet forwarded by the SvelteKit proxy. They can be added to `src/routes/api/plants/+server.ts` as needed.
 
 #### Identification
 

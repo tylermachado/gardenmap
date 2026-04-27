@@ -1,22 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
-
-	export interface Plant {
-		id: string;
-		name: string;
-		scientific_name?: string;
-		common_name: Array<string>;
-		plant_family?: string;
-		plant_type?: Array<string>;
-		height_min_ft?: number;
-		height_max_ft?: number;
-		growth_rate?: string;
-		lifespan?: Array<string>;
-		flowering_months?: Array<string>;
-		sun_and_shade?: Array<string>;
-		soil_moisture?: Array<string>;
-		image_url?: string;
-	}
+	import type { Plant } from '$lib/types/plant.js';
 
 	interface PlantModalProps {
 		plant: Plant;
@@ -24,6 +9,39 @@
 	}
 
 	let { plant, onclose }: PlantModalProps = $props();
+
+	let closeBtn: HTMLButtonElement;
+	let dialogEl: HTMLDivElement;
+
+	onMount(() => closeBtn?.focus());
+
+	function trapFocus(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			onclose();
+			return;
+		}
+		if (e.key !== 'Tab') return;
+		const focusable = Array.from(
+			dialogEl.querySelectorAll<HTMLElement>(
+				'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+			)
+		).filter((el) => !el.closest('[inert]'));
+		if (!focusable.length) return;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (e.shiftKey) {
+			if (document.activeElement === first) {
+				e.preventDefault();
+				last.focus();
+			}
+		} else {
+			if (document.activeElement === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
+	}
 
 	function heightRange(min?: number, max?: number): string {
 		if (min != null && max != null) return `${min}–${max} ft`;
@@ -43,6 +61,8 @@
 		aria-modal="true"
 		aria-label={plant.scientific_name}
 		tabindex="-1"
+		onkeydown={trapFocus}
+		bind:this={dialogEl}
 		class="relative w-[28rem] max-w-[92vw] rounded-xl bg-white p-6 shadow-2xl"
 	>
 		<button
@@ -50,6 +70,7 @@
 			class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
 			onclick={onclose}
 			aria-label="Close"
+			bind:this={closeBtn}
 		>
 			&times;
 		</button>

@@ -1,3 +1,4 @@
+import { PLANTS_API_URL } from '$env/static/private';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -13,14 +14,14 @@ export const GET: RequestHandler = async ({ url }) => {
 		if (zipcode) params.set('zipcode', zipcode);
         params.set('limit', '250');
 
-		const response = await fetch(`http://100.109.30.31:8000/plants?${params.toString()}`);
+		const response = await fetch(`${PLANTS_API_URL}?${params.toString()}`);
 
 		if (!response.ok) {
 			throw new Error(`API request failed: ${response.status}`);
 		}
 
 		const data = await response.json();
-		console.log('plants data:', `http://100.109.30.31:8000/plants?${params.toString()}`);
+		console.log('plants data:', `${PLANTS_API_URL}?${params.toString()}`);
 		return new Response(JSON.stringify(data), {
 			headers: { 'Content-Type': 'application/json' }
 		});

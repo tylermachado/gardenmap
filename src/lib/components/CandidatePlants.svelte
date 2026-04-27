@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
 	import PlantModal from '$lib/components/PlantModal.svelte';
-	import type { Plant } from '$lib/components/PlantModal.svelte';
+	import type { Plant } from '$lib/types/plant.js';
 
 	interface CandidatePlantsProps {
 		ecoregion?: string;
