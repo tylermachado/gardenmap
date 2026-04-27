@@ -1,15 +1,7 @@
 <script lang="ts">
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
-
-	interface Plant {
-		id: string;
-		name: string;
-		scientific_name?: string;
-		common_name: Array<string>;
-		plant_type?: Array<string>;
-		sun_and_shade?: Array<string>;
-		moisture_use?: string;
-	}
+	import PlantModal from '$lib/components/PlantModal.svelte';
+	import type { Plant } from '$lib/components/PlantModal.svelte';
 
 	interface CandidatePlantsProps {
 		ecoregion?: string;
@@ -22,6 +14,7 @@
 	let plants: Plant[] = $state([]);
 	let loading = $state(false);
 	let error: string | null = $state(null);
+	let selectedPlant: Plant | null = $state(null);
 
 	let filterPlantType = $state('');
 	let filterSunShade = $state('');
@@ -137,16 +130,24 @@
 
 		<div class="grid w-full grid-cols-5 gap-2 p-4">
 			{#each filteredPlants as plant (plant.id)}
-				<div class="flex aspect-square flex-col items-center justify-center gap-1">
-					<img src={PlantIcon1} alt={plant.scientific_name} class="h-xl w-xl" />
+				<button
+					type="button"
+					class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded p-1 hover:bg-stone-100"
+					onclick={() => (selectedPlant = plant)}
+				>
+					<img src={plant.image_url ?? PlantIcon1} alt={plant.scientific_name} class="h-xl w-xl" />
 					<span class="text-center text-[12px] leading-tight">{plant.scientific_name}</span>
 					<span class="text-center text-[10px] leading-tight italic">
 						{plant.common_name.join(', ')}
 					</span>
-				</div>
+				</button>
 			{/each}
 		</div>
 	{:else if ecoregion || phzZone || zipcode}
 		<p class="mt-2 text-[11px] italic text-stone-600">No candidate plants found.</p>
 	{/if}
 </div>
+
+{#if selectedPlant}
+	<PlantModal plant={selectedPlant} onclose={() => (selectedPlant = null)} />
+{/if}
