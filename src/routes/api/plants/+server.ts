@@ -11,7 +11,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		if (ecoregion) params.set('ecoregion', ecoregion);
 		if (zone) params.set('zone', zone);
 		if (zipcode) params.set('zipcode', zipcode);
-        params.set('limit', '10');
+        params.set('limit', '250');
 
 		const response = await fetch(`http://100.109.30.31:8000/plants?${params.toString()}`);
 
