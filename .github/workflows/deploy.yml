@@ -27,6 +27,8 @@ jobs:
         run: npm install
 
       - name: Build project
+        env:
+          PLANTS_API_URL: ${{ secrets.PLANTS_API_URL }}
         run: |
           export NODE_ENV=production
           npm run build
