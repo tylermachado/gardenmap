@@ -9,6 +9,8 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { untrack } from 'svelte';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
@@ -16,6 +18,10 @@
 	import { isLayerSelected } from '$lib/types/layer.js';
 
 	let { data }: { data: PageData } = $props();
+
+	// Evaluated once at init — shared links with coords skip the splash
+	const hasInitialUrlParams =
+		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng');
 
 	const layers = data.availableShapefiles;
 	let mapRef: Map | null = $state(null);
@@ -27,6 +33,7 @@
 	let numFlowers: number = $state(0);
 	let searchResultAddress = $state<NominatimAddress | null>(null);
 	let currentCoords: { lat: number; lng: number } | null = $state(null);
+	const showSplash = $derived(currentCoords === null && !hasInitialUrlParams);
 	const searchResultDisplayName = $derived(
 		[
 			searchResultAddress?.suburb,
@@ -218,61 +225,87 @@
 	<meta name="description" content="Explore geographic data with interactive maps" />
 </svelte:head>
 
-<SearchBar 
-	bind:searchQuery 
-	onSearch={searchLocation}
-	onFindLocation={findMyLocation}
-/>
-
-<!-- Responsive: map on top, layers below on mobile; side-by-side on desktop -->
-<div class="mt-4 flex flex-col sm:grid sm:grid-cols-4 gap-0 border-t border-stone-700 bg-stone-300 flex-1">
-	<!-- Map column: always first, left on desktop -->
-	<div class="map-wrapper sm:col-span-2 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden relative">
-		<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
-			<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
+{#if showSplash}
+	<div
+		class="flex-1 flex flex-col items-center justify-center bg-lime-950"
+		out:fly={{ y: -100, duration: 500, easing: cubicOut }}
+	>
+		<div class="w-full max-w-2xl px-8 flex flex-col items-center gap-8">
+			<h2 class="text-stone-100 text-center leading-tight" style="font-family: var(--font-serif); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700;">
+				Enter your zip code and find native plants for your area.
+			</h2>
+			<div class="w-full">
+				<SearchBar
+					variant="splash"
+					bind:searchQuery
+					onSearch={searchLocation}
+					onFindLocation={findMyLocation}
+				/>
+			</div>
 		</div>
-		
-		<!-- Floating layers dropdown for desktop -->
-		<div class="hidden sm:block absolute top-4 right-4" style="z-index: 1000;">
-			<button 
-				class="border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between shadow-md hover:bg-stone-50" 
-				onclick={() => showLayersDropdown = !showLayersDropdown} 
-				aria-haspopup="true" 
-				aria-expanded={showLayersDropdown}
-			>
-				<span>Layers ({selectedLayers.length})</span>
-				<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-				</svg>
-			</button>
-			{#if showLayersDropdown}
-				<div class="absolute top-full right-0 mt-2 bg-stone-100 border border-stone-700 rounded shadow-lg w-48" style="z-index: 1001;">
-					{#each layers as layer}
-						<button
-							class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer, selectedLayers) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
-							onclick={() => {
-								toggleLayer(layer);
-							}}
-						>
-							<span class="mr-2">{isLayerSelected(layer, selectedLayers) ? '✓' : '○'}</span>
-							<span>{layer.name}</span>
-						</button>
-					{/each}
+	</div>
+{:else}
+	<div
+		class="flex flex-col flex-1"
+		in:fly={{ y: 80, duration: 500, delay: 100, easing: cubicOut }}
+	>
+		<SearchBar
+			bind:searchQuery
+			onSearch={searchLocation}
+			onFindLocation={findMyLocation}
+		/>
+
+		<!-- Responsive: map on top, layers below on mobile; side-by-side on desktop -->
+		<div class="mt-4 flex flex-col sm:grid sm:grid-cols-4 gap-0 border-t border-stone-700 bg-stone-300 flex-1">
+			<!-- Map column: always first, left on desktop -->
+			<div class="map-wrapper sm:col-span-2 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden relative">
+				<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
+					<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
 				</div>
-			{/if}
+				
+				<!-- Floating layers dropdown for desktop -->
+				<div class="hidden sm:block absolute top-4 right-4" style="z-index: 1000;">
+					<button 
+						class="border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between shadow-md hover:bg-stone-50" 
+						onclick={() => showLayersDropdown = !showLayersDropdown} 
+						aria-haspopup="true" 
+						aria-expanded={showLayersDropdown}
+					>
+						<span>Layers ({selectedLayers.length})</span>
+						<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</button>
+					{#if showLayersDropdown}
+						<div class="absolute top-full right-0 mt-2 bg-stone-100 border border-stone-700 rounded shadow-lg w-48" style="z-index: 1001;">
+							{#each layers as layer}
+								<button
+									class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer, selectedLayers) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
+									onclick={() => {
+										toggleLayer(layer);
+									}}
+								>
+									<span class="mr-2">{isLayerSelected(layer, selectedLayers) ? '✓' : '○'}</span>
+									<span>{layer.name}</span>
+								</button>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
+			<!-- Info/controls column: always second, right on desktop -->
+			<div class="controls sm:col-span-2 flex flex-col items-start gap-0 bg-stone-300 w-full order-2 sm:order-2">
+				<LocationInfo 
+					searchResultAddress={searchResultAddress}
+					pointLayerData={pointLayerData}
+				/>
+
+				<LayerPanel 
+					layers={layers}
+					selectedLayers={selectedLayers}
+					onToggleLayer={toggleLayer}
+				/>
+			</div>
 		</div>
 	</div>
-	<!-- Info/controls column: always second, right on desktop -->
-	<div class="controls sm:col-span-2 flex flex-col items-start gap-0 bg-stone-300 w-full order-2 sm:order-2">
-		<LocationInfo 
-			searchResultAddress={searchResultAddress}
-			pointLayerData={pointLayerData}
-		/>
-
-		<LayerPanel 
-			layers={layers}
-			selectedLayers={selectedLayers}
-			onToggleLayer={toggleLayer}
-		/>
-	</div>
-</div>
+{/if}

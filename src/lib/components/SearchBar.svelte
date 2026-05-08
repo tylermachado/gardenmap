@@ -5,9 +5,12 @@
 		searchQuery: string;
 		onSearch: () => void;
 		onFindLocation: () => void;
+		variant?: 'default' | 'splash';
 	}
 
-	let { searchQuery = $bindable(''), onSearch, onFindLocation }: SearchBarProps = $props();
+	let { searchQuery = $bindable(''), onSearch, onFindLocation, variant = 'default' }: SearchBarProps = $props();
+
+	const isSplash = $derived(variant === 'splash');
 	let showValidationError = $state(false);
 
 	function hasZipcode(query: string): boolean {
@@ -44,14 +47,16 @@
 	}
 </script>
 
-<div class="mt-4 w-full flex flex-col gap-2 px-6">
+<div class={isSplash ? 'w-full flex flex-col gap-2' : 'mt-4 w-full flex flex-col gap-2 px-6'}>
 	<div class="flex flex-row gap-2 items-center">
 		<button
-			class="cursor-pointer border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100 whitespace-nowrap flex items-center justify-center sm:w-auto w-12 h-12"
+			class={isSplash
+				? 'cursor-pointer border border-stone-100 rounded bg-transparent px-4 py-2 text-stone-100 hover:bg-stone-100 hover:text-lime-950 whitespace-nowrap flex items-center justify-center sm:w-auto w-12 h-12'
+				: 'cursor-pointer border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100 whitespace-nowrap flex items-center justify-center sm:w-auto w-12 h-12'}
 			onclick={onFindLocation}
 			aria-label="Find My Location"
 		>
-			<img src={Location} alt="Find My Location" class="h-s w-s" />
+			<img src={Location} alt="Find My Location" class={isSplash ? 'h-s w-s invert' : 'h-s w-s'} />
 		</button>
 		
 		<div class="flex w-full mt-2 sm:mt-0">
@@ -59,11 +64,15 @@
 				type="text"
 				bind:value={searchQuery}
 				placeholder="Enter your zip code"
-				class="flex-1 rounded-l border border-r-0 px-3 py-2 focus:outline-none {errorMessage ? 'border-red-500' : 'border-lime-950'}"
+				class={isSplash
+					? `flex-1 rounded-l border border-r-0 px-3 py-2 focus:outline-none bg-white/10 text-stone-100 placeholder-stone-300 ${errorMessage ? 'border-red-400' : 'border-stone-300'}`
+					: `flex-1 rounded-l border border-r-0 px-3 py-2 focus:outline-none ${errorMessage ? 'border-red-500' : 'border-lime-950'}`}
 				onkeydown={handleKeydown}
 			/>
 			<button
-				class="rounded-r border border-l-0 bg-stone-100 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100 {errorMessage ? 'border-red-500' : 'border-lime-950'}"
+				class={isSplash
+					? `rounded-r border border-l-0 bg-stone-100 px-4 py-2 text-lime-950 font-semibold hover:bg-lime-100 ${errorMessage ? 'border-red-400' : 'border-stone-300'}`
+					: `rounded-r border border-l-0 bg-stone-100 px-4 py-2 text-lime-950 hover:bg-lime-950 hover:text-stone-100 ${errorMessage ? 'border-red-500' : 'border-lime-950'}`}
 				onclick={handleSearch}
 			>
 				Search
@@ -72,6 +81,6 @@
 	</div>
 	
 	{#if errorMessage}
-		<p class="text-red-600 text-sm">{errorMessage}</p>
+		<p class={isSplash ? 'text-red-300 text-sm' : 'text-red-600 text-sm'}>{errorMessage}</p>
 	{/if}
 </div>
