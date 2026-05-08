@@ -128,7 +128,7 @@
 			</span>
 		</div>
 
-		<div class="grid w-full grid-cols-5 gap-2 p-4">
+		<div class="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-2 p-4">
 			{#each filteredPlants as plant (plant.id)}
 				<button
 					type="button"

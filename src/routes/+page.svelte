@@ -3,6 +3,7 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import LayerPanel from '$lib/components/LayerPanel.svelte';
 	import LocationInfo from '$lib/components/LocationInfo.svelte';
+	import CandidatePlants from '$lib/components/CandidatePlants.svelte';
 	
 	import { GeocodingService } from '$lib/services/geocoding.js';
 	import { SpatialAnalysisService } from '$lib/services/spatial-analysis.js';
@@ -256,7 +257,8 @@
 		/>
 
 		<!-- Responsive: map on top, layers below on mobile; side-by-side on desktop -->
-		<div class="mt-4 flex flex-col sm:grid sm:grid-cols-4 gap-0 border-t border-stone-700 bg-stone-300 flex-1">
+		<div class="mt-4 flex flex-col flex-1 border-t border-stone-700 bg-stone-300">
+		<div class="flex flex-col sm:grid sm:grid-cols-4 gap-0">
 			<!-- Map column: always first, left on desktop -->
 			<div class="map-wrapper sm:col-span-2 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden relative">
 				<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
@@ -306,6 +308,11 @@
 					onToggleLayer={toggleLayer}
 				/>
 			</div>
+		</div>
+		<!-- Bottom row: plants full width -->
+		<div class="w-full border-t border-stone-700">
+			<CandidatePlants zipcode={searchResultAddress?.postcode} />
+		</div>
 		</div>
 	</div>
 {/if}

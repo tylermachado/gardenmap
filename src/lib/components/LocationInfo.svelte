@@ -1,5 +1,4 @@
 <script lang="ts">
-	import CandidatePlants from '$lib/components/CandidatePlants.svelte';
 	import type { NominatimAddress } from '$lib/types/layer.js';
 
 	interface LocationInfoProps {
@@ -76,6 +75,4 @@
 	{/if}
 </div>
 
-<CandidatePlants
-	zipcode={searchResultAddress?.postcode}
-/>
+
