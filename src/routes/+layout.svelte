@@ -10,7 +10,7 @@
 	});
 </script>
 
-<div class="min-h-screen bg-stone-300 flex flex-col">
+<div class="h-screen bg-stone-300 flex flex-col overflow-hidden">
 	<header class="bg-lime-950 p-4">
 		<h1 class="font-serif text-3xl font-bold text-stone-100">GardenersMap</h1>
 	</header>

@@ -247,7 +247,7 @@
 	</div>
 {:else}
 	<div
-		class="flex flex-col flex-1"
+		class="flex flex-col flex-1 overflow-hidden"
 		in:fly={{ y: 80, duration: 500, delay: 100, easing: cubicOut }}
 	>
 		<SearchBar
@@ -256,63 +256,64 @@
 			onFindLocation={findMyLocation}
 		/>
 
-		<!-- Responsive: map on top, layers below on mobile; side-by-side on desktop -->
-		<div class="mt-4 flex flex-col flex-1 border-t border-stone-700 bg-stone-300">
-		<div class="flex flex-col sm:grid sm:grid-cols-4 gap-0">
-			<!-- Map column: always first, left on desktop -->
-			<div class="map-wrapper sm:col-span-2 bg-stone-100 flex w-full order-1 sm:order-1 p-0 sm:p-0 flex-none sm:h-full sm:items-stretch sm:justify-stretch overflow-hidden relative">
-				<div class="w-full h-full aspect-[5/4] sm:aspect-[16/9] max-w-2xl sm:max-w-full">
-					<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
+		<!-- Two-pane layout: persistent sidebar (map + climate) + scrollable plant grid -->
+		<div class="flex flex-col sm:flex-row flex-1 overflow-hidden border-t border-stone-700">
+
+			<!-- Left sidebar: map + location info + layer panel -->
+			<div class="sm:w-1/3 lg:w-1/4 flex flex-col overflow-y-auto bg-stone-200 sm:border-r border-stone-700 flex-shrink-0">
+
+				<!-- Map -->
+				<div class="relative w-full overflow-hidden bg-stone-100">
+					<div class="w-full aspect-[16/9]">
+						<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
+					</div>
+
+					<!-- Floating layers dropdown -->
+					<div class="absolute top-4 right-4" style="z-index: 1000;">
+						<button
+							class="border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between shadow-md hover:bg-stone-50"
+							onclick={() => showLayersDropdown = !showLayersDropdown}
+							aria-haspopup="true"
+							aria-expanded={showLayersDropdown}
+						>
+							<span>Layers ({selectedLayers.length})</span>
+							<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							</svg>
+						</button>
+						{#if showLayersDropdown}
+							<div class="absolute top-full right-0 mt-2 bg-stone-100 border border-stone-700 rounded shadow-lg w-48" style="z-index: 1001;">
+								{#each layers as layer}
+									<button
+										class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer, selectedLayers) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
+										onclick={() => toggleLayer(layer)}
+									>
+										<span class="mr-2">{isLayerSelected(layer, selectedLayers) ? '✓' : '○'}</span>
+										<span>{layer.name}</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
 				</div>
-				
-				<!-- Floating layers dropdown for desktop -->
-				<div class="hidden sm:block absolute top-4 right-4" style="z-index: 1000;">
-					<button 
-						class="border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between shadow-md hover:bg-stone-50" 
-						onclick={() => showLayersDropdown = !showLayersDropdown} 
-						aria-haspopup="true" 
-						aria-expanded={showLayersDropdown}
-					>
-						<span>Layers ({selectedLayers.length})</span>
-						<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-						</svg>
-					</button>
-					{#if showLayersDropdown}
-						<div class="absolute top-full right-0 mt-2 bg-stone-100 border border-stone-700 rounded shadow-lg w-48" style="z-index: 1001;">
-							{#each layers as layer}
-								<button
-									class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer, selectedLayers) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
-									onclick={() => {
-										toggleLayer(layer);
-									}}
-								>
-									<span class="mr-2">{isLayerSelected(layer, selectedLayers) ? '✓' : '○'}</span>
-									<span>{layer.name}</span>
-								</button>
-							{/each}
-						</div>
-					{/if}
-				</div>
-			</div>
-			<!-- Info/controls column: always second, right on desktop -->
-			<div class="controls sm:col-span-2 flex flex-col items-start gap-0 bg-stone-300 w-full order-2 sm:order-2">
-				<LocationInfo 
+
+				<!-- Location info + layer descriptions -->
+				<LocationInfo
 					searchResultAddress={searchResultAddress}
 					pointLayerData={pointLayerData}
 				/>
-
-				<LayerPanel 
+				<LayerPanel
 					layers={layers}
 					selectedLayers={selectedLayers}
 					onToggleLayer={toggleLayer}
 				/>
 			</div>
-		</div>
-		<!-- Bottom row: plants full width -->
-		<div class="w-full border-t border-stone-700">
-			<CandidatePlants zipcode={searchResultAddress?.postcode} />
-		</div>
+
+			<!-- Right pane: plant grid (independently scrollable) -->
+			<div class="flex-1 overflow-y-auto bg-stone-300">
+				<CandidatePlants zipcode={searchResultAddress?.postcode} />
+			</div>
+
 		</div>
 	</div>
 {/if}
