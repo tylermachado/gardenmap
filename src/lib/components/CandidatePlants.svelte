@@ -19,6 +19,23 @@
 	let filterPlantType = $state('');
 	let filterSunShade = $state('');
 	let filterMoisture = $state('');
+	let filterPollinators = $state(new Set<string>());
+
+	const POLLINATOR_KEYS: { key: keyof Plant; label: string }[] = [
+		{ key: 'monarchs', label: 'Monarchs' },
+		{ key: 'native_bees', label: 'Native bees' },
+		{ key: 'honey_bees', label: 'Honey bees' },
+		{ key: 'bombus', label: 'Bumblebees' },
+		{ key: 'butterflies', label: 'Butterflies' },
+		{ key: 'moths', label: 'Moths' },
+		{ key: 'hummingbirds', label: 'Hummingbirds' },
+		{ key: 'beetles_wasps_flies', label: 'Beetles/wasps/flies' },
+		{ key: 'bats', label: 'Bats' },
+		{ key: 'nesting_and_structure_bees', label: 'Nesting bees' },
+		{ key: 'larval_host_monarch', label: 'Larval host: monarch' },
+		{ key: 'larval_host_butterfly', label: 'Larval host: butterfly' },
+		{ key: 'larval_host_moth', label: 'Larval host: moth' },
+	];
 
 	const plantTypeOptions = $derived(
 		[...new Set(plants.flatMap((p) => p.plant_type ?? []))].sort()
@@ -35,6 +52,7 @@
 			if (filterPlantType && !(p.plant_type ?? []).includes(filterPlantType)) return false;
 			if (filterSunShade && !(p.sun_and_shade ?? []).includes(filterSunShade)) return false;
 			if (filterMoisture && !(p.soil_moisture ?? []).includes(filterMoisture)) return false;
+			if (filterPollinators.size > 0 && ![...filterPollinators].some((k) => p[k as keyof Plant])) return false;
 			return true;
 		})
 	);
@@ -50,6 +68,7 @@
 		filterPlantType = '';
 		filterSunShade = '';
 		filterMoisture = '';
+		filterPollinators = new Set();
 
 		const params = new URLSearchParams({ offset: '0' });
 		if (ecoregion) params.set('ecoregion', ecoregion);
@@ -114,10 +133,10 @@
 				{/each}
 			</select>
 
-			{#if filterPlantType || filterSunShade || filterMoisture}
+			{#if filterPlantType || filterSunShade || filterMoisture || filterPollinators.size > 0}
 				<button
 					class="rounded border border-stone-400 bg-stone-200 px-2 py-1 text-[12px] hover:bg-stone-300"
-					onclick={() => { filterPlantType = ''; filterSunShade = ''; filterMoisture = ''; }}
+					onclick={() => { filterPlantType = ''; filterSunShade = ''; filterMoisture = ''; filterPollinators = new Set(); }}
 				>
 					Clear filters
 				</button>
@@ -126,6 +145,25 @@
 			<span class="self-center text-[11px] italic text-stone-500">
 				{filteredPlants.length} of {plants.length}
 			</span>
+		</div>
+
+		<div class="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+			<span class="self-center text-[11px] text-stone-500">Attracts:</span>
+			{#each POLLINATOR_KEYS as { key, label }}
+				<label class="flex cursor-pointer items-center gap-1 text-[12px]">
+					<input
+						type="checkbox"
+						checked={filterPollinators.has(key)}
+						onchange={(e) => {
+							const next = new Set(filterPollinators);
+							if ((e.target as HTMLInputElement).checked) next.add(key);
+							else next.delete(key);
+							filterPollinators = next;
+						}}
+					/>
+					{label}
+				</label>
+			{/each}
 		</div>
 
 		<div class="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-2 p-4">

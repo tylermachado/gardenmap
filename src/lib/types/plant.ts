@@ -12,5 +12,18 @@ export interface Plant {
 	flowering_months?: Array<string>;
 	sun_and_shade?: Array<string>;
 	soil_moisture?: Array<string>;
+	monarchs?: boolean;
+	native_bees?: boolean;
+	honey_bees?: boolean;
+	bombus?: boolean;
+	butterflies?: boolean;
+	moths?: boolean;
+	hummingbirds?: boolean;
+	beetles_wasps_flies?: boolean;
+	bats?: boolean;
+	nesting_and_structure_bees?: boolean;
+	larval_host_monarch?: boolean;
+	larval_host_butterfly?: boolean;
+	larval_host_moth?: boolean;
 	image_url?: string;
 }
