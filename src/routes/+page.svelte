@@ -228,10 +228,22 @@
 
 {#if showSplash}
 	<div
-		class="flex-1 flex flex-col items-center justify-center bg-lime-950"
+		class="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
 		out:fly={{ y: -100, duration: 500, easing: cubicOut }}
 	>
-		<div class="w-full max-w-2xl px-8 flex flex-col items-center gap-8">
+		<!-- Background image -->
+		<div
+			class="absolute inset-0 bg-cover bg-center bg-no-repeat"
+			style="background-image: url('/img/splash.jpg');"
+			aria-hidden="true"
+		></div>
+		<!-- Dark green to black gradient overlay -->
+		<div
+			class="absolute inset-0"
+			style="background: linear-gradient(to bottom, rgba(20, 50, 20, 0.72) 0%, rgba(0, 0, 0, 0.92) 100%);"
+			aria-hidden="true"
+		></div>
+		<div class="relative z-10 w-full max-w-2xl px-8 flex flex-col items-center gap-8">
 			<h2 class="text-stone-100 text-center leading-tight" style="font-family: var(--font-serif); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700;">
 				Enter your zip code and find native plants for your area.
 			</h2>
