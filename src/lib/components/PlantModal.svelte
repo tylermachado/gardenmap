@@ -1,19 +1,38 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
-	import type { Plant } from '$lib/types/plant.js';
+	import type { Plant, PlantSummary } from '$lib/types/plant.js';
 
 	interface PlantModalProps {
-		plant: Plant;
+		plant: PlantSummary;
 		onclose: () => void;
 	}
 
 	let { plant, onclose }: PlantModalProps = $props();
 
+	let detail: Plant | null = $state(null);
+	let loadingDetail = $state(true);
+
 	let closeBtn: HTMLButtonElement;
 	let dialogEl: HTMLDivElement;
 
-	onMount(() => closeBtn?.focus());
+	onMount(() => {
+		closeBtn?.focus();
+		fetch(`/api/plants/${plant.id}`)
+			.then((res) => {
+				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+				return res.json() as Promise<Plant>;
+			})
+			.then((data) => {
+				detail = data;
+			})
+			.catch(() => {
+				// detail stays null; detail-only fields simply won't render
+			})
+			.finally(() => {
+				loadingDetail = false;
+			});
+	});
 
 	function trapFocus(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
@@ -97,40 +116,11 @@
 		<!-- Info table -->
 		<table class="mt-4 w-full border-collapse text-sm">
 			<tbody>
-				{#if plant.plant_family}
-					<tr class="border-t border-stone-100">
-						<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Family</th>
-						<td class="py-1.5 text-stone-800">{plant.plant_family}</td>
-					</tr>
-				{/if}
+				<!-- Summary fields: available immediately from the list response -->
 				{#if plant.plant_type?.length}
 					<tr class="border-t border-stone-100">
 						<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Type</th>
 						<td class="py-1.5 text-stone-800">{plant.plant_type.join(', ')}</td>
-					</tr>
-				{/if}
-				{#if heightRange(plant.height_min_ft, plant.height_max_ft)}
-					<tr class="border-t border-stone-100">
-						<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Height</th>
-						<td class="py-1.5 text-stone-800">{heightRange(plant.height_min_ft, plant.height_max_ft)}</td>
-					</tr>
-				{/if}
-				{#if plant.growth_rate}
-					<tr class="border-t border-stone-100">
-						<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Growth rate</th>
-						<td class="py-1.5 text-stone-800">{plant.growth_rate}</td>
-					</tr>
-				{/if}
-				{#if plant.lifespan?.length}
-					<tr class="border-t border-stone-100">
-						<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Lifespan</th>
-						<td class="py-1.5 text-stone-800">{plant.lifespan.join(', ')}</td>
-					</tr>
-				{/if}
-				{#if plant.flowering_months?.length}
-					<tr class="border-t border-stone-100">
-						<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Flowering</th>
-						<td class="py-1.5 text-stone-800">{plant.flowering_months.join(', ')}</td>
 					</tr>
 				{/if}
 				{#if plant.sun_and_shade?.length}
@@ -144,6 +134,43 @@
 						<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Soil moisture</th>
 						<td class="py-1.5 text-stone-800">{plant.soil_moisture.join(', ')}</td>
 					</tr>
+				{/if}
+				<!-- Detail fields: loaded asynchronously from /api/plants/:id -->
+				{#if loadingDetail}
+					<tr class="border-t border-stone-100">
+						<td colspan="2" class="py-2 text-[11px] italic text-stone-400">Loading details…</td>
+					</tr>
+				{:else if detail}
+					{#if detail.plant_family}
+						<tr class="border-t border-stone-100">
+							<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Family</th>
+							<td class="py-1.5 text-stone-800">{detail.plant_family}</td>
+						</tr>
+					{/if}
+					{#if heightRange(detail.height_min_ft, detail.height_max_ft)}
+						<tr class="border-t border-stone-100">
+							<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Height</th>
+							<td class="py-1.5 text-stone-800">{heightRange(detail.height_min_ft, detail.height_max_ft)}</td>
+						</tr>
+					{/if}
+					{#if detail.growth_rate}
+						<tr class="border-t border-stone-100">
+							<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Growth rate</th>
+							<td class="py-1.5 text-stone-800">{detail.growth_rate}</td>
+						</tr>
+					{/if}
+					{#if detail.lifespan?.length}
+						<tr class="border-t border-stone-100">
+							<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Lifespan</th>
+							<td class="py-1.5 text-stone-800">{detail.lifespan.join(', ')}</td>
+						</tr>
+					{/if}
+					{#if detail.flowering_months?.length}
+						<tr class="border-t border-stone-100">
+							<th class="w-2/5 py-1.5 pr-3 text-left font-medium text-stone-500">Flowering</th>
+							<td class="py-1.5 text-stone-800">{detail.flowering_months.join(', ')}</td>
+						</tr>
+					{/if}
 				{/if}
 			</tbody>
 		</table>

@@ -1,6 +1,33 @@
 import { PLANTS_API_URL } from '$env/static/private';
 import type { RequestHandler } from '@sveltejs/kit';
 
+/** Fields kept in the list response. Matches PlantSummary in src/lib/types/plant.ts. */
+const SUMMARY_KEYS = new Set([
+	'id', 'name', 'scientific_name', 'common_name', 'image_url',
+	'plant_type', 'sun_and_shade', 'soil_moisture',
+	'monarchs', 'native_bees', 'honey_bees', 'bombus', 'butterflies',
+	'moths', 'hummingbirds', 'beetles_wasps_flies', 'bats',
+	'nesting_and_structure_bees', 'larval_host_monarch',
+	'larval_host_butterfly', 'larval_host_moth',
+]);
+
+/** Filter params the upstream API accepts that we forward from the client. */
+const FILTER_PARAMS = [
+	'plant_type', 'sun_and_shade', 'soil_moisture',
+	'monarchs', 'native_bees', 'honey_bees', 'bombus', 'butterflies',
+	'moths', 'hummingbirds', 'beetles_wasps_flies', 'bats',
+	'nesting_and_structure_bees', 'larval_host_monarch',
+	'larval_host_butterfly', 'larval_host_moth',
+] as const;
+
+type PlantRecord = Record<string, unknown>;
+
+function toSummary(plant: PlantRecord): PlantRecord {
+	return Object.fromEntries(
+		Object.entries(plant).filter(([k]) => SUMMARY_KEYS.has(k))
+	);
+}
+
 export const GET: RequestHandler = async ({ url }) => {
 	const offset = url.searchParams.get('offset') || '0';
 	const ecoregion = url.searchParams.get('ecoregion');
@@ -16,7 +43,12 @@ export const GET: RequestHandler = async ({ url }) => {
 		if (zipcode) baseParams.set('zipcode', zipcode);
 		baseParams.set('limit', String(LIMIT));
 
-		const allPlants: unknown[] = [];
+		for (const key of FILTER_PARAMS) {
+			const val = url.searchParams.get(key);
+			if (val !== null) baseParams.set(key, val);
+		}
+
+		const allPlants: PlantRecord[] = [];
 		let currentOffset = parseInt(offset, 10) || 0;
 
 		while (true) {
@@ -29,7 +61,7 @@ export const GET: RequestHandler = async ({ url }) => {
 				throw new Error(`API request failed: ${response.status}`);
 			}
 
-			const page = await response.json() as unknown[];
+			const page = await response.json() as PlantRecord[];
 			console.log('plants page:', `${PLANTS_API_URL}?${params.toString()}`, `(${page.length} results)`);
 			allPlants.push(...page);
 
@@ -37,7 +69,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			currentOffset += LIMIT;
 		}
 
-		return new Response(JSON.stringify(allPlants), {
+		return new Response(JSON.stringify(allPlants.map(toSummary)), {
 			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (error) {

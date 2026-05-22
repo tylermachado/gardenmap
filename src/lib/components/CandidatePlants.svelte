@@ -1,7 +1,7 @@
 <script lang="ts">
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
 	import PlantModal from '$lib/components/PlantModal.svelte';
-	import type { Plant } from '$lib/types/plant.js';
+	import type { PlantSummary } from '$lib/types/plant.js';
 
 	interface CandidatePlantsProps {
 		ecoregion?: string;
@@ -11,10 +11,13 @@
 
 	let { ecoregion, phzZone, zipcode }: CandidatePlantsProps = $props();
 
-	let plants: Plant[] = $state([]);
+	// allSummaries: unfiltered set for this location; drives filter dropdown options
+	let allSummaries: PlantSummary[] = $state([]);
+	// plants: current server-filtered result set displayed in the grid
+	let plants: PlantSummary[] = $state([]);
 	let loading = $state(false);
 	let error: string | null = $state(null);
-	let selectedPlant: Plant | null = $state(null);
+	let selectedPlant: PlantSummary | null = $state(null);
 
 	let filterPlantType = $state('');
 	let filterSunShade = $state('');
@@ -38,7 +41,7 @@
 		filterPollinators = new Set();
 	}
 
-	const POLLINATOR_KEYS: { key: keyof Plant; label: string }[] = [
+	const POLLINATOR_KEYS: { key: keyof PlantSummary; label: string }[] = [
 		{ key: 'monarchs', label: 'Monarchs' },
 		{ key: 'native_bees', label: 'Native bees' },
 		{ key: 'honey_bees', label: 'Honey bees' },
@@ -54,61 +57,91 @@
 		{ key: 'larval_host_moth', label: 'Larval host: moth' },
 	];
 
+	// Dropdown options always derived from allSummaries (stable; don't shift when filters are applied)
 	const plantTypeOptions = $derived(
-		[...new Set(plants.flatMap((p) => p.plant_type ?? []))].sort()
+		[...new Set(allSummaries.flatMap((p) => p.plant_type ?? []))].sort()
 	);
 	const sunShadeOptions = $derived(
-		[...new Set(plants.flatMap((p) => p.sun_and_shade ?? []))].sort()
+		[...new Set(allSummaries.flatMap((p) => p.sun_and_shade ?? []))].sort()
 	);
 	const moistureOptions = $derived(
-		[...new Set(plants.flatMap((p) => p.soil_moisture ?? []))].sort()
+		[...new Set(allSummaries.flatMap((p) => p.soil_moisture ?? []))].sort()
 	);
 
-	const filteredPlants = $derived(
-		plants.filter((p) => {
-			if (filterPlantType && !(p.plant_type ?? []).includes(filterPlantType)) return false;
-			if (filterSunShade && !(p.sun_and_shade ?? []).includes(filterSunShade)) return false;
-			if (filterMoisture && !(p.soil_moisture ?? []).includes(filterMoisture)) return false;
-			if (filterPollinators.size > 0 && ![...filterPollinators].some((k) => p[k as keyof Plant])) return false;
-			return true;
-		})
-	);
+	// Plain (non-reactive) variable used to detect location changes without itself being a tracked dep
+	let prevLocationKey = '';
 
 	$effect(() => {
+		// Read ALL reactive deps at the top so Svelte tracks them even when we return early
+		const locationKey = [ecoregion, phzZone, zipcode].join('|');
+		const ft = filterPlantType;
+		const fs = filterSunShade;
+		const fm = filterMoisture;
+		const fp = filterPollinators;
+
 		if (!ecoregion && !phzZone && !zipcode) {
+			prevLocationKey = locationKey;
+			allSummaries = [];
 			plants = [];
+			loading = false;
 			return;
 		}
 
-		loading = true;
-		error = null;
-		filterPlantType = '';
-		filterSunShade = '';
-		filterMoisture = '';
-		filterPollinators = new Set();
-		showFilters = false;
-		showAttractsDropdown = false;
+		const isNewLocation = locationKey !== prevLocationKey;
 
-		const params = new URLSearchParams({ offset: '0' });
+		if (isNewLocation) {
+			// Update key FIRST so the re-run (triggered by filter resets below) sees isNewLocation = false
+			prevLocationKey = locationKey;
+			allSummaries = [];
+			plants = [];
+			loading = true;
+			error = null;
+			showFilters = false;
+			showAttractsDropdown = false;
+			// Writing these tracked deps schedules the effect to re-run with empty filters
+			filterPlantType = '';
+			filterSunShade = '';
+			filterMoisture = '';
+			filterPollinators = new Set();
+			return;
+		}
+
+		const hasFilters = !!(ft || fs || fm || fp.size > 0);
+
+		const params = new URLSearchParams();
 		if (ecoregion) params.set('ecoregion', ecoregion);
 		if (phzZone) params.set('zone', phzZone);
 		if (zipcode) params.set('zipcode', zipcode);
+		if (ft) params.set('plant_type', ft);
+		if (fs) params.set('sun_and_shade', fs);
+		if (fm) params.set('soil_moisture', fm);
+		for (const k of [...fp]) params.set(k, 'true');
 
-		fetch(`/api/plants?${params.toString()}`)
+		loading = true;
+		error = null;
+
+		const controller = new AbortController();
+
+		fetch(`/api/plants?${params.toString()}`, { signal: controller.signal })
 			.then((res) => {
 				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-				return res.json() as Promise<Plant[]>;
+				return res.json() as Promise<PlantSummary[]>;
 			})
 			.then((data) => {
 				plants = data;
+				// The first fetch for a new location (no filters) also seeds the dropdown options
+				if (!hasFilters) allSummaries = data;
 			})
 			.catch((err: unknown) => {
+				if (err instanceof Error && err.name === 'AbortError') return;
 				error = err instanceof Error ? err.message : 'Unknown error';
 				plants = [];
 			})
 			.finally(() => {
 				loading = false;
 			});
+
+		return () => controller.abort();
 	});
 </script>
 
@@ -120,7 +153,7 @@
 		<p class="mt-2 text-[11px] italic text-stone-600">Loading plants…</p>
 	{:else if error}
 		<p class="mt-2 text-[11px] italic text-red-600">{error}</p>
-	{:else if plants.length > 0}
+	{:else if allSummaries.length > 0}
 		<!-- Filter toggle bar: always visible -->
 		<div class="mt-3 flex items-center gap-3">
 			<button
@@ -144,7 +177,7 @@
 			</button>
 
 			<span class="text-[11px] italic text-stone-500">
-				{filteredPlants.length} of {plants.length}
+				{plants.length} of {allSummaries.length}
 			</span>
 
 			{#if activeFilterCount > 0}
@@ -241,8 +274,11 @@
 			</div>
 		{/if}
 
+		{#if plants.length === 0 && activeFilterCount > 0}
+			<p class="mt-3 text-[11px] italic text-stone-500">No plants match these filters.</p>
+		{:else}
 		<div class="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-2 p-4">
-			{#each filteredPlants as plant (plant.id)}
+			{#each plants as plant (plant.id)}
 				<button
 					type="button"
 					class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded p-1 hover:bg-stone-100"
@@ -256,6 +292,7 @@
 				</button>
 			{/each}
 		</div>
+		{/if}
 	{:else if ecoregion || phzZone || zipcode}
 		<p class="mt-2 text-[11px] italic text-stone-600">No candidate plants found.</p>
 	{/if}

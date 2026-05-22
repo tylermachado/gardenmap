@@ -1,15 +1,11 @@
-export interface Plant {
+/** Lightweight shape returned by GET /api/plants (list endpoint). */
+export interface PlantSummary {
 	id: string;
 	name: string;
 	scientific_name?: string;
 	common_name: Array<string>;
-	plant_family?: string;
+	image_url?: string;
 	plant_type?: Array<string>;
-	height_min_ft?: number;
-	height_max_ft?: number;
-	growth_rate?: string;
-	lifespan?: Array<string>;
-	flowering_months?: Array<string>;
 	sun_and_shade?: Array<string>;
 	soil_moisture?: Array<string>;
 	monarchs?: boolean;
@@ -25,5 +21,14 @@ export interface Plant {
 	larval_host_monarch?: boolean;
 	larval_host_butterfly?: boolean;
 	larval_host_moth?: boolean;
-	image_url?: string;
+}
+
+/** Full shape returned by GET /api/plants/:id (detail endpoint). */
+export interface Plant extends PlantSummary {
+	plant_family?: string;
+	height_min_ft?: number;
+	height_max_ft?: number;
+	growth_rate?: string;
+	lifespan?: Array<string>;
+	flowering_months?: Array<string>;
 }
