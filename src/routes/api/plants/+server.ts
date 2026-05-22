@@ -7,22 +7,37 @@ export const GET: RequestHandler = async ({ url }) => {
 	const zone = url.searchParams.get('zone');
 	const zipcode = url.searchParams.get('zipcode');
 
+	const LIMIT = 250;
+
 	try {
-		const params = new URLSearchParams({ offset });
-		if (ecoregion) params.set('ecoregion', ecoregion);
-		if (zone) params.set('zone', zone);
-		if (zipcode) params.set('zipcode', zipcode);
-        params.set('limit', '250');
+		const baseParams = new URLSearchParams();
+		if (ecoregion) baseParams.set('ecoregion', ecoregion);
+		if (zone) baseParams.set('zone', zone);
+		if (zipcode) baseParams.set('zipcode', zipcode);
+		baseParams.set('limit', String(LIMIT));
 
-		const response = await fetch(`${PLANTS_API_URL}?${params.toString()}`);
+		const allPlants: unknown[] = [];
+		let currentOffset = parseInt(offset, 10) || 0;
 
-		if (!response.ok) {
-			throw new Error(`API request failed: ${response.status}`);
+		while (true) {
+			const params = new URLSearchParams(baseParams);
+			params.set('offset', String(currentOffset));
+
+			const response = await fetch(`${PLANTS_API_URL}?${params.toString()}`);
+
+			if (!response.ok) {
+				throw new Error(`API request failed: ${response.status}`);
+			}
+
+			const page = await response.json() as unknown[];
+			console.log('plants page:', `${PLANTS_API_URL}?${params.toString()}`, `(${page.length} results)`);
+			allPlants.push(...page);
+
+			if (page.length < LIMIT) break;
+			currentOffset += LIMIT;
 		}
 
-		const data = await response.json();
-		console.log('plants data:', `${PLANTS_API_URL}?${params.toString()}`);
-		return new Response(JSON.stringify(data), {
+		return new Response(JSON.stringify(allPlants), {
 			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (error) {
