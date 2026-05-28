@@ -269,10 +269,10 @@
 		/>
 
 		<!-- Two-pane layout: persistent sidebar (map + climate) + scrollable plant grid -->
-		<div class="flex flex-col sm:flex-row flex-1 overflow-hidden border-t border-stone-700">
+		<div class="flex flex-col sm:flex-row flex-1 overflow-y-auto sm:overflow-hidden border-t border-stone-700">
 
 			<!-- Left sidebar: map + location info + layer panel -->
-			<div class="sm:w-1/3 lg:w-1/4 flex flex-col overflow-y-auto bg-stone-200 sm:border-r border-stone-700 flex-shrink-0">
+			<div class="sm:w-1/3 lg:w-1/4 flex flex-col sm:overflow-y-auto bg-stone-200 sm:border-r border-stone-700 flex-shrink-0">
 
 				<!-- Map -->
 				<div class="relative w-full overflow-hidden bg-stone-100">
@@ -322,7 +322,7 @@
 			</div>
 
 			<!-- Right pane: plant grid (independently scrollable) -->
-			<div class="flex-1 overflow-y-auto bg-stone-300">
+			<div class="flex-1 sm:overflow-y-auto bg-stone-300">
 				<CandidatePlants zipcode={searchResultAddress?.postcode} />
 			</div>
 
