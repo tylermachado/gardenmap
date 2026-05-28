@@ -12,6 +12,15 @@
     font-weight: 300;
   }
 
+  a {
+    text-decoration: underline;
+    font-weight: bold;
+    color: theme(colors.lime.950);
+    &:hover {
+      color: theme(colors.lime.700);
+    }
+  }
+
   button {
     cursor: pointer;
   }

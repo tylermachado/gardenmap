@@ -24,6 +24,15 @@
 	let filterMoisture = $state('');
 	let filterPollinators = $state(new Set<string>());
 
+	function makePlaceholderPlants(): PlantSummary[] {
+		return Array.from({ length: 25 }, (_, i) => ({
+			id: `placeholder-${i + 1}`,
+			name: `Placeholder ${i + 1}`,
+			scientific_name: `Species placeholder ${i + 1}`,
+			common_name: ['Placeholder plant'],
+		} satisfies PlantSummary));
+	}
+
 	let showFilters = $state(false);
 	let showAttractsDropdown = $state(false);
 
@@ -124,10 +133,17 @@
 
 		fetch(`/api/plants?${params.toString()}`, { signal: controller.signal })
 			.then((res) => {
+				if (res.status === 500) {
+					const placeholders = makePlaceholderPlants();
+					plants = placeholders;
+					if (!hasFilters) allSummaries = placeholders;
+					return null;
+				}
 				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 				return res.json() as Promise<PlantSummary[]>;
 			})
 			.then((data) => {
+				if (data === null) return;
 				plants = data;
 				// The first fetch for a new location (no filters) also seeds the dropdown options
 				if (!hasFilters) allSummaries = data;
