@@ -322,15 +322,17 @@
 			{#each visiblePlants as plant (plant.id)}
 				<button
 					type="button"
-					class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded p-1 hover:bg-stone-100"
+					class="flex cursor-pointer flex-col items-center gap-1 rounded p-1 hover:bg-stone-100"
 					onclick={() => (selectedPlant = plant)}
 				>
-					<img
-						src={plant.img_file_name?.length ? `${IMG_BASE_URL}${plant.img_file_name[0]}` : (plant.image_url ?? PlantIcon1)}
-						alt={plant.scientific_name}
-						class="h-xl w-xl"
-						loading="lazy"
-					/>
+					<div class="w-full" style="aspect-ratio: 4/5; overflow: hidden; border-radius: 0.25rem;">
+						<img
+							src={plant.img_file_name?.length ? `${IMG_BASE_URL}${plant.img_file_name[0]}` : (plant.image_url ?? PlantIcon1)}
+							alt={plant.scientific_name}
+							class="h-full w-full object-cover"
+							loading="lazy"
+						/>
+					</div>
 					<span class="text-center text-[12px] leading-tight">{plant.scientific_name}</span>
 					<span class="text-center text-[10px] leading-tight italic">
 						{plant.common_name.join(', ')}
