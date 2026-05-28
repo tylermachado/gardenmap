@@ -4,6 +4,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 /** Fields kept in the list response. Matches PlantSummary in src/lib/types/plant.ts. */
 const SUMMARY_KEYS = new Set([
 	'id', 'name', 'scientific_name', 'common_name', 'image_url',
+	'img_file_name', 'img_src_url', 'img_profile_url', 'img_attribution',
 	'plant_type', 'sun_and_shade', 'soil_moisture',
 	'monarchs', 'native_bees', 'honey_bees', 'bombus', 'butterflies',
 	'moths', 'hummingbirds', 'beetles_wasps_flies', 'bats',

@@ -5,6 +5,10 @@ export interface PlantSummary {
 	scientific_name?: string;
 	common_name: Array<string>;
 	image_url?: string;
+	img_file_name?: string[] | null;
+	img_src_url?: string | null;
+	img_profile_url?: string | null;
+	img_attribution?: string | null;
 	plant_type?: Array<string>;
 	sun_and_shade?: Array<string>;
 	soil_moisture?: Array<string>;

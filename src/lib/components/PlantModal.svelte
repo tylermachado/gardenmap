@@ -62,6 +62,14 @@
 		}
 	}
 
+	const IMG_BASE_URL = 'https://d10s8hlfsm6n8p.cloudfront.net/images/';
+
+	function getImageUrl(p: typeof plant | typeof detail): string {
+		if (!p) return PlantIcon1;
+		if (p.img_file_name?.length) return `${IMG_BASE_URL}${p.img_file_name[0]}`;
+		return p.image_url ?? PlantIcon1;
+	}
+
 	function heightRange(min?: number, max?: number): string {
 		if (min != null && max != null) return `${min}–${max} ft`;
 		if (min != null) return `${min}+ ft`;
@@ -96,11 +104,18 @@
 
 		<!-- Header: icon left, names right -->
 		<div class="flex items-center gap-4 pr-6">
-			<img
-				src={plant.image_url ?? PlantIcon1}
-				alt={plant.scientific_name}
-				class="h-20 w-20 shrink-0 rounded-lg object-contain"
-			/>
+			<div class="shrink-0">
+				<img
+					src={getImageUrl(detail ?? plant)}
+					alt={plant.scientific_name}
+					class="h-20 w-20 rounded-lg object-contain"
+				/>
+				{#if (detail ?? plant).img_attribution}
+					<p class="mt-0.5 max-w-[5rem] text-center text-[8px] leading-tight text-stone-400">
+						{(detail ?? plant).img_attribution}
+					</p>
+				{/if}
+			</div>
 			<div class="min-w-0">
 				<p class="text-base font-semibold leading-snug text-stone-800">
 					{plant.scientific_name ?? plant.name}

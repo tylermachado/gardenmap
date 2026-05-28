@@ -3,6 +3,9 @@
 	import PlantModal from '$lib/components/PlantModal.svelte';
 	import type { PlantSummary } from '$lib/types/plant.js';
 
+	const IMG_BASE_URL = 'https://d10s8hlfsm6n8p.cloudfront.net/images/';
+	const PAGE_SIZE = 20;
+
 	interface CandidatePlantsProps {
 		ecoregion?: string;
 		phzZone?: string;
@@ -23,6 +26,27 @@
 	let filterSunShade = $state('');
 	let filterMoisture = $state('');
 	let filterPollinators = $state(new Set<string>());
+
+	let displayCount = $state(PAGE_SIZE);
+	let sentinelEl: HTMLDivElement | undefined = $state();
+
+	const visiblePlants = $derived(plants.slice(0, displayCount));
+	const hasMoreToDisplay = $derived(displayCount < plants.length);
+
+	$effect(() => {
+		const el = sentinelEl;
+		if (!el) return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					displayCount += PAGE_SIZE;
+				}
+			},
+			{ rootMargin: '300px' }
+		);
+		observer.observe(el);
+		return () => observer.disconnect();
+	});
 
 	function makePlaceholderPlants(): PlantSummary[] {
 		return Array.from({ length: 25 }, (_, i) => ({
@@ -128,6 +152,7 @@
 
 		loading = true;
 		error = null;
+		displayCount = PAGE_SIZE;
 
 		const controller = new AbortController();
 
@@ -294,13 +319,18 @@
 			<p class="mt-3 text-[11px] italic text-stone-500">No plants match these filters.</p>
 		{:else}
 		<div class="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-2 p-4">
-			{#each plants as plant (plant.id)}
+			{#each visiblePlants as plant (plant.id)}
 				<button
 					type="button"
 					class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded p-1 hover:bg-stone-100"
 					onclick={() => (selectedPlant = plant)}
 				>
-					<img src={plant.image_url ?? PlantIcon1} alt={plant.scientific_name} class="h-xl w-xl" />
+					<img
+						src={plant.img_file_name?.length ? `${IMG_BASE_URL}${plant.img_file_name[0]}` : (plant.image_url ?? PlantIcon1)}
+						alt={plant.scientific_name}
+						class="h-xl w-xl"
+						loading="lazy"
+					/>
 					<span class="text-center text-[12px] leading-tight">{plant.scientific_name}</span>
 					<span class="text-center text-[10px] leading-tight italic">
 						{plant.common_name.join(', ')}
@@ -308,6 +338,9 @@
 				</button>
 			{/each}
 		</div>
+		{#if hasMoreToDisplay}
+			<div bind:this={sentinelEl} class="h-4 w-full" aria-hidden="true"></div>
+		{/if}
 		{/if}
 	{:else if ecoregion || phzZone || zipcode}
 		<p class="mt-2 text-[11px] italic text-stone-600">No candidate plants found.</p>
