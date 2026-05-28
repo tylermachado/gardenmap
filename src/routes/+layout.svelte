@@ -59,7 +59,7 @@
 		</nav>
 	</header>
 	
-	<main class="flex-1 flex flex-col">
+	<main class="flex-1 flex flex-col overflow-hidden min-h-0">
 		{#if mounted}
 			{@render children()}
 		{:else}
