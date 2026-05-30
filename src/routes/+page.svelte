@@ -9,6 +9,7 @@
 	import { SpatialAnalysisService } from '$lib/services/spatial-analysis.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { base } from '$app/paths';
 	import { untrack } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -242,7 +243,7 @@
 		<!-- Background image -->
 		<div
 			class="absolute inset-0 bg-cover bg-center bg-no-repeat"
-			style="background-image: url('/img/splash.jpg');"
+			style="background-image: url('{base}/img/splash.jpg');"}
 			aria-hidden="true"
 		></div>
 		<!-- Dark green to black gradient overlay -->

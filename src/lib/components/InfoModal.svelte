@@ -10,6 +10,12 @@
 
 	let { title, open, onclose, children }: InfoModalProps = $props();
 
+	let closeBtn: HTMLButtonElement | undefined = $state();
+
+	$effect(() => {
+		if (open && closeBtn) closeBtn.focus();
+	});
+
 	function handleBackdropClick(e: MouseEvent) {
 		if (e.target === e.currentTarget) onclose();
 	}
@@ -34,6 +40,7 @@
 			<div class="flex items-center justify-between border-b border-stone-200 px-6 py-4">
 				<h2 id="info-modal-title" class="text-lg font-semibold text-stone-900">{title}</h2>
 				<button
+					bind:this={closeBtn}
 					class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors"
 					onclick={onclose}
 					aria-label="Close"

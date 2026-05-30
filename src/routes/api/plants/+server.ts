@@ -63,7 +63,6 @@ export const GET: RequestHandler = async ({ url }) => {
 			}
 
 			const page = await response.json() as PlantRecord[];
-			console.log('plants page:', `${PLANTS_API_URL}?${params.toString()}`, `(${page.length} results)`);
 			allPlants.push(...page);
 
 			if (page.length < LIMIT) break;
