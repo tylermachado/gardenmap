@@ -9,36 +9,7 @@
 	}
 
 	let { layers, selectedLayers, onToggleLayer }: LayerPanelProps = $props();
-	let showLayersDropdown: boolean = $state(false);
 </script>
-
-<!-- On mobile, show a dropdown for layers -->
-<div class="w-full sm:hidden px-4 py-2">
-	<button 
-		class="w-full border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between" 
-		onclick={() => showLayersDropdown = !showLayersDropdown} 
-		aria-haspopup="true" 
-		aria-expanded={showLayersDropdown}
-	>
-		<span>Layers ({selectedLayers.length})</span>
-		<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-		</svg>
-	</button>
-	{#if showLayersDropdown}
-		<div class="absolute left-0 right-0 mt-2 z-10 bg-stone-100 border border-stone-700 rounded shadow-lg">
-			{#each layers as layer}
-				<button
-					class={`flex w-full items-center justify-start border-b border-stone-700 px-4 py-5 text-l ${isLayerSelected(layer, selectedLayers) ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
-					onclick={() => onToggleLayer(layer)}
-				>
-					<span class="mr-2">{isLayerSelected(layer, selectedLayers) ? '✓' : '○'}</span>
-					<span>{layer.name}</span>
-				</button>
-			{/each}
-		</div>
-	{/if}
-</div>
 
 <!-- Layer descriptions -->
 <div class="w-full items-start p-4 text-left">

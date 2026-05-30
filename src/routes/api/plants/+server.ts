@@ -1,28 +1,75 @@
 import { PLANTS_API_URL } from '$env/static/private';
 import type { RequestHandler } from '@sveltejs/kit';
 
+/** Fields kept in the list response. Matches PlantSummary in src/lib/types/plant.ts. */
+const SUMMARY_KEYS = new Set([
+	'id', 'name', 'scientific_name', 'common_name', 'image_url',
+	'img_file_name', 'img_src_url', 'img_profile_url', 'img_attribution',
+	'plant_type', 'sun_and_shade', 'soil_moisture',
+	'monarchs', 'native_bees', 'honey_bees', 'bombus', 'butterflies',
+	'moths', 'hummingbirds', 'beetles_wasps_flies', 'bats',
+	'nesting_and_structure_bees', 'larval_host_monarch',
+	'larval_host_butterfly', 'larval_host_moth',
+]);
+
+/** Filter params the upstream API accepts that we forward from the client. */
+const FILTER_PARAMS = [
+	'plant_type', 'sun_and_shade', 'soil_moisture',
+	'monarchs', 'native_bees', 'honey_bees', 'bombus', 'butterflies',
+	'moths', 'hummingbirds', 'beetles_wasps_flies', 'bats',
+	'nesting_and_structure_bees', 'larval_host_monarch',
+	'larval_host_butterfly', 'larval_host_moth',
+] as const;
+
+type PlantRecord = Record<string, unknown>;
+
+function toSummary(plant: PlantRecord): PlantRecord {
+	return Object.fromEntries(
+		Object.entries(plant).filter(([k]) => SUMMARY_KEYS.has(k))
+	);
+}
+
 export const GET: RequestHandler = async ({ url }) => {
 	const offset = url.searchParams.get('offset') || '0';
 	const ecoregion = url.searchParams.get('ecoregion');
 	const zone = url.searchParams.get('zone');
 	const zipcode = url.searchParams.get('zipcode');
 
+	const LIMIT = 250;
+
 	try {
-		const params = new URLSearchParams({ offset });
-		if (ecoregion) params.set('ecoregion', ecoregion);
-		if (zone) params.set('zone', zone);
-		if (zipcode) params.set('zipcode', zipcode);
-        params.set('limit', '250');
+		const baseParams = new URLSearchParams();
+		if (ecoregion) baseParams.set('ecoregion', ecoregion);
+		if (zone) baseParams.set('zone', zone);
+		if (zipcode) baseParams.set('zipcode', zipcode);
+		baseParams.set('limit', String(LIMIT));
 
-		const response = await fetch(`${PLANTS_API_URL}?${params.toString()}`);
-
-		if (!response.ok) {
-			throw new Error(`API request failed: ${response.status}`);
+		for (const key of FILTER_PARAMS) {
+			const val = url.searchParams.get(key);
+			if (val !== null) baseParams.set(key, val);
 		}
 
-		const data = await response.json();
-		console.log('plants data:', `${PLANTS_API_URL}?${params.toString()}`);
-		return new Response(JSON.stringify(data), {
+		const allPlants: PlantRecord[] = [];
+		let currentOffset = parseInt(offset, 10) || 0;
+
+		while (true) {
+			const params = new URLSearchParams(baseParams);
+			params.set('offset', String(currentOffset));
+
+			const response = await fetch(`${PLANTS_API_URL}?${params.toString()}`);
+
+			if (!response.ok) {
+				throw new Error(`API request failed: ${response.status}`);
+			}
+
+			const page = await response.json() as PlantRecord[];
+			allPlants.push(...page);
+
+			if (page.length < LIMIT) break;
+			currentOffset += LIMIT;
+		}
+
+		return new Response(JSON.stringify(allPlants.map(toSummary)), {
 			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (error) {
