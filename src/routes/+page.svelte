@@ -29,6 +29,14 @@
 	// Change to array of selected layers
 	let selectedLayers: LayerOption[] = $state([]);
 	let showLayersDropdown: boolean = $state(false);
+	let isMapCollapsed = $state(false);
+	let scrollContainer: HTMLElement | null = $state(null);
+
+	function handleScroll() {
+		if (scrollContainer) {
+			isMapCollapsed = scrollContainer.scrollTop > 10;
+		}
+	}
 
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
@@ -268,15 +276,15 @@
 			onFindLocation={findMyLocation}
 		/>
 
-		<!-- Two-pane layout: persistent sidebar (map + climate) + scrollable plant grid -->
-		<div class="flex flex-col sm:flex-row flex-1 overflow-y-auto sm:overflow-hidden border-t border-stone-700">
+		<!-- Stacked layout: map+info row, then full-width plant grid -->
+		<div bind:this={scrollContainer} onscroll={handleScroll} class="flex flex-col flex-1 overflow-y-auto border-t border-stone-700">
 
-			<!-- Left sidebar: map + location info + layer panel -->
-			<div class="sm:w-1/3 lg:w-1/4 flex flex-col sm:overflow-y-auto bg-stone-200 sm:border-r border-stone-700 flex-shrink-0">
+			<!-- Full-width row: map on left, location info + layer panel on right -->
+			<div class={`sm:sticky sm:top-0 sm:z-10 flex flex-col sm:flex-row w-full border-b border-stone-700 sm:transition-[height] sm:duration-300 sm:ease-in-out ${isMapCollapsed ? 'sm:h-[15vh]' : 'sm:h-[66vh]'}`}>
 
-				<!-- Map -->
-				<div class="relative w-full overflow-hidden bg-stone-100">
-					<div class="w-full aspect-[16/9]">
+				<!-- Map (left half) -->
+				<div class="sm:w-1/2 relative overflow-hidden bg-stone-100 flex-shrink-0">
+					<div class="w-full h-full aspect-[16/9] sm:aspect-auto">
 						<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
 					</div>
 
@@ -309,20 +317,23 @@
 					</div>
 				</div>
 
-				<!-- Location info + layer descriptions -->
-				<LocationInfo
-					searchResultAddress={searchResultAddress}
-					pointLayerData={pointLayerData}
-				/>
-				<LayerPanel
-					layers={layers}
-					selectedLayers={selectedLayers}
-					onToggleLayer={toggleLayer}
-				/>
+				<!-- Right side: location info + layer descriptions -->
+				<div class="sm:w-1/2 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
+					<LocationInfo
+						searchResultAddress={searchResultAddress}
+						pointLayerData={pointLayerData}
+					/>
+					<LayerPanel
+						layers={layers}
+						selectedLayers={selectedLayers}
+						onToggleLayer={toggleLayer}
+					/>
+				</div>
+
 			</div>
 
-			<!-- Right pane: plant grid (independently scrollable) -->
-			<div class="flex-1 sm:overflow-y-auto bg-stone-300">
+			<!-- Full-width plant grid -->
+			<div class="w-full bg-stone-300">
 				<CandidatePlants zipcode={searchResultAddress?.postcode} />
 			</div>
 
