@@ -180,6 +180,25 @@
 			map.once('locationerror', (e: L.ErrorEvent) => {
 				alert('Unable to find your location: ' + e.message);
 			});
+		} else {
+			// Use browser geolocation API when map is not available (e.g., on splash screen)
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					async (position) => {
+						const { latitude, longitude } = position.coords;
+						await setLocation(latitude, longitude);
+						if (searchResultAddress?.postcode) {
+							searchQuery = searchResultAddress.postcode;
+						}
+					},
+					(error) => {
+						alert('Unable to find your location: ' + error.message);
+					},
+					{ enableHighAccuracy: true }
+				);
+			} else {
+				alert('Geolocation is not supported by your browser.');
+			}
 		}
 	}
 
@@ -243,7 +262,7 @@
 		<!-- Background image -->
 		<div
 			class="absolute inset-0 bg-cover bg-center bg-no-repeat"
-			style="background-image: url('{base}/img/splash.jpg');"}
+			style="background-image: url('{base}/img/splash.jpg');"
 			aria-hidden="true"
 		></div>
 		<!-- Dark green to black gradient overlay -->
