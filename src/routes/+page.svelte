@@ -30,14 +30,6 @@
 	// Change to array of selected layers
 	let selectedLayers: LayerOption[] = $state([]);
 	let showLayersDropdown: boolean = $state(false);
-	let isMapCollapsed = $state(false);
-	let scrollContainer: HTMLElement | null = $state(null);
-
-	function handleScroll() {
-		if (scrollContainer) {
-			isMapCollapsed = scrollContainer.scrollTop > 10;
-		}
-	}
 
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
@@ -297,18 +289,16 @@
 		/>
 
 		<!-- Stacked layout: map+info row, then full-width plant grid -->
-		<div bind:this={scrollContainer} onscroll={handleScroll} class="flex flex-col flex-1 overflow-y-auto border-t border-stone-700">
+		<div class="flex flex-col flex-1 overflow-y-auto border-t border-stone-700">
 
 			<!-- Full-width row: map on left, location info + layer panel on right -->
-			<div class={`sm:sticky sm:top-0 sm:z-10 flex flex-col sm:flex-row w-full border-b border-stone-700 sm:transition-[height] sm:duration-300 sm:ease-in-out ${isMapCollapsed ? 'sm:h-[15vh]' : 'sm:h-[66vh]'}`}>
+			<div class="flex flex-col sm:flex-row w-full border-b border-stone-700 sm:h-[66vh]">
 
 				<!-- Map (left half) -->
 				<div class="sm:w-1/2 relative overflow-hidden bg-stone-100 flex-shrink-0">
 					<div class="w-full h-full aspect-[16/9] sm:aspect-auto">
 						<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
 					</div>
-
-					<!-- Floating layers dropdown -->
 					<div class="absolute top-4 right-4" style="z-index: 1000;">
 						<button
 							class="border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between shadow-md hover:bg-stone-50"
