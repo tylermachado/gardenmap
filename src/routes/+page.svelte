@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Map from '$lib/components/Map.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
-	import LayerPanel from '$lib/components/LayerPanel.svelte';
 	import LocationInfo from '$lib/components/LocationInfo.svelte';
 	import CandidatePlants from '$lib/components/CandidatePlants.svelte';
 	
@@ -28,8 +27,7 @@
 	const layers = data.availableShapefiles;
 	let mapRef: Map | null = $state(null);
 	// Change to array of selected layers
-	let selectedLayers: LayerOption[] = $state([]);
-	let showLayersDropdown: boolean = $state(false);
+	let selectedLayers: LayerOption[] = $state(layers.filter(l => l.path === 'geodata/phz.json'));	let showLayersDropdown: boolean = $state(false);
 
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
@@ -291,8 +289,8 @@
 		<!-- Stacked layout: map+info row, then full-width plant grid -->
 		<div class="flex flex-col flex-1 overflow-y-auto border-t border-stone-700">
 
-			<!-- Full-width row: map on left, location info + layer panel on right -->
-			<div class="flex flex-col sm:flex-row w-full border-b border-stone-700 sm:h-[66vh]">
+			<!-- Full-width row: map on left, location info on right (zone + ecoregion columns on large screens) -->
+			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 h-[60vh] shrink-0">
 
 				<!-- Map (left half) -->
 				<div class="sm:w-1/2 relative overflow-hidden bg-stone-100 flex-shrink-0">
@@ -327,16 +325,12 @@
 					</div>
 				</div>
 
-				<!-- Right side: location info + layer descriptions -->
+				<!-- Right side: location info (address, zone, ecoregion) -->
 				<div class="sm:w-1/2 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
 					<LocationInfo
 						searchResultAddress={searchResultAddress}
 						pointLayerData={pointLayerData}
-					/>
-					<LayerPanel
 						layers={layers}
-						selectedLayers={selectedLayers}
-						onToggleLayer={toggleLayer}
 					/>
 				</div>
 
