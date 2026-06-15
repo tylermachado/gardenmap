@@ -85,7 +85,7 @@
 		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
 			{#if pointLayerData.phz}
 				<h4 class="font-semibold text-base tracking-wide flex items-center gap-1">
-					<a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="underline">USDA 2023 Plant Hardiness Zone</a>
+					USDA 2023 Plant Hardiness Zone
 					{@render infoButton(phzLayer)}
 				</h4>
 				{#if pointLayerData.phz.zone}
@@ -97,6 +97,7 @@
 						<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.phz.trange}°F</div>
 					</div>
 				{/if}
+				<a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="text-[11px] mt-2">About Hardiness Zones →</a>
 			{/if}
 		</div>
 
