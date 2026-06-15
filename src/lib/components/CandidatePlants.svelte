@@ -214,7 +214,7 @@
 			</button>
 
 			<span class="text-[11px] italic text-stone-500">
-				{plants.length}{#if allSummaries.length > 0} of {allSummaries.length}{/if}
+				{plants.length}{allSummaries.length > 0 ? ` of ${allSummaries.length}` : ''}
 			</span>
 
 			{#if activeFilterCount > 0}

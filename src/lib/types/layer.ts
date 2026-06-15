@@ -47,8 +47,7 @@ export function getCityStateLabel(address: NominatimAddress | null | undefined):
     address?.village,
     address?.town,
     address?.city,
-    address?.state,
-    address?.country
+    address?.state
   ]
     .filter(Boolean)
     .join(', ');
