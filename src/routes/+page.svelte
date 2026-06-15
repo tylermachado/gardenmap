@@ -1,10 +1,11 @@
 <script lang="ts">
 	import Map from '$lib/components/Map.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
-	import LayerPanel from '$lib/components/LayerPanel.svelte';
 	import LocationInfo from '$lib/components/LocationInfo.svelte';
 	import CandidatePlants from '$lib/components/CandidatePlants.svelte';
-	
+	import PlantFilters from '$lib/components/PlantFilters.svelte';
+	import { createPlantFilters, clearPlantFilters, countActiveFilters } from '$lib/plant-filters.js';
+
 	import { GeocodingService } from '$lib/services/geocoding.js';
 	import { SpatialAnalysisService } from '$lib/services/spatial-analysis.js';
 	import { goto } from '$app/navigation';
@@ -21,40 +22,26 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// Evaluated once at init — shared links with coords skip the splash
-	const hasInitialUrlParams =
-		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng');
-
 	const layers = data.availableShapefiles;
 	let mapRef: Map | null = $state(null);
 	// Change to array of selected layers
-	let selectedLayers: LayerOption[] = $state([]);
-	let showLayersDropdown: boolean = $state(false);
-	let isMapCollapsed = $state(false);
-	let scrollContainer: HTMLElement | null = $state(null);
-
-	function handleScroll() {
-		if (scrollContainer) {
-			isMapCollapsed = scrollContainer.scrollTop > 10;
-		}
-	}
+	let selectedLayers: LayerOption[] = $state(layers.filter(l => l.path === 'geodata/phz.json'));	let showLayersDropdown: boolean = $state(false);
 
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
+
+	// Shared plant filters: pre-selected on the splash, then carried into the results.
+	let plantFilters = $state(createPlantFilters());
+	let showSplashFilters: boolean = $state(false);
+	const splashFilterCount = $derived(countActiveFilters(plantFilters));
 	let searchResultAddress = $state<NominatimAddress | null>(null);
 	let currentCoords: { lat: number; lng: number } | null = $state(null);
-	const showSplash = $derived(currentCoords === null && !hasInitialUrlParams);
-	const searchResultDisplayName = $derived(
-		[
-			searchResultAddress?.suburb,
-			searchResultAddress?.village,
-			searchResultAddress?.town,
-			searchResultAddress?.city,
-			searchResultAddress?.state
-		]
-			.filter(Boolean)
-			.join(', ')
+	// URL with lat/lng (e.g. a shared link) skips the splash even before
+	// currentCoords resolves asynchronously via setLocation.
+	const urlHasCoords = $derived(
+		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng')
 	);
+	const showSplash = $derived(currentCoords === null && !urlHasCoords);
 
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
@@ -71,7 +58,7 @@
 
 	function updateUrlWithLocation(lat: number, lng: number, zoom?: number): void {
 		const map = mapRef?.getMap();
-		const zoomLevel = zoom ?? map?.getZoom() ?? 10;
+		const zoomLevel = zoom ?? map?.getZoom() ?? 6;
 		const params = new URLSearchParams();
 		params.set('lat', lat.toFixed(6));
 		params.set('lng', lng.toFixed(6));
@@ -79,13 +66,14 @@
 		goto(`?${params.toString()}`, { replaceState: true });
 	}
 
-	// Load location from URL params on mount
+	// Load location from URL params on mount, and reset back to the splash
+	// when navigating to a URL with no location params (e.g. clicking the logo).
 	$effect.pre(() => {
 		const searchParams = $page.url.searchParams;
 		const urlLat = searchParams.get('lat');
 		const urlLng = searchParams.get('lng');
 		const urlZoom = searchParams.get('zoom');
-		
+
 		if (urlLat && urlLng) {
 			const lat = parseFloat(urlLat);
 			const lng = parseFloat(urlLng);
@@ -99,6 +87,12 @@
 					}
 				});
 			}
+		} else {
+			untrack(() => {
+				if (currentCoords) {
+					resetLocationState();
+				}
+			});
 		}
 	});
 
@@ -107,7 +101,7 @@
 			await setLocation(lat, lng);
 			const map = mapRef?.getMap();
 			if (map) {
-				map.setView([lat, lng], zoom ?? 10);
+				map.setView([lat, lng], zoom ?? 6);
 			}
 		} catch (error) {
 			console.error('Failed to load location from URL:', error);
@@ -180,6 +174,25 @@
 			map.once('locationerror', (e: L.ErrorEvent) => {
 				alert('Unable to find your location: ' + e.message);
 			});
+		} else {
+			// Use browser geolocation API when map is not available (e.g., on splash screen)
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					async (position) => {
+						const { latitude, longitude } = position.coords;
+						await setLocation(latitude, longitude);
+						if (searchResultAddress?.postcode) {
+							searchQuery = searchResultAddress.postcode;
+						}
+					},
+					(error) => {
+						alert('Unable to find your location: ' + error.message);
+					},
+					{ enableHighAccuracy: true }
+				);
+			} else {
+				alert('Geolocation is not supported by your browser.');
+			}
 		}
 	}
 
@@ -194,7 +207,7 @@
 		await setLocation(lat, lon, address);
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
-			map.setView([lat, lon], 14);
+			map.setView([lat, lon], 6);
 		}
 	}
 
@@ -209,7 +222,7 @@
 				: (await GeocodingService.reverseGeocode(lat, lng))?.address ?? null;
 		searchResultAddress = resolved;
 		currentCoords = { lat, lng };
-		mapRef?.addSearchMarker(lat, lng, searchResultDisplayName || undefined);
+		mapRef?.addSearchMarker(lat, lng);
 		updateUrlWithLocation(lat, lng);
 		await resolvePointData(lat, lng);
 	}
@@ -221,17 +234,30 @@
 		await setLocation(lat, lng, result.address);
 	}
 
-	function handleLocationReset() {
+	function handleZoomChange(zoomLevel: number) {
+		const map = mapRef?.getMap();
+		if (!map) return;
+		const center = currentCoords ?? map.getCenter();
+		updateUrlWithLocation(center.lat, center.lng, zoomLevel);
+	}
+
+	function resetLocationState() {
 		searchResultAddress = null;
 		currentCoords = null;
 		pointLayerData = {};
 		searchQuery = '';
+		clearPlantFilters(plantFilters);
+		showSplashFilters = false;
+	}
+
+	function handleLocationReset() {
+		resetLocationState();
 		goto('?', { replaceState: true });
 	}
 </script>
 
 <svelte:head>
-	<title>Interactive Map</title>
+	<title>MyNativePlants</title>
 	<meta name="description" content="Explore geographic data with interactive maps" />
 </svelte:head>
 
@@ -243,7 +269,7 @@
 		<!-- Background image -->
 		<div
 			class="absolute inset-0 bg-cover bg-center bg-no-repeat"
-			style="background-image: url('{base}/img/splash.jpg');"}
+			style="background-image: url('{base}/img/splash.jpg');"
 			aria-hidden="true"
 		></div>
 		<!-- Dark green to black gradient overlay -->
@@ -256,13 +282,49 @@
 			<h2 class="text-stone-100 text-center leading-tight" style="font-family: var(--font-serif); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700;">
 				Enter your zip code and find native plants for your area.
 			</h2>
-			<div class="w-full">
+			<div class="w-full flex flex-col gap-3">
 				<SearchBar
 					variant="splash"
 					bind:searchQuery
 					onSearch={searchLocation}
 					onFindLocation={findMyLocation}
 				/>
+
+				<!-- Optional pre-filters: narrow results before searching -->
+				<div class="flex flex-col gap-2">
+					<button
+						class="flex items-center gap-1.5 self-start text-[13px] text-stone-200 hover:text-white"
+						onclick={() => (showSplashFilters = !showSplashFilters)}
+						aria-expanded={showSplashFilters}
+					>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M7 12h10M11 20h2" />
+						</svg>
+						Refine (optional)
+						{#if splashFilterCount > 0}
+							<span class="rounded-full bg-lime-600 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+								{splashFilterCount}
+							</span>
+						{/if}
+						<svg class="w-3 h-3 transition-transform {showSplashFilters ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</button>
+
+					{#if showSplashFilters}
+						<div class="rounded border border-stone-500/50 bg-black/20 p-3">
+							<PlantFilters filters={plantFilters} variant="splash" />
+							{#if splashFilterCount > 0}
+								<button
+									class="mt-3 text-[11px] text-stone-300 underline hover:text-white"
+									onclick={() => clearPlantFilters(plantFilters)}
+								>
+									Clear all
+								</button>
+							{/if}
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -275,21 +337,20 @@
 			bind:searchQuery
 			onSearch={searchLocation}
 			onFindLocation={findMyLocation}
+			searchResultAddress={searchResultAddress}
 		/>
 
 		<!-- Stacked layout: map+info row, then full-width plant grid -->
-		<div bind:this={scrollContainer} onscroll={handleScroll} class="flex flex-col flex-1 overflow-y-auto border-t border-stone-700">
+		<div class="flex flex-col flex-1 overflow-y-auto border-t border-stone-700">
 
-			<!-- Full-width row: map on left, location info + layer panel on right -->
-			<div class={`sm:sticky sm:top-0 sm:z-10 flex flex-col sm:flex-row w-full border-b border-stone-700 sm:transition-[height] sm:duration-300 sm:ease-in-out ${isMapCollapsed ? 'sm:h-[15vh]' : 'sm:h-[66vh]'}`}>
+			<!-- Full-width row: map on left, location info on right (zone + ecoregion columns on large screens) -->
+			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 shrink-0">
 
-				<!-- Map (left half) -->
-				<div class="sm:w-1/2 relative overflow-hidden bg-stone-100 flex-shrink-0">
-					<div class="w-full h-full aspect-[16/9] sm:aspect-auto">
-						<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
+				<!-- Map -->
+				<div class="sm:w-3/5 relative overflow-hidden bg-stone-100 flex-shrink-0">
+					<div class="w-full h-[300px] sm:aspect-auto">
+						<Map bind:this={mapRef} center={currentCoords ? [currentCoords.lat, currentCoords.lng] : undefined} zoom={currentCoords ? 6 : undefined} marker={currentCoords ? { lat: currentCoords.lat, lng: currentCoords.lng } : undefined} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onZoomChange={handleZoomChange} />
 					</div>
-
-					<!-- Floating layers dropdown -->
 					<div class="absolute top-4 right-4" style="z-index: 1000;">
 						<button
 							class="border border-lime-950 rounded bg-stone-100 px-4 py-2 text-lime-950 font-bold flex items-center justify-between shadow-md hover:bg-stone-50"
@@ -318,16 +379,13 @@
 					</div>
 				</div>
 
-				<!-- Right side: location info + layer descriptions -->
-				<div class="sm:w-1/2 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
+				<!-- Right side: location info (location, zone, ecoregion columns) -->
+				<div class="sm:w-2/5 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
 					<LocationInfo
 						searchResultAddress={searchResultAddress}
 						pointLayerData={pointLayerData}
-					/>
-					<LayerPanel
 						layers={layers}
-						selectedLayers={selectedLayers}
-						onToggleLayer={toggleLayer}
+						onEditLocation={handleLocationReset}
 					/>
 				</div>
 
@@ -335,7 +393,7 @@
 
 			<!-- Full-width plant grid -->
 			<div class="w-full bg-stone-300">
-				<CandidatePlants zipcode={searchResultAddress?.postcode} />
+				<CandidatePlants zipcode={searchResultAddress?.postcode} filters={plantFilters} />
 			</div>
 
 		</div>

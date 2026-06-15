@@ -40,3 +40,15 @@ export interface SearchResult {
 export function isLayerSelected(layer: LayerOption, selectedLayers: LayerOption[]): boolean {
   return selectedLayers.some(selected => selected.name === layer.name);
 }
+
+export function getCityStateLabel(address: NominatimAddress | null | undefined): string {
+  return [
+    address?.suburb,
+    address?.village,
+    address?.town,
+    address?.city,
+    address?.state
+  ]
+    .filter(Boolean)
+    .join(', ');
+}

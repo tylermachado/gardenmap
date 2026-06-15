@@ -83,7 +83,7 @@
 
 <div
 	role="presentation"
-	class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
+	class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
 	onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
 >
 	{#if hasImage}

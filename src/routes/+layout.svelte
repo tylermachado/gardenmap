@@ -16,7 +16,7 @@
 <InfoModal title="About" open={showAbout} onclose={() => (showAbout = false)}>
 	{#snippet children()}
 		<p>
-			GardenersMap is a project of <a href="https://www.whiteflowerfarm.com/" target="_blank" rel="noopener">White Flower Farm</a> and the <a href="https://www.sustainablegardeninginstitute.org/" target="_blank" rel="noopener">Sustainable Gardening Institute</a>.
+			MyNativePlants is a project of <a href="https://www.whiteflowerfarm.com/" target="_blank" rel="noopener">White Flower Farm</a> and the <a href="https://www.sustainablegardeninginstitute.org/" target="_blank" rel="noopener">Sustainable Gardening Institute</a>.
 		</p>
 		<p>
 			It helps you discover native plants suited to your specific location — taking into
@@ -52,7 +52,7 @@
 
 <div class="h-screen bg-stone-300 flex flex-col overflow-hidden">
 	<header class="bg-lime-950 p-4 flex items-center justify-between">
-		<h1 class="font-serif text-3xl font-bold text-stone-100">GardenersMap</h1>
+		<a href="/"><h1 class="font-serif text-3xl font-bold text-stone-100">MyNativePlants</h1></a>
 		<nav class="flex items-center gap-4">
 			<button onclick={() => (showAbout = true)} class="text-stone-300 text-sm hover:text-stone-100 transition-colors">About</button>
 			<button onclick={() => (showHowTo = true)} class="text-stone-300 text-sm hover:text-stone-100 transition-colors">How to Use</button>
