@@ -6,9 +6,10 @@
 		searchResultAddress: NominatimAddress | null;
 		pointLayerData: Record<string, Record<string, any>>;
 		layers: LayerOption[];
+		onEditLocation?: () => void;
 	}
 
-	let { searchResultAddress, pointLayerData, layers }: LocationInfoProps = $props();
+	let { searchResultAddress, pointLayerData, layers, onEditLocation }: LocationInfoProps = $props();
 
 	function toTitleCase(str: string): string {
 		return str
@@ -18,14 +19,14 @@
 			.join(' ');
 	}
 
-	const addressLabel = $derived(
+	const cityStateLabel = $derived(
 		[
 			searchResultAddress?.suburb,
 			searchResultAddress?.village,
 			searchResultAddress?.town,
 			searchResultAddress?.city,
 			searchResultAddress?.state,
-			searchResultAddress?.postcode
+			searchResultAddress?.country
 		]
 			.filter(Boolean)
 			.join(', ')
@@ -52,53 +53,85 @@
 	{/if}
 {/snippet}
 
-<div class="w-full items-start p-4 text-left flex flex-col gap-3">
-	{#if searchResultAddress}
-		<h3>{addressLabel}</h3>
-	{/if}
+<div class="w-full flex flex-col sm:flex-row text-left">
 
-	<!-- Insert polygon data results -->
+	<!-- Location column -->
+	<div class="flex-1 min-w-0 p-4 flex flex-col gap-1">
+		{#if searchResultAddress}
+			{#if searchResultAddress.postcode}
+				<div class="font-mono text-3xl font-bold text-stone-800">{searchResultAddress.postcode}</div>
+				<div class="text-sm text-stone-600">{cityStateLabel}</div>
+			{:else}
+				<div class="text-xl font-bold text-stone-800">{cityStateLabel}</div>
+			{/if}
+			{#if onEditLocation}
+				<button
+					type="button"
+					class="mt-3 self-start border border-lime-950 rounded bg-stone-100 px-3 py-1.5 text-sm text-lime-950 font-bold flex items-center gap-1.5 hover:bg-stone-50"
+					onclick={onEditLocation}
+				>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" />
+					</svg>
+					Edit Location
+				</button>
+			{/if}
+		{/if}
+	</div>
+
 	{#if Object.keys(pointLayerData).length > 0}
-		<div class="flex flex-col lg:flex-row gap-3">
-			<!-- Zone column -->
-			<div class="">
-				{#if pointLayerData.phz}
-							<h4 class="font-semibold text-lg tracking-wide">
-								<a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="underline">USDA 2023 Plant Hardiness Zone</a>
-								{@render infoButton(phzLayer)}
-							</h4>
-							{#if pointLayerData.phz.zone}
-								<div class="font-mono text-sm font-bold text-stone-800">Zone:</div>
-								<div class="font-mono text-2xl font-bold text-stone-800 mb-[20px]">{pointLayerData.phz.zone}</div>
-							{/if}
-							{#if pointLayerData.phz.trange}
-								<div class="font-mono text-sm font-bold text-stone-800">Average Annual Lowest Temperature:</div>
-								<div class="font-mono text-2xl font-bold text-stone-800 mb-[20px]">{pointLayerData.phz.trange}°F</div>
-							{/if}
+		<!-- USDA Hardiness Zone column -->
+		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
+			{#if pointLayerData.phz}
+				<h4 class="font-semibold text-base tracking-wide flex items-center gap-1">
+					<a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="underline">USDA 2023 Plant Hardiness Zone</a>
+					{@render infoButton(phzLayer)}
+				</h4>
+				{#if pointLayerData.phz.zone}
+					<div class="font-mono text-3xl font-bold text-stone-800 mt-1">{pointLayerData.phz.zone}</div>
 				{/if}
-
-
-				{#if pointLayerData.ecoregions}
-							<h4 class="font-semibold text-lg tracking-wide">
-								North American Ecoregions - Level III
-								{@render infoButton(ecoregionsLayer)}
-							</h4>
-							{#if pointLayerData.ecoregions.NA_L3NAME}
-								<div class="font-mono text-sm font-bold text-stone-800">Level 1:</div>
-								<div class="font-mono text-2xl font-bold text-stone-800 mb-[20px]">{pointLayerData.ecoregions.NA_L1CODE} {toTitleCase(pointLayerData.ecoregions.NA_L1NAME)}</div>
-								<div class="font-mono text-sm font-bold text-stone-800">Level 2:</div>
-								<div class="font-mono text-2xl font-bold text-stone-800 mb-[20px]">{pointLayerData.ecoregions.NA_L2CODE} {toTitleCase(pointLayerData.ecoregions.NA_L2NAME)}</div>
-								<div class="font-mono text-sm font-bold text-stone-800">Level 3:</div>
-								<div class="font-mono text-2xl font-bold text-stone-800 mb-[20px]">{pointLayerData.ecoregions.NA_L3CODE} {toTitleCase(pointLayerData.ecoregions.NA_L3NAME)}</div>
-								<div class="text-[11px] mt-1"><a href="https://sgi-gardenlibrary.maps.arcgis.com/sharing/rest/content/items/79bca4b771a04cb0b61176cf6f778565/data" target="_blank" rel="noopener noreferrer" class="underline">View detailed Ecoregion Descriptions</a></div>
-							{/if}
+				{#if pointLayerData.phz.trange}
+					<div class="mt-2">
+						<div class="text-[10px] uppercase tracking-wide text-stone-500">Avg. Annual Lowest Temp</div>
+						<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.phz.trange}°F</div>
+					</div>
 				{/if}
+			{/if}
+		</div>
 
-			</div>
+		<!-- Ecoregion column -->
+		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
+			{#if pointLayerData.ecoregions}
+				<h4 class="font-semibold text-base tracking-wide flex items-center gap-1">
+					North American Ecoregions - Level III
+					{@render infoButton(ecoregionsLayer)}
+				</h4>
+				{#if pointLayerData.ecoregions.NA_L3NAME}
+					<div class="mt-1 flex flex-col gap-2">
+						<div>
+							<div class="text-[10px] uppercase tracking-wide text-stone-500">Level 1</div>
+							<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.ecoregions.NA_L1CODE} {toTitleCase(pointLayerData.ecoregions.NA_L1NAME)}</div>
+						</div>
+						<div>
+							<div class="text-[10px] uppercase tracking-wide text-stone-500">Level 2</div>
+							<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.ecoregions.NA_L2CODE} {toTitleCase(pointLayerData.ecoregions.NA_L2NAME)}</div>
+						</div>
+						<div>
+							<div class="text-[10px] uppercase tracking-wide text-stone-500">Level 3</div>
+							<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.ecoregions.NA_L3CODE} {toTitleCase(pointLayerData.ecoregions.NA_L3NAME)}</div>
+						</div>
+					</div>
+					<a href="https://sgi-gardenlibrary.maps.arcgis.com/sharing/rest/content/items/79bca4b771a04cb0b61176cf6f778565/data" target="_blank" rel="noopener noreferrer" class="text-[11px] mt-2">View detailed Ecoregion Descriptions →</a>
+				{/if}
+			{/if}
 		</div>
 	{:else if searchResultAddress}
-		<p class="text-[11px] italic text-stone-600">No polygon matches at this point.</p>
+		<div class="flex-1 min-w-0 p-4 flex items-center border-t sm:border-t-0 sm:border-l border-stone-400">
+			<p class="text-[11px] italic text-stone-600">No polygon matches at this point.</p>
+		</div>
 	{/if}
+
 </div>
 
 <InfoModal
@@ -110,4 +143,3 @@
 		<p>{infoModalLayer?.description}</p>
 	{/snippet}
 </InfoModal>
-

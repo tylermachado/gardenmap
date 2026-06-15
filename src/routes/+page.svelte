@@ -3,7 +3,9 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import LocationInfo from '$lib/components/LocationInfo.svelte';
 	import CandidatePlants from '$lib/components/CandidatePlants.svelte';
-	
+	import PlantFilters from '$lib/components/PlantFilters.svelte';
+	import { createPlantFilters, clearPlantFilters, countActiveFilters } from '$lib/plant-filters.js';
+
 	import { GeocodingService } from '$lib/services/geocoding.js';
 	import { SpatialAnalysisService } from '$lib/services/spatial-analysis.js';
 	import { goto } from '$app/navigation';
@@ -31,6 +33,11 @@
 
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
+
+	// Shared plant filters: pre-selected on the splash, then carried into the results.
+	let plantFilters = $state(createPlantFilters());
+	let showSplashFilters: boolean = $state(false);
+	const splashFilterCount = $derived(countActiveFilters(plantFilters));
 	let searchResultAddress = $state<NominatimAddress | null>(null);
 	let currentCoords: { lat: number; lng: number } | null = $state(null);
 	const showSplash = $derived(currentCoords === null && !hasInitialUrlParams);
@@ -203,7 +210,7 @@
 		await setLocation(lat, lon, address);
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
-			map.setView([lat, lon], 14);
+			map.setView([lat, lon], 4);
 		}
 	}
 
@@ -235,12 +242,14 @@
 		currentCoords = null;
 		pointLayerData = {};
 		searchQuery = '';
+		clearPlantFilters(plantFilters);
+		showSplashFilters = false;
 		goto('?', { replaceState: true });
 	}
 </script>
 
 <svelte:head>
-	<title>Interactive Map</title>
+	<title>MyNativePlants</title>
 	<meta name="description" content="Explore geographic data with interactive maps" />
 </svelte:head>
 
@@ -265,13 +274,49 @@
 			<h2 class="text-stone-100 text-center leading-tight" style="font-family: var(--font-serif); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700;">
 				Enter your zip code and find native plants for your area.
 			</h2>
-			<div class="w-full">
+			<div class="w-full flex flex-col gap-3">
 				<SearchBar
 					variant="splash"
 					bind:searchQuery
 					onSearch={searchLocation}
 					onFindLocation={findMyLocation}
 				/>
+
+				<!-- Optional pre-filters: narrow results before searching -->
+				<div class="flex flex-col gap-2">
+					<button
+						class="flex items-center gap-1.5 self-start text-[13px] text-stone-200 hover:text-white"
+						onclick={() => (showSplashFilters = !showSplashFilters)}
+						aria-expanded={showSplashFilters}
+					>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M7 12h10M11 20h2" />
+						</svg>
+						Refine (optional)
+						{#if splashFilterCount > 0}
+							<span class="rounded-full bg-lime-600 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+								{splashFilterCount}
+							</span>
+						{/if}
+						<svg class="w-3 h-3 transition-transform {showSplashFilters ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</button>
+
+					{#if showSplashFilters}
+						<div class="rounded border border-stone-500/50 bg-black/20 p-3">
+							<PlantFilters filters={plantFilters} variant="splash" />
+							{#if splashFilterCount > 0}
+								<button
+									class="mt-3 text-[11px] text-stone-300 underline hover:text-white"
+									onclick={() => clearPlantFilters(plantFilters)}
+								>
+									Clear all
+								</button>
+							{/if}
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -292,8 +337,8 @@
 			<!-- Full-width row: map on left, location info on right (zone + ecoregion columns on large screens) -->
 			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 h-[60vh] shrink-0">
 
-				<!-- Map (left half) -->
-				<div class="sm:w-1/2 relative overflow-hidden bg-stone-100 flex-shrink-0">
+				<!-- Map -->
+				<div class="sm:w-2/5 relative overflow-hidden bg-stone-100 flex-shrink-0">
 					<div class="w-full h-full aspect-[16/9] sm:aspect-auto">
 						<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
 					</div>
@@ -325,12 +370,13 @@
 					</div>
 				</div>
 
-				<!-- Right side: location info (address, zone, ecoregion) -->
-				<div class="sm:w-1/2 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
+				<!-- Right side: location info (location, zone, ecoregion columns) -->
+				<div class="sm:w-3/5 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
 					<LocationInfo
 						searchResultAddress={searchResultAddress}
 						pointLayerData={pointLayerData}
 						layers={layers}
+						onEditLocation={handleLocationReset}
 					/>
 				</div>
 
@@ -338,7 +384,7 @@
 
 			<!-- Full-width plant grid -->
 			<div class="w-full bg-stone-300">
-				<CandidatePlants zipcode={searchResultAddress?.postcode} />
+				<CandidatePlants zipcode={searchResultAddress?.postcode} filters={plantFilters} />
 			</div>
 
 		</div>

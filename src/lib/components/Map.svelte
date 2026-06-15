@@ -10,7 +10,7 @@ import usdaHardinessColors from '$lib/data/usda-hardiness-colors.json';
 import epaEcoregionColorsData from '$lib/data/epa-ecoregion-colors.json';
 
 
-const { center = [39.8283, -98.5795], zoom = 3.5, shapefiles = [], colorArray = [
+const { center = [39.8283, -98.5795], zoom = 4, shapefiles = [], colorArray = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FCEA2B',
   '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
 ], onMapClick, onLocationReset } = $props();

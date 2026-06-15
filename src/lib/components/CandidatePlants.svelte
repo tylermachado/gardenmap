@@ -1,7 +1,16 @@
 <script lang="ts">
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
 	import PlantModal from '$lib/components/PlantModal.svelte';
+	import PlantFilters from '$lib/components/PlantFilters.svelte';
 	import type { PlantSummary } from '$lib/types/plant.js';
+	import {
+		createPlantFilters,
+		clearPlantFilters,
+		countActiveFilters,
+		hasActiveFilters,
+		applyPlantFilterParams,
+		type PlantFilterState,
+	} from '$lib/plant-filters.js';
 
 	const IMG_BASE_URL = 'https://d10s8hlfsm6n8p.cloudfront.net/images/';
 	const PAGE_SIZE = 20;
@@ -10,22 +19,19 @@
 		ecoregion?: string;
 		phzZone?: string;
 		zipcode?: string;
+		/** Shared filter selection, owned by the parent so splash pre-selections survive. */
+		filters?: PlantFilterState;
 	}
 
-	let { ecoregion, phzZone, zipcode }: CandidatePlantsProps = $props();
+	let { ecoregion, phzZone, zipcode, filters = createPlantFilters() }: CandidatePlantsProps = $props();
 
-	// allSummaries: unfiltered set for this location; drives filter dropdown options
+	// allSummaries: unfiltered total for this location; drives the "X of Y" count
 	let allSummaries: PlantSummary[] = $state([]);
 	// plants: current server-filtered result set displayed in the grid
 	let plants: PlantSummary[] = $state([]);
 	let loading = $state(false);
 	let error: string | null = $state(null);
 	let selectedPlant: PlantSummary | null = $state(null);
-
-	let filterPlantType = $state('');
-	let filterSunShade = $state('');
-	let filterMoisture = $state('');
-	let filterPollinators = $state(new Set<string>());
 
 	let displayCount = $state(PAGE_SIZE);
 	let sentinelEl: HTMLDivElement | undefined = $state();
@@ -58,48 +64,32 @@
 	}
 
 	let showFilters = $state(false);
-	let showAttractsDropdown = $state(false);
 
-	const activeFilterCount = $derived(
-		(filterPlantType ? 1 : 0) +
-		(filterSunShade ? 1 : 0) +
-		(filterMoisture ? 1 : 0) +
-		(filterPollinators.size > 0 ? 1 : 0)
-	);
+	const activeFilterCount = $derived(countActiveFilters(filters));
 
-	function clearFilters() {
-		filterPlantType = '';
-		filterSunShade = '';
-		filterMoisture = '';
-		filterPollinators = new Set();
+	function locationParams(): URLSearchParams {
+		const params = new URLSearchParams();
+		if (ecoregion) params.set('ecoregion', ecoregion);
+		if (phzZone) params.set('zone', phzZone);
+		if (zipcode) params.set('zipcode', zipcode);
+		return params;
 	}
 
-	const POLLINATOR_KEYS: { key: keyof PlantSummary; label: string }[] = [
-		{ key: 'monarchs', label: 'Monarchs' },
-		{ key: 'native_bees', label: 'Native bees' },
-		{ key: 'honey_bees', label: 'Honey bees' },
-		{ key: 'bombus', label: 'Bumblebees' },
-		{ key: 'butterflies', label: 'Butterflies' },
-		{ key: 'moths', label: 'Moths' },
-		{ key: 'hummingbirds', label: 'Hummingbirds' },
-		{ key: 'beetles_wasps_flies', label: 'Beetles/wasps/flies' },
-		{ key: 'bats', label: 'Bats' },
-		{ key: 'nesting_and_structure_bees', label: 'Nesting bees' },
-		{ key: 'larval_host_monarch', label: 'Larval host: monarch' },
-		{ key: 'larval_host_butterfly', label: 'Larval host: butterfly' },
-		{ key: 'larval_host_moth', label: 'Larval host: moth' },
-	];
-
-	// Dropdown options always derived from allSummaries (stable; don't shift when filters are applied)
-	const plantTypeOptions = $derived(
-		[...new Set(allSummaries.flatMap((p) => p.plant_type ?? []))].sort()
-	);
-	const sunShadeOptions = $derived(
-		[...new Set(allSummaries.flatMap((p) => p.sun_and_shade ?? []))].sort()
-	);
-	const moistureOptions = $derived(
-		[...new Set(allSummaries.flatMap((p) => p.soil_moisture ?? []))].sort()
-	);
+	/** Fetch the unfiltered total for this location to seed the "of N" count. */
+	function seedTotals(signal: AbortSignal) {
+		fetch(`/api/plants?${locationParams().toString()}`, { signal })
+			.then((res) => {
+				if (res.status === 500) return makePlaceholderPlants();
+				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+				return res.json() as Promise<PlantSummary[]>;
+			})
+			.then((data) => {
+				allSummaries = data;
+			})
+			.catch((err: unknown) => {
+				if (err instanceof Error && err.name === 'AbortError') return;
+			});
+	}
 
 	// Plain (non-reactive) variable used to detect location changes without itself being a tracked dep
 	let prevLocationKey = '';
@@ -107,10 +97,10 @@
 	$effect(() => {
 		// Read ALL reactive deps at the top so Svelte tracks them even when we return early
 		const locationKey = [ecoregion, phzZone, zipcode].join('|');
-		const ft = filterPlantType;
-		const fs = filterSunShade;
-		const fm = filterMoisture;
-		const fp = filterPollinators;
+		const ft = filters.plantType;
+		const fs = filters.sunShade;
+		const fm = filters.moisture;
+		const fp = filters.pollinators;
 
 		if (!ecoregion && !phzZone && !zipcode) {
 			prevLocationKey = locationKey;
@@ -121,34 +111,31 @@
 		}
 
 		const isNewLocation = locationKey !== prevLocationKey;
+		// A real previous location (not the initial mount or the empty/no-location key).
+		const hadRealPreviousLocation =
+			isNewLocation && prevLocationKey !== '' && prevLocationKey !== '||';
 
-		if (isNewLocation) {
-			// Update key FIRST so the re-run (triggered by filter resets below) sees isNewLocation = false
+		// Moving between two real locations: drop stale filters (selections may not fit the
+		// new place). The very first load is exempt so splash pre-selections survive.
+		if (hadRealPreviousLocation) {
 			prevLocationKey = locationKey;
 			allSummaries = [];
 			plants = [];
 			loading = true;
 			error = null;
 			showFilters = false;
-			showAttractsDropdown = false;
-			// Writing these tracked deps schedules the effect to re-run with empty filters
-			filterPlantType = '';
-			filterSunShade = '';
-			filterMoisture = '';
-			filterPollinators = new Set();
+			clearPlantFilters(filters); // schedules a re-run with empty filters
 			return;
 		}
 
-		const hasFilters = !!(ft || fs || fm || fp.size > 0);
+		if (isNewLocation) {
+			prevLocationKey = locationKey;
+		}
 
-		const params = new URLSearchParams();
-		if (ecoregion) params.set('ecoregion', ecoregion);
-		if (phzZone) params.set('zone', phzZone);
-		if (zipcode) params.set('zipcode', zipcode);
-		if (ft) params.set('plant_type', ft);
-		if (fs) params.set('sun_and_shade', fs);
-		if (fm) params.set('soil_moisture', fm);
-		for (const k of [...fp]) params.set(k, 'true');
+		const filtersActive = hasActiveFilters(filters);
+
+		const params = locationParams();
+		applyPlantFilterParams(filters, params);
 
 		loading = true;
 		error = null;
@@ -156,12 +143,18 @@
 
 		const controller = new AbortController();
 
+		// First load arriving with pre-selected filters (from the splash): the main fetch is
+		// filtered, so seed the unfiltered total separately for the "of N" count.
+		if (isNewLocation && filtersActive) {
+			seedTotals(controller.signal);
+		}
+
 		fetch(`/api/plants?${params.toString()}`, { signal: controller.signal })
 			.then((res) => {
 				if (res.status === 500) {
 					const placeholders = makePlaceholderPlants();
 					plants = placeholders;
-					if (!hasFilters) allSummaries = placeholders;
+					if (!filtersActive) allSummaries = placeholders;
 					return null;
 				}
 				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -170,8 +163,8 @@
 			.then((data) => {
 				if (data === null) return;
 				plants = data;
-				// The first fetch for a new location (no filters) also seeds the dropdown options
-				if (!hasFilters) allSummaries = data;
+				// An unfiltered fetch also seeds the total for the "of N" count.
+				if (!filtersActive) allSummaries = data;
 			})
 			.catch((err: unknown) => {
 				if (err instanceof Error && err.name === 'AbortError') return;
@@ -184,6 +177,9 @@
 
 		return () => controller.abort();
 	});
+
+	// Show the filter UI once there are results or active (e.g. pre-selected) filters.
+	const showFilterControls = $derived(plants.length > 0 || activeFilterCount > 0);
 </script>
 
 <div class="w-full items-start p-4 text-left">
@@ -194,7 +190,7 @@
 		<p class="mt-2 text-[11px] italic text-stone-600">Loading plants…</p>
 	{:else if error}
 		<p class="mt-2 text-[11px] italic text-red-600">{error}</p>
-	{:else if allSummaries.length > 0}
+	{:else if showFilterControls}
 		<!-- Filter toggle bar: always visible -->
 		<div class="mt-3 flex items-center gap-3">
 			<button
@@ -218,13 +214,13 @@
 			</button>
 
 			<span class="text-[11px] italic text-stone-500">
-				{plants.length} of {allSummaries.length}
+				{plants.length}{#if allSummaries.length > 0} of {allSummaries.length}{/if}
 			</span>
 
 			{#if activeFilterCount > 0}
 				<button
 					class="text-[11px] text-stone-500 underline hover:text-stone-700"
-					onclick={clearFilters}
+					onclick={() => clearPlantFilters(filters)}
 				>
 					Clear all
 				</button>
@@ -233,85 +229,8 @@
 
 		<!-- Collapsible filter panel -->
 		{#if showFilters}
-			<div class="mt-2 flex flex-wrap items-end gap-3 rounded border border-stone-300 bg-stone-100 p-3">
-				<label class="flex flex-col gap-1 text-[11px] text-stone-600">
-					Plant type
-					<select bind:value={filterPlantType} class="rounded border border-stone-400 bg-white px-2 py-1 text-[12px]">
-						<option value="">All</option>
-						{#each plantTypeOptions as opt}
-							<option value={opt}>{opt}</option>
-						{/each}
-					</select>
-				</label>
-
-				<label class="flex flex-col gap-1 text-[11px] text-stone-600">
-					Sun / shade
-					<select bind:value={filterSunShade} class="rounded border border-stone-400 bg-white px-2 py-1 text-[12px]">
-						<option value="">All</option>
-						{#each sunShadeOptions as opt}
-							<option value={opt}>{opt}</option>
-						{/each}
-					</select>
-				</label>
-
-				<label class="flex flex-col gap-1 text-[11px] text-stone-600">
-					Moisture
-					<select bind:value={filterMoisture} class="rounded border border-stone-400 bg-white px-2 py-1 text-[12px]">
-						<option value="">All</option>
-						{#each moistureOptions as opt}
-							<option value={opt}>{opt}</option>
-						{/each}
-					</select>
-				</label>
-
-				<!-- Attracts: custom multi-select dropdown -->
-				<div class="flex flex-col gap-1 text-[11px] text-stone-600 relative">
-					Attracts
-					<button
-						class="flex items-center gap-1 rounded border px-2 py-1 text-[12px] text-left
-							{filterPollinators.size > 0 ? 'border-lime-700 bg-lime-50 text-lime-900 font-medium' : 'border-stone-400 bg-white text-stone-700'}"
-						onclick={() => (showAttractsDropdown = !showAttractsDropdown)}
-						aria-expanded={showAttractsDropdown}
-					>
-						{filterPollinators.size > 0 ? `${filterPollinators.size} selected` : 'Any'}
-						<svg class="w-3 h-3 ml-auto transition-transform {showAttractsDropdown ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-						</svg>
-					</button>
-
-					{#if showAttractsDropdown}
-						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<div
-							class="absolute top-full left-0 z-20 mt-1 w-52 rounded border border-stone-300 bg-white shadow-lg"
-							onmouseleave={() => (showAttractsDropdown = false)}
-						>
-							<div class="max-h-64 overflow-y-auto p-2 flex flex-col gap-1">
-								{#each POLLINATOR_KEYS as { key, label }}
-									<label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-[12px] hover:bg-stone-100">
-										<input
-											type="checkbox"
-											checked={filterPollinators.has(key)}
-											onchange={(e) => {
-												const next = new Set(filterPollinators);
-												if ((e.target as HTMLInputElement).checked) next.add(key);
-												else next.delete(key);
-												filterPollinators = next;
-											}}
-										/>
-										{label}
-									</label>
-								{/each}
-							</div>
-							{#if filterPollinators.size > 0}
-								<div class="border-t border-stone-200 px-3 py-1.5">
-									<button class="text-[11px] text-stone-500 underline hover:text-stone-700" onclick={() => (filterPollinators = new Set())}>
-										Clear
-									</button>
-								</div>
-							{/if}
-						</div>
-					{/if}
-				</div>
+			<div class="mt-2 rounded border border-stone-300 bg-stone-100 p-3">
+				<PlantFilters {filters} variant="panel" />
 			</div>
 		{/if}
 
