@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { LayerOption, NominatimAddress } from '$lib/types/layer.js';
+	import { getCityStateLabel } from '$lib/types/layer.js';
 	import InfoModal from './InfoModal.svelte';
 
 	interface LocationInfoProps {
@@ -19,18 +20,7 @@
 			.join(' ');
 	}
 
-	const cityStateLabel = $derived(
-		[
-			searchResultAddress?.suburb,
-			searchResultAddress?.village,
-			searchResultAddress?.town,
-			searchResultAddress?.city,
-			searchResultAddress?.state,
-			searchResultAddress?.country
-		]
-			.filter(Boolean)
-			.join(', ')
-	);
+	const cityStateLabel = $derived(getCityStateLabel(searchResultAddress));
 
 	const phzLayer = $derived(layers.find(l => l.path === 'geodata/phz.json'));
 	const ecoregionsLayer = $derived(layers.find(l => l.path === 'geodata/ecoregions.json'));
@@ -55,30 +45,6 @@
 
 <div class="w-full flex flex-col sm:flex-row text-left">
 
-	<!-- Location column -->
-	<div class="flex-1 min-w-0 p-4 flex flex-col gap-1">
-		{#if searchResultAddress}
-			{#if searchResultAddress.postcode}
-				<div class="font-mono text-3xl font-bold text-stone-800">{searchResultAddress.postcode}</div>
-				<div class="text-sm text-stone-600">{cityStateLabel}</div>
-			{:else}
-				<div class="text-xl font-bold text-stone-800">{cityStateLabel}</div>
-			{/if}
-			{#if onEditLocation}
-				<button
-					type="button"
-					class="mt-3 self-start border border-lime-950 rounded bg-stone-100 px-3 py-1.5 text-sm text-lime-950 font-bold flex items-center gap-1.5 hover:bg-stone-50"
-					onclick={onEditLocation}
-				>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" />
-					</svg>
-					Edit Location
-				</button>
-			{/if}
-		{/if}
-	</div>
 
 	{#if Object.keys(pointLayerData).length > 0}
 		<!-- USDA Hardiness Zone column -->

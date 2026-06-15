@@ -22,9 +22,11 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// Evaluated once at init — shared links with coords skip the splash
-	const hasInitialUrlParams =
-		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng');
+	// Initialized from the URL — shared links with coords skip the splash.
+	// Cleared on reset so navigating back to "/" can show the splash again.
+	let hasInitialUrlParams = $state(
+		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng')
+	);
 
 	const layers = data.availableShapefiles;
 	let mapRef: Map | null = $state(null);
@@ -41,17 +43,6 @@
 	let searchResultAddress = $state<NominatimAddress | null>(null);
 	let currentCoords: { lat: number; lng: number } | null = $state(null);
 	const showSplash = $derived(currentCoords === null && !hasInitialUrlParams);
-	const searchResultDisplayName = $derived(
-		[
-			searchResultAddress?.suburb,
-			searchResultAddress?.village,
-			searchResultAddress?.town,
-			searchResultAddress?.city,
-			searchResultAddress?.state
-		]
-			.filter(Boolean)
-			.join(', ')
-	);
 
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
@@ -68,7 +59,7 @@
 
 	function updateUrlWithLocation(lat: number, lng: number, zoom?: number): void {
 		const map = mapRef?.getMap();
-		const zoomLevel = zoom ?? map?.getZoom() ?? 10;
+		const zoomLevel = zoom ?? map?.getZoom() ?? 6;
 		const params = new URLSearchParams();
 		params.set('lat', lat.toFixed(6));
 		params.set('lng', lng.toFixed(6));
@@ -76,13 +67,14 @@
 		goto(`?${params.toString()}`, { replaceState: true });
 	}
 
-	// Load location from URL params on mount
+	// Load location from URL params on mount, and reset back to the splash
+	// when navigating to a URL with no location params (e.g. clicking the logo).
 	$effect.pre(() => {
 		const searchParams = $page.url.searchParams;
 		const urlLat = searchParams.get('lat');
 		const urlLng = searchParams.get('lng');
 		const urlZoom = searchParams.get('zoom');
-		
+
 		if (urlLat && urlLng) {
 			const lat = parseFloat(urlLat);
 			const lng = parseFloat(urlLng);
@@ -96,6 +88,12 @@
 					}
 				});
 			}
+		} else {
+			untrack(() => {
+				if (currentCoords) {
+					resetLocationState();
+				}
+			});
 		}
 	});
 
@@ -104,7 +102,7 @@
 			await setLocation(lat, lng);
 			const map = mapRef?.getMap();
 			if (map) {
-				map.setView([lat, lng], zoom ?? 10);
+				map.setView([lat, lng], zoom ?? 6);
 			}
 		} catch (error) {
 			console.error('Failed to load location from URL:', error);
@@ -210,7 +208,7 @@
 		await setLocation(lat, lon, address);
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
-			map.setView([lat, lon], 4);
+			map.setView([lat, lon], 6);
 		}
 	}
 
@@ -225,7 +223,7 @@
 				: (await GeocodingService.reverseGeocode(lat, lng))?.address ?? null;
 		searchResultAddress = resolved;
 		currentCoords = { lat, lng };
-		mapRef?.addSearchMarker(lat, lng, searchResultDisplayName || undefined);
+		mapRef?.addSearchMarker(lat, lng);
 		updateUrlWithLocation(lat, lng);
 		await resolvePointData(lat, lng);
 	}
@@ -237,13 +235,25 @@
 		await setLocation(lat, lng, result.address);
 	}
 
-	function handleLocationReset() {
+	function handleZoomChange(zoomLevel: number) {
+		const map = mapRef?.getMap();
+		if (!map) return;
+		const center = currentCoords ?? map.getCenter();
+		updateUrlWithLocation(center.lat, center.lng, zoomLevel);
+	}
+
+	function resetLocationState() {
 		searchResultAddress = null;
 		currentCoords = null;
 		pointLayerData = {};
 		searchQuery = '';
 		clearPlantFilters(plantFilters);
 		showSplashFilters = false;
+		hasInitialUrlParams = false;
+	}
+
+	function handleLocationReset() {
+		resetLocationState();
 		goto('?', { replaceState: true });
 	}
 </script>
@@ -329,6 +339,7 @@
 			bind:searchQuery
 			onSearch={searchLocation}
 			onFindLocation={findMyLocation}
+			searchResultAddress={searchResultAddress}
 		/>
 
 		<!-- Stacked layout: map+info row, then full-width plant grid -->
@@ -338,9 +349,9 @@
 			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 shrink-0">
 
 				<!-- Map -->
-				<div class="sm:w-2/5 relative overflow-hidden bg-stone-100 flex-shrink-0">
+				<div class="sm:w-3/5 relative overflow-hidden bg-stone-100 flex-shrink-0">
 					<div class="w-full h-[300px] sm:aspect-auto">
-						<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
+						<Map bind:this={mapRef} center={currentCoords ? [currentCoords.lat, currentCoords.lng] : undefined} zoom={currentCoords ? 6 : undefined} marker={currentCoords ? { lat: currentCoords.lat, lng: currentCoords.lng } : undefined} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onZoomChange={handleZoomChange} />
 					</div>
 					<div class="absolute top-4 right-4" style="z-index: 1000;">
 						<button
