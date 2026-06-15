@@ -22,12 +22,6 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// Initialized from the URL — shared links with coords skip the splash.
-	// Cleared on reset so navigating back to "/" can show the splash again.
-	let hasInitialUrlParams = $state(
-		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng')
-	);
-
 	const layers = data.availableShapefiles;
 	let mapRef: Map | null = $state(null);
 	// Change to array of selected layers
@@ -42,7 +36,12 @@
 	const splashFilterCount = $derived(countActiveFilters(plantFilters));
 	let searchResultAddress = $state<NominatimAddress | null>(null);
 	let currentCoords: { lat: number; lng: number } | null = $state(null);
-	const showSplash = $derived(currentCoords === null && !hasInitialUrlParams);
+	// URL with lat/lng (e.g. a shared link) skips the splash even before
+	// currentCoords resolves asynchronously via setLocation.
+	const urlHasCoords = $derived(
+		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng')
+	);
+	const showSplash = $derived(currentCoords === null && !urlHasCoords);
 
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
@@ -249,7 +248,6 @@
 		searchQuery = '';
 		clearPlantFilters(plantFilters);
 		showSplashFilters = false;
-		hasInitialUrlParams = false;
 	}
 
 	function handleLocationReset() {
@@ -382,7 +380,7 @@
 				</div>
 
 				<!-- Right side: location info (location, zone, ecoregion columns) -->
-				<div class="sm:w-3/5 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
+				<div class="sm:w-2/5 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
 					<LocationInfo
 						searchResultAddress={searchResultAddress}
 						pointLayerData={pointLayerData}
