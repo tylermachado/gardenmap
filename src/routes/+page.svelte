@@ -335,11 +335,11 @@
 		<div class="flex flex-col flex-1 overflow-y-auto border-t border-stone-700">
 
 			<!-- Full-width row: map on left, location info on right (zone + ecoregion columns on large screens) -->
-			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 h-[60vh] shrink-0">
+			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 shrink-0">
 
 				<!-- Map -->
 				<div class="sm:w-2/5 relative overflow-hidden bg-stone-100 flex-shrink-0">
-					<div class="w-full h-full aspect-[16/9] sm:aspect-auto">
+					<div class="w-full h-[300px] sm:aspect-auto">
 						<Map bind:this={mapRef} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onLocationReset={handleLocationReset} />
 					</div>
 					<div class="absolute top-4 right-4" style="z-index: 1000;">
