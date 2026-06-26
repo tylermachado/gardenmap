@@ -146,7 +146,7 @@ async function loadShapefiles(): Promise<void> {
         if (feature?.properties?.zone && typeof feature.properties.zone === 'string') {
           const zoneValue = feature.properties.zone as string;
           color = usdaHardinessColors[zoneValue as keyof typeof usdaHardinessColors] || usdaHardinessColors['1a'];
-        } else if (feature?.properties?.US_L3CODE) {
+        } else if (feature?.properties?.NA_L3CODE) {
           const ecoregionCode = String(feature.properties.NA_L3CODE);
           color = epaEcoregionColors[ecoregionCode] || '#A5DCF5';
         } else {
