@@ -1,3 +1,7 @@
+<script module lang="ts">
+  const geoDataCache: Record<string, GeoJSON.FeatureCollection> = {};
+</script>
+
 <script lang="ts">
 import { onMount } from 'svelte';
 import { base } from '$app/paths';
@@ -198,17 +202,22 @@ async function loadGeoOrTopoJSON(
   styleFunction?: (feature?: GeoJSON.Feature) => L.PathOptions,
   layerIndex?: number
 ): Promise<void> {
-  const response: Response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const data = await response.json();
   let geojsonData: GeoJSON.FeatureCollection;
-  if (data.type === 'Topology') {
-    const objectName = Object.keys(data.objects)[0];
-    geojsonData = topojson.feature(data, data.objects[objectName]) as any;
+  if (geoDataCache[url]) {
+    geojsonData = geoDataCache[url];
   } else {
-    geojsonData = data as GeoJSON.FeatureCollection;
+    const response: Response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    if (data.type === 'Topology') {
+      const objectName = Object.keys(data.objects)[0];
+      geojsonData = topojson.feature(data, data.objects[objectName]) as any;
+    } else {
+      geojsonData = data as GeoJSON.FeatureCollection;
+    }
+    geoDataCache[url] = geojsonData;
   }
   addGeoJSONToMap(geojsonData, styleFunction, layerIndex);
 }
