@@ -79,12 +79,12 @@
 	function seedTotals(signal: AbortSignal) {
 		fetch(`/api/plants?${locationParams().toString()}`, { signal })
 			.then((res) => {
-				if (res.status === 500) return makePlaceholderPlants();
+				if (res.status === 500) return null;
 				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 				return res.json() as Promise<PlantSummary[]>;
 			})
 			.then((data) => {
-				allSummaries = data;
+				if (data !== null) allSummaries = data;
 			})
 			.catch((err: unknown) => {
 				if (err instanceof Error && err.name === 'AbortError') return;
