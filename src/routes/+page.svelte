@@ -12,7 +12,7 @@
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 	import { untrack } from 'svelte';
-	import { fly } from 'svelte/transition';
+	import { fly, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
 	import type * as L from 'leaflet';
@@ -254,6 +254,28 @@
 		resetLocationState();
 		goto('?', { replaceState: true });
 	}
+
+	// Mobile-only "scroll down" hint so users discover the plant list below the map.
+	let resultsScrollEl: HTMLElement | null = $state(null);
+	let plantListEl: HTMLElement | null = $state(null);
+	let scrollHintVisible: boolean = $state(true);
+
+	function handleResultsScroll() {
+		if (resultsScrollEl) {
+			scrollHintVisible = resultsScrollEl.scrollTop < 40;
+		}
+	}
+
+	function scrollToPlants() {
+		plantListEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+
+	// Re-show the hint whenever a new location is loaded.
+	$effect(() => {
+		if (currentCoords) {
+			scrollHintVisible = true;
+		}
+	});
 </script>
 
 <svelte:head>
@@ -341,14 +363,18 @@
 		/>
 
 		<!-- Stacked layout: map+info row, then full-width plant grid -->
-		<div class="flex flex-col flex-1 overflow-y-auto border-t border-stone-700">
+		<div
+			bind:this={resultsScrollEl}
+			onscroll={handleResultsScroll}
+			class="relative flex flex-col flex-1 overflow-y-auto border-t border-stone-700"
+		>
 
 			<!-- Full-width row: map on left, location info on right (zone + ecoregion columns on large screens) -->
 			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 shrink-0">
 
 				<!-- Map -->
 				<div class="sm:w-3/5 relative overflow-hidden bg-stone-100 flex-shrink-0">
-					<div class="w-full h-[300px] sm:aspect-auto">
+					<div class="w-full h-[300px] sm:h-full">
 						<Map bind:this={mapRef} center={currentCoords ? [currentCoords.lat, currentCoords.lng] : undefined} zoom={currentCoords ? 6 : undefined} marker={currentCoords ? { lat: currentCoords.lat, lng: currentCoords.lng } : undefined} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onZoomChange={handleZoomChange} />
 					</div>
 					<div class="absolute top-4 right-4" style="z-index: 1000;">
@@ -392,9 +418,35 @@
 			</div>
 
 			<!-- Full-width plant grid -->
-			<div class="w-full bg-stone-300">
+			<div bind:this={plantListEl} class="w-full bg-stone-300">
 				<CandidatePlants zipcode={searchResultAddress?.postcode} filters={plantFilters} />
 			</div>
+
+			<!-- Mobile-only scroll hint: nudges users toward the native plant list below -->
+			{#if scrollHintVisible}
+				<button
+					type="button"
+					onclick={scrollToPlants}
+					transition:fade={{ duration: 200 }}
+					class="sm:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[1100] flex flex-col items-center gap-1.5"
+					aria-label="Scroll down to see native plants"
+				>
+					<span class="rounded-full bg-lime-950/90 px-4 py-1.5 text-xs font-semibold text-stone-100 shadow-lg backdrop-blur-sm">
+						See local native plants
+					</span>
+					<span class="flex h-9 w-9 items-center justify-center rounded-full bg-lime-950 shadow-lg animate-bounce">
+						<svg
+							class="h-5 w-5 text-white"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+						>
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+						</svg>
+					</span>
+				</button>
+			{/if}
 
 		</div>
 	</div>

@@ -30,6 +30,7 @@ let map: L.Map | null = null;
 let LeafletLib: typeof L | null = null;
 let currentGeoJsonLayers: L.GeoJSON[] = [];
 let searchMarker: L.Marker | null = null;
+let resizeObserver: ResizeObserver | null = null;
 
 const epaEcoregionColors: { [key: string]: string } = {};
 epaEcoregionColorsData.forEach(item => {
@@ -94,11 +95,24 @@ onMount(() => {
       if (marker) {
         addSearchMarker(marker.lat, marker.lng);
       }
+      // The map container's height is content-driven (it stretches to match the
+      // adjacent info column), so the size can change after init when location
+      // data loads or the window resizes. Keep Leaflet's internal size in sync.
+      if (mapContainer) {
+        resizeObserver = new ResizeObserver(() => {
+          map?.invalidateSize();
+        });
+        resizeObserver.observe(mapContainer);
+      }
     } catch (error) {
       console.error('Error initializing map:', error);
     }
   })();
   cleanup = () => {
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
     if (map) {
       if (searchMarker) {
         map.removeLayer(searchMarker);
