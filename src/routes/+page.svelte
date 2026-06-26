@@ -280,7 +280,7 @@
 		></div>
 		<div class="relative z-10 w-full max-w-2xl px-8 flex flex-col items-center gap-8">
 			<h2 class="text-stone-100 text-center leading-tight" style="font-family: var(--font-serif); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700;">
-				Identify Native Plants for Your Ecoregion and Hardiness Zone
+				Find Native Plants for Your Ecoregion and Hardiness Zone
 			</h2>
 			<div class="w-full flex flex-col gap-3">
 				<SearchBar

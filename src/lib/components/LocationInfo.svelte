@@ -50,17 +50,17 @@
 		<!-- USDA Hardiness Zone column -->
 		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
 			{#if pointLayerData.phz}
-				<h4 class="font-semibold text-base tracking-wide flex items-center gap-1">
+				<h4 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
 					USDA 2023 Plant Hardiness Zone
 					{@render infoButton(phzLayer)}
 				</h4>
 				{#if pointLayerData.phz.zone}
-					<div class="font-mono text-3xl font-bold text-stone-800 mt-1">{pointLayerData.phz.zone}</div>
+					<div class="font-mono text-3xl font-bold leading-none text-stone-800 mt-1">{pointLayerData.phz.zone}</div>
 				{/if}
 				{#if pointLayerData.phz.trange}
 					<div class="mt-2">
-						<div class="text-[10px] uppercase tracking-wide text-stone-500">Avg. Annual Lowest Temp</div>
-						<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.phz.trange}°F</div>
+						<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Avg. Annual Lowest Temp</div>
+						<div class="font-mono text-sm font-bold leading-tight text-stone-800">{pointLayerData.phz.trange}°F</div>
 					</div>
 				{/if}
 				<a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="text-[11px] mt-2">About Hardiness Zones →</a>
@@ -70,23 +70,23 @@
 		<!-- Ecoregion column -->
 		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
 			{#if pointLayerData.ecoregions}
-				<h4 class="font-semibold text-base tracking-wide flex items-center gap-1">
+				<h4 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
 					North American Ecoregions - Level III
 					{@render infoButton(ecoregionsLayer)}
 				</h4>
 				{#if pointLayerData.ecoregions.NA_L3NAME}
 					<div class="mt-1 flex flex-col gap-2">
-						<div>
-							<div class="text-[10px] uppercase tracking-wide text-stone-500">Level 1</div>
-							<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.ecoregions.NA_L1CODE} {toTitleCase(pointLayerData.ecoregions.NA_L1NAME)}</div>
+						<div class="hidden sm:block">
+							<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 1</div>
+							<div class="font-mono text-sm font-bold leading-tight text-stone-800">{pointLayerData.ecoregions.NA_L1CODE} {toTitleCase(pointLayerData.ecoregions.NA_L1NAME)}</div>
+						</div>
+						<div class="hidden sm:block">
+							<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 2</div>
+							<div class="font-mono text-sm font-bold leading-tight text-stone-800">{pointLayerData.ecoregions.NA_L2CODE} {toTitleCase(pointLayerData.ecoregions.NA_L2NAME)}</div>
 						</div>
 						<div>
-							<div class="text-[10px] uppercase tracking-wide text-stone-500">Level 2</div>
-							<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.ecoregions.NA_L2CODE} {toTitleCase(pointLayerData.ecoregions.NA_L2NAME)}</div>
-						</div>
-						<div>
-							<div class="text-[10px] uppercase tracking-wide text-stone-500">Level 3</div>
-							<div class="font-mono text-sm font-bold text-stone-800">{pointLayerData.ecoregions.NA_L3CODE} {toTitleCase(pointLayerData.ecoregions.NA_L3NAME)}</div>
+							<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 3</div>
+							<div class="font-mono text-sm font-bold leading-tight text-stone-800">{pointLayerData.ecoregions.NA_L3CODE} {toTitleCase(pointLayerData.ecoregions.NA_L3NAME)}</div>
 						</div>
 					</div>
 					<a href="https://sgi-gardenlibrary.maps.arcgis.com/sharing/rest/content/items/79bca4b771a04cb0b61176cf6f778565/data" target="_blank" rel="noopener noreferrer" class="text-[11px] mt-2">View detailed Ecoregion Descriptions →</a>
