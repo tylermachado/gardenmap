@@ -60,7 +60,7 @@
 </script>
 
 <div class={isSplash ? 'w-full flex flex-col gap-2' : 'w-full flex flex-col relative'}>
-	<div class="flex flex-row items-stretch">
+	<div class={showResult ? 'flex flex-col md:flex-row md:items-stretch' : 'flex flex-row items-stretch'}>
 		{#if !showResult}
 			<!-- Location button -->
 			<button
@@ -79,14 +79,14 @@
 			<!-- Result summary -->
 			<div
 				class={isSplash
-					? 'flex-1 min-w-0 border-y border-l border-r-0 rounded-l px-3 py-2 bg-white/10 text-stone-100 border-stone-300 flex items-center gap-2'
-					: 'flex-1 min-w-0 border-y border-l border-r-0 px-3 py-2 bg-stone-100 border-lime-950 flex items-center gap-2'}
+					? 'flex-1 min-w-0 border-y border-l border-r-0 rounded-l px-3 py-2 bg-white/10 text-stone-100 border-stone-300 flex flex-col items-start gap-0 md:flex-row md:items-center md:gap-2'
+					: 'flex-1 min-w-0 border border-b-0 md:border-b md:border-r-0 px-3 py-2 bg-stone-100 border-lime-950 flex flex-col items-start gap-0 md:flex-row md:items-center md:gap-2'}
 			>
 				{#if searchResultAddress?.postcode}
 					<div class={isSplash ? 'text-lg font-bold leading-tight shrink-0' : 'text-lg font-bold text-stone-800 leading-tight shrink-0'}>{searchResultAddress.postcode}</div>
 				{/if}
 				{#if searchResultAddress?.postcode && cityStateLabel}
-					<div class={isSplash ? 'text-lg font-bold leading-tight text-stone-300' : 'text-lg font-bold leading-tight text-stone-400'}>•</div>
+					<div class={isSplash ? 'hidden md:block text-lg font-bold leading-tight text-stone-300' : 'hidden md:block text-lg font-bold leading-tight text-stone-400'}>•</div>
 				{/if}
 				{#if cityStateLabel}
 					<div class={isSplash ? 'text-lg font-bold leading-tight truncate' : 'text-lg font-bold text-stone-800 leading-tight truncate'}>{cityStateLabel}</div>
@@ -96,8 +96,8 @@
 			<!-- Edit location button -->
 			<button
 				class={isSplash
-					? 'rounded-r border bg-stone-100 px-4 py-2 text-lime-950 font-semibold shrink-0 hover:bg-lime-100 border-stone-300 flex items-center gap-1.5'
-					: 'border-y border-r border-l-0 bg-stone-100 px-5 py-3 text-lime-950 font-semibold shrink-0 hover:bg-lime-950 hover:text-stone-100 border-lime-950 flex items-center gap-1.5'}
+					? 'rounded-r border bg-stone-100 px-4 py-2 text-lime-950 font-semibold shrink-0 hover:bg-lime-100 border-stone-300 flex items-center justify-center gap-1.5 md:justify-start'
+					: 'border border-l md:border-l-0 bg-stone-100 px-5 py-3 text-lime-950 font-semibold shrink-0 hover:bg-lime-950 hover:text-stone-100 border-lime-950 flex items-center justify-center gap-1.5 md:justify-start'}
 				onclick={() => (editMode = true)}
 			>
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
