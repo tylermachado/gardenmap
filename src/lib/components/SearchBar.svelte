@@ -89,7 +89,7 @@
 					<div class={isSplash ? 'hidden md:block text-lg font-bold leading-tight text-stone-300' : 'hidden md:block text-lg font-bold leading-tight text-stone-400'}>•</div>
 				{/if}
 				{#if cityStateLabel}
-					<div class={isSplash ? 'text-lg font-bold leading-tight truncate' : 'text-lg font-bold text-stone-800 leading-tight truncate'}>{cityStateLabel}</div>
+					<div class={isSplash ? 'min-w-0 text-lg font-bold leading-tight break-words md:truncate' : 'min-w-0 text-lg font-bold text-stone-800 leading-tight break-words md:truncate'}>{cityStateLabel}</div>
 				{/if}
 			</div>
 

@@ -6,7 +6,6 @@
 	let { children } = $props();
 	let mounted = $state(false);
 	let showAbout = $state(false);
-	let showHowTo = $state(false);
 
 	onMount(() => {
 		mounted = true;
@@ -37,10 +36,9 @@ You can read more about Ecoregions and Hardiness Zones via the links below.
 
 <div class="h-screen bg-stone-300 flex flex-col overflow-hidden">
 	<header class="bg-lime-950 p-4 flex items-center justify-between">
-		<a href="/"><h1 class="font-serif text-3xl font-bold text-stone-100">MyNativePlantList.com</h1></a>
+		<a href="/"><h1 class="font-serif text-xl sm:text-3xl font-bold text-stone-100">MyNativePlantList.com</h1></a>
 		<nav class="flex items-center gap-4">
 			<button onclick={() => (showAbout = true)} class="text-stone-300 text-sm hover:text-stone-100 transition-colors">About</button>
-			<button onclick={() => (showHowTo = true)} class="text-stone-300 text-sm hover:text-stone-100 transition-colors">How to Use</button>
 		</nav>
 	</header>
 	
