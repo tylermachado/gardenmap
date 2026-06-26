@@ -11,31 +11,56 @@
 	let { title, open, onclose, children }: InfoModalProps = $props();
 
 	let closeBtn: HTMLButtonElement | undefined = $state();
+	let dialogEl: HTMLDivElement | undefined = $state();
 
 	$effect(() => {
 		if (open && closeBtn) closeBtn.focus();
 	});
 
-	function handleBackdropClick(e: MouseEvent) {
-		if (e.target === e.currentTarget) onclose();
-	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
+	function trapFocus(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			onclose();
+			return;
+		}
+		if (e.key !== 'Tab' || !dialogEl) return;
+		const focusable = Array.from(
+			dialogEl.querySelectorAll<HTMLElement>(
+				'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+			)
+		).filter((el) => !el.closest('[inert]'));
+		if (!focusable.length) return;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (e.shiftKey) {
+			if (document.activeElement === first) {
+				e.preventDefault();
+				last.focus();
+			}
+		} else {
+			if (document.activeElement === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
 	}
 </script>
 
 {#if open}
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="info-modal-title"
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-		onclick={handleBackdropClick}
-		onkeydown={handleKeydown}
+		role="presentation"
+		class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+		onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
 	>
-		<div class="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-lg bg-white shadow-xl">
+		<div
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="info-modal-title"
+			tabindex="-1"
+			onkeydown={trapFocus}
+			bind:this={dialogEl}
+			class="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-lg bg-white shadow-xl"
+		>
 			<!-- Header -->
 			<div class="flex items-center justify-between border-b border-stone-200 px-6 py-4">
 				<h2 id="info-modal-title" class="text-lg font-semibold text-stone-900">{title}</h2>
