@@ -39,12 +39,14 @@ epaEcoregionColorsData.forEach(item => {
 
 onMount(() => {
   if (!browser) return;
-  let cleanup: (() => void) | null = null;
+  let destroyed = false;
   (async () => {
     try {
       const leafletModule = await import('leaflet');
+      if (destroyed) return;
       LeafletLib = leafletModule.default;
       await import('leaflet/dist/leaflet.css');
+      if (destroyed) return;
       delete (LeafletLib.Icon.Default.prototype as any)._getIconUrl;
       LeafletLib.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -108,7 +110,8 @@ onMount(() => {
       console.error('Error initializing map:', error);
     }
   })();
-  cleanup = () => {
+  return () => {
+    destroyed = true;
     if (resizeObserver) {
       resizeObserver.disconnect();
       resizeObserver = null;
@@ -122,7 +125,6 @@ onMount(() => {
       map = null;
     }
   };
-  return cleanup;
 });
 
 
