@@ -4,6 +4,7 @@ export class GeocodingService {
   private static lastRequestTime = 0;
   private static readonly RATE_LIMIT_MS = 1000; // 1 second between requests
   private static readonly USER_AGENT = 'GardenMap/1.0 (https://github.com/tylermachado/gardenmap)';
+  private static requestQueue: Promise<void> = Promise.resolve();
 
   private static hasZipcode(query: string): boolean {
     // Match 5-digit or 5+4 digit ZIP codes
@@ -11,22 +12,19 @@ export class GeocodingService {
     return zipRegex.test(query);
   }
 
-  private static async rateLimitedFetch(url: string): Promise<Response> {
-    const now = Date.now();
-    const timeSinceLastRequest = now - this.lastRequestTime;
-    
-    if (timeSinceLastRequest < this.RATE_LIMIT_MS) {
-      const delay = this.RATE_LIMIT_MS - timeSinceLastRequest;
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-    
-    this.lastRequestTime = Date.now();
-    
-    return fetch(url, {
-      headers: {
-        'User-Agent': this.USER_AGENT
+  private static rateLimitedFetch(url: string): Promise<Response> {
+    const next = this.requestQueue.then(async () => {
+      const elapsed = Date.now() - this.lastRequestTime;
+      if (elapsed < this.RATE_LIMIT_MS) {
+        await new Promise<void>(resolve => setTimeout(resolve, this.RATE_LIMIT_MS - elapsed));
       }
+      this.lastRequestTime = Date.now();
+      return fetch(url, { headers: { 'User-Agent': this.USER_AGENT } });
     });
+    // Advance the queue regardless of fetch success/failure so one error
+    // doesn't block all subsequent requests.
+    this.requestQueue = next.then(() => {}, () => {});
+    return next;
   }
 
   static async reverseGeocode(lat: number, lon: number): Promise<SearchResult | null> {
