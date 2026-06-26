@@ -42,7 +42,6 @@
 	function handleSearch() {
 		if (!isValidSearchQuery) {
 			showValidationError = true;
-			searchQuery = '';
 			return;
 		}
 
