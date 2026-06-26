@@ -16,21 +16,22 @@
 <InfoModal title="About" open={showAbout} onclose={() => (showAbout = false)}>
 	{#snippet children()}
 		<p>
-			MyNativePlants is a project of <a href="https://www.whiteflowerfarm.com/" target="_blank" rel="noopener">White Flower Farm</a> and the <a href="https://www.sustainablegardeninginstitute.org/" target="_blank" rel="noopener">Sustainable Gardening Institute</a>.
+			MyNativePlants is a collaboration between <a href="https://www.sustainablegardeninginstitute.org/" target="_blank" rel="noopener">The Sustainable Gardening Institute</a> and <a href="https://www.whiteflowerfarm.com/" target="_blank" rel="noopener">White Flower Farm</a>. It is designed to identify plant species that are:
 		</p>
+		<ul>
+			<li>Native to the user’s Level III Ecoregion.</li>
+			<li>Generally considered winter hardy in the user’s Plant Hardiness Zone.</li>
+			<li>Commercially available.</li>
+		</ul>
 		<p>
-			It helps you discover native plants suited to your specific location — taking into
-			account your EPA Level III ecoregion and USDA Plant Hardiness Zone.
-		</p>
-		<p>
-			Native plants support local ecosystems, require less maintenance once established, and provide
-			critical habitat for pollinators and wildlife.
+You can read more about Ecoregions and Hardiness Zones via the links below.
 		</p>
 		<h3>Data sources</h3>
 		<ul>
 			<li><a href="https://www.epa.gov/eco-research/ecoregions" target="_blank" rel="noopener">EPA Ecoregions (Level III)</a></li>
 			<li><a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener">USDA Plant Hardiness Zone Map (2023)</a></li>
 		</ul>
+		<p>This site incorporates data and images from <a href="https://www.wildflower.org/" target="_blank" rel="noopener">Lady Bird Johnson Wildflower Center</a> and the <a href="https://highways.dot.gov/" target="_blank" rel="noopener">Federal Highway Administration</a>. For questions, comments, suggestions, etc. please email <a href="mailto:admin@mynativeplantlist.com">admin@mynativeplantlist.com</a>.</p>
 	{/snippet}
 </InfoModal>
 

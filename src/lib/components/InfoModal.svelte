@@ -51,7 +51,7 @@
 				</button>
 			</div>
 			<!-- Body -->
-			<div class="prose prose-stone prose-sm max-w-none px-6 py-5">
+			<div class="modal-content px-6 py-5">
 				{@render children()}
 			</div>
 		</div>

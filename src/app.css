@@ -24,4 +24,25 @@
   button {
     cursor: pointer;
   }
+
+  /* Restore browser prose defaults inside modal bodies, which Preflight strips */
+  .modal-content :where(p) {
+    margin: 0 0 1em;
+  }
+  .modal-content :where(ul) {
+    list-style: disc;
+    padding-left: 1.5em;
+    margin: 0 0 1em;
+  }
+  .modal-content :where(ol) {
+    list-style: decimal;
+    padding-left: 1.5em;
+    margin: 0 0 1em;
+  }
+  .modal-content :where(li) {
+    margin: 0.25em 0;
+  }
+  .modal-content :where(p, ul, ol):last-child {
+    margin-bottom: 0;
+  }
 }
