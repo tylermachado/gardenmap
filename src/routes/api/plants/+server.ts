@@ -1,15 +1,6 @@
 import { PLANTS_API_URL } from '$env/static/private';
 import type { RequestHandler } from '@sveltejs/kit';
-
-/** Fields kept in the list response. Matches PlantSummary in src/lib/types/plant.ts. */
-const SUMMARY_KEYS = new Set([
-	'id', 'name', 'scientific_name', 'common_name', 'image_url', 'images',
-	'plant_type', 'sun_and_shade', 'soil_moisture',
-	'monarchs', 'native_bees', 'honey_bees', 'bombus', 'butterflies',
-	'moths', 'hummingbirds', 'beetles_wasps_flies', 'bats',
-	'nesting_and_structure_bees', 'larval_host_monarch',
-	'larval_host_butterfly', 'larval_host_moth',
-]);
+import { toSummary, type PlantRecord } from '$lib/server/plants';
 
 /** Filter params the upstream API accepts that we forward from the client. */
 const FILTER_PARAMS = [
@@ -19,14 +10,6 @@ const FILTER_PARAMS = [
 	'nesting_and_structure_bees', 'larval_host_monarch',
 	'larval_host_butterfly', 'larval_host_moth',
 ] as const;
-
-type PlantRecord = Record<string, unknown>;
-
-function toSummary(plant: PlantRecord): PlantRecord {
-	return Object.fromEntries(
-		Object.entries(plant).filter(([k]) => SUMMARY_KEYS.has(k))
-	);
-}
 
 export const GET: RequestHandler = async ({ url }) => {
 	const offset = url.searchParams.get('offset') || '0';

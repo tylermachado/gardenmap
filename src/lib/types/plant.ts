@@ -32,6 +32,12 @@ export interface PlantSummary {
 	larval_host_moth?: boolean;
 }
 
+/** A name-search match, annotated with whether it suits the current location. */
+export interface PlantSearchResult extends PlantSummary {
+	/** true/false once a location is set; null when no location was provided. */
+	appropriate: boolean | null;
+}
+
 /** Full shape returned by GET /api/plants/:id (detail endpoint). */
 export interface Plant extends PlantSummary {
 	plant_family?: string;

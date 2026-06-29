@@ -3,7 +3,9 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import LocationInfo from '$lib/components/LocationInfo.svelte';
 	import CandidatePlants from '$lib/components/CandidatePlants.svelte';
+	import PlantSearchResults from '$lib/components/PlantSearchResults.svelte';
 	import PlantFilters from '$lib/components/PlantFilters.svelte';
+	import type { PlantSearchResult } from '$lib/types/plant.js';
 	import { createPlantFilters, clearPlantFilters, countActiveFilters } from '$lib/plant-filters.js';
 
 	import { GeocodingService } from '$lib/services/geocoding.js';
@@ -30,6 +32,38 @@
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
 
+	// Plant-name search (the "is this plant right for here?" flow)
+	let searchMode: 'location' | 'plant' = $state('location');
+	let plantSearchActive: boolean = $state(false);
+	let plantSearchTerm: string = $state('');
+	let plantSearchResults: PlantSearchResult[] = $state([]);
+	let plantSearchLoading: boolean = $state(false);
+	let plantSearchError: string | null = $state(null);
+
+	// Returning to location mode clears the plant-search view.
+	$effect(() => {
+		if (searchMode === 'location') plantSearchActive = false;
+	});
+
+	async function searchPlantByName(term: string) {
+		plantSearchActive = true;
+		plantSearchTerm = term;
+		plantSearchLoading = true;
+		plantSearchError = null;
+		try {
+			const params = new URLSearchParams({ q: term });
+			if (searchResultAddress?.postcode) params.set('zipcode', searchResultAddress.postcode);
+			const res = await fetch(`/api/plants/search?${params.toString()}`);
+			if (!res.ok) throw new Error(`Search failed: ${res.status}`);
+			plantSearchResults = (await res.json()) as PlantSearchResult[];
+		} catch (err) {
+			plantSearchError = err instanceof Error ? err.message : 'Unknown error';
+			plantSearchResults = [];
+		} finally {
+			plantSearchLoading = false;
+		}
+	}
+
 	// Shared plant filters: pre-selected on the splash, then carried into the results.
 	let plantFilters = $state(createPlantFilters());
 	let showSplashFilters: boolean = $state(false);
@@ -41,7 +75,7 @@
 	const urlHasCoords = $derived(
 		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng')
 	);
-	const showSplash = $derived(currentCoords === null && !urlHasCoords);
+	const showSplash = $derived(currentCoords === null && !urlHasCoords && !plantSearchActive);
 
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
@@ -308,7 +342,9 @@
 				<SearchBar
 					variant="splash"
 					bind:searchQuery
+					bind:mode={searchMode}
 					onSearch={searchLocation}
+					onPlantSearch={searchPlantByName}
 					onFindLocation={findMyLocation}
 				/>
 
@@ -357,7 +393,9 @@
 	>
 		<SearchBar
 			bind:searchQuery
+			bind:mode={searchMode}
 			onSearch={searchLocation}
+			onPlantSearch={searchPlantByName}
 			onFindLocation={findMyLocation}
 			searchResultAddress={searchResultAddress}
 		/>
@@ -369,6 +407,15 @@
 			class="relative flex flex-col flex-1 overflow-y-auto border-t border-stone-700"
 		>
 
+			{#if !currentCoords && plantSearchActive}
+				<!-- Plant search with no location set: prompt the user to add one -->
+				<div class="w-full border-b border-stone-700 bg-stone-200 px-4 py-3 text-sm text-stone-700">
+					Set a location to check whether these plants suit your area.
+					<button class="ml-1 font-semibold text-lime-900 underline" onclick={() => (searchMode = 'location')}>
+						Search by location
+					</button>
+				</div>
+			{:else}
 			<!-- Full-width row: map on left, location info on right (zone + ecoregion columns on large screens) -->
 			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 shrink-0">
 
@@ -416,10 +463,21 @@
 				</div>
 
 			</div>
+			{/if}
 
 			<!-- Full-width plant grid -->
 			<div bind:this={plantListEl} class="w-full bg-stone-300">
-				<CandidatePlants zipcode={searchResultAddress?.postcode} filters={plantFilters} />
+				{#if plantSearchActive}
+					<PlantSearchResults
+						results={plantSearchResults}
+						term={plantSearchTerm}
+						loading={plantSearchLoading}
+						error={plantSearchError}
+						hasLocation={!!searchResultAddress?.postcode}
+					/>
+				{:else}
+					<CandidatePlants zipcode={searchResultAddress?.postcode} filters={plantFilters} />
+				{/if}
 			</div>
 
 			<!-- Mobile-only scroll hint: nudges users toward the native plant list below -->
