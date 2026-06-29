@@ -1,7 +1,10 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
 	import InfoModal from '$lib/components/InfoModal.svelte';
+
+	const GA_MEASUREMENT_ID = 'G-2XBQGFE0ZJ';
 
 	let { children } = $props();
 	let mounted = $state(false);
@@ -9,6 +12,21 @@
 
 	onMount(() => {
 		mounted = true;
+
+		// Only load Google Analytics in production builds, not during `vite dev`.
+		if (!dev) {
+			const script = document.createElement('script');
+			script.async = true;
+			script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+			document.head.appendChild(script);
+
+			window.dataLayer = window.dataLayer || [];
+			function gtag(...args: unknown[]) {
+				window.dataLayer.push(args);
+			}
+			gtag('js', new Date());
+			gtag('config', GA_MEASUREMENT_ID);
+		}
 	});
 </script>
 
