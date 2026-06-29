@@ -64,11 +64,27 @@
 
 	const IMG_BASE_URL = 'https://d10s8hlfsm6n8p.cloudfront.net/images/';
 
-	function getImageUrl(p: typeof plant | typeof detail): string {
-		if (!p) return PlantIcon1;
-		const file = p.images?.[0]?.img_file_name;
-		if (file) return `${IMG_BASE_URL}${file}`;
-		return p.image_url ?? PlantIcon1;
+	// Gallery: the image list comes from detail once loaded, falling back to the summary.
+	let images = $derived((detail ?? plant).images ?? []);
+	let imageIndex = $state(0);
+
+	// Keep the index valid if the underlying image list changes (e.g. when detail loads).
+	$effect(() => {
+		if (imageIndex >= images.length) imageIndex = 0;
+	});
+
+	let currentImageUrl = $derived(
+		images[imageIndex]?.img_file_name
+			? `${IMG_BASE_URL}${images[imageIndex].img_file_name}`
+			: ((detail ?? plant).image_url ?? PlantIcon1)
+	);
+	let currentAttribution = $derived(images[imageIndex]?.img_attribution);
+
+	function prevImage() {
+		if (images.length) imageIndex = (imageIndex - 1 + images.length) % images.length;
+	}
+	function nextImage() {
+		if (images.length) imageIndex = (imageIndex + 1) % images.length;
 	}
 
 	// True if the plant summary already carries a real image URL
@@ -98,17 +114,42 @@
 			bind:this={dialogEl}
 			class="relative flex w-[52rem] max-w-[92vw] overflow-hidden rounded-xl bg-white shadow-2xl"
 		>
-			<!-- Left: full-height image -->
-			<div class="relative w-1/2 shrink-0">
-				<img
-					src={getImageUrl(detail ?? plant)}
-					alt={plant.scientific_name}
-					class="absolute inset-0 h-full w-full object-cover"
-				/>
-				{#if (detail ?? plant).images?.[0]?.img_attribution}
-					<p class="absolute bottom-1 left-0 right-0 text-center text-[8px] leading-tight text-white/60">
-						{(detail ?? plant).images?.[0]?.img_attribution}
-					</p>
+			<!-- Left: full-height image gallery -->
+			<div class="flex w-1/2 shrink-0 flex-col bg-stone-900">
+				<div class="relative flex-1">
+					<img
+						src={currentImageUrl}
+						alt={plant.scientific_name}
+						class="absolute inset-0 h-full w-full object-cover"
+					/>
+				</div>
+				{#if currentAttribution || images.length > 1}
+					<!-- Thin gallery bar: Last | attribution | Next -->
+					<div class="flex shrink-0 items-center gap-2 px-2 py-1 text-[10px] text-white/70">
+						{#if images.length > 1}
+							<button
+								type="button"
+								class="shrink-0 px-1 hover:text-white"
+								onclick={prevImage}
+								aria-label="Previous image"
+							>‹ Last</button>
+						{:else}
+							<span class="w-10 shrink-0"></span>
+						{/if}
+						<span class="min-w-0 flex-1 truncate text-center text-white/60">
+							{currentAttribution ?? ''}
+						</span>
+						{#if images.length > 1}
+							<button
+								type="button"
+								class="shrink-0 px-1 hover:text-white"
+								onclick={nextImage}
+								aria-label="Next image"
+							>Next ›</button>
+						{:else}
+							<span class="w-10 shrink-0"></span>
+						{/if}
+					</div>
 				{/if}
 			</div>
 
