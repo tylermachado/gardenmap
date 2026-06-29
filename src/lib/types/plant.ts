@@ -1,3 +1,10 @@
+/** A single image associated with a plant. */
+export interface PlantImage {
+	img_file_name: string;
+	img_src_url?: string;
+	img_attribution?: string;
+}
+
 /** Lightweight shape returned by GET /api/plants (list endpoint). */
 export interface PlantSummary {
 	id: string;
@@ -5,10 +12,8 @@ export interface PlantSummary {
 	scientific_name?: string;
 	common_name: Array<string>;
 	image_url?: string;
-	img_file_name?: string[] | null;
-	img_src_url?: string | null;
-	img_profile_url?: string | null;
-	img_attribution?: string | null;
+	/** Ordered list of images; the UI currently uses images[0], but more may be shown later. */
+	images?: PlantImage[];
 	plant_type?: Array<string>;
 	sun_and_shade?: Array<string>;
 	soil_moisture?: Array<string>;

@@ -66,12 +66,13 @@
 
 	function getImageUrl(p: typeof plant | typeof detail): string {
 		if (!p) return PlantIcon1;
-		if (p.img_file_name?.length) return `${IMG_BASE_URL}${p.img_file_name[0]}`;
+		const file = p.images?.[0]?.img_file_name;
+		if (file) return `${IMG_BASE_URL}${file}`;
 		return p.image_url ?? PlantIcon1;
 	}
 
 	// True if the plant summary already carries a real image URL
-	let hasImage = $derived(!!(plant.img_file_name?.length || plant.image_url));
+	let hasImage = $derived(!!(plant.images?.length || plant.image_url));
 
 	function heightRange(min?: number, max?: number): string {
 		if (min != null && max != null) return `${min}–${max} ft`;
@@ -104,9 +105,9 @@
 					alt={plant.scientific_name}
 					class="absolute inset-0 h-full w-full object-cover"
 				/>
-				{#if (detail ?? plant).img_attribution}
+				{#if (detail ?? plant).images?.[0]?.img_attribution}
 					<p class="absolute bottom-1 left-0 right-0 text-center text-[8px] leading-tight text-white/60">
-						{(detail ?? plant).img_attribution}
+						{(detail ?? plant).images?.[0]?.img_attribution}
 					</p>
 				{/if}
 			</div>

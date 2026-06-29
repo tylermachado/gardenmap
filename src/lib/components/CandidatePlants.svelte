@@ -246,7 +246,7 @@
 				>
 					<div class="w-full" style="aspect-ratio: 4/5; overflow: hidden; border-radius: 0.25rem;">
 						<img
-							src={plant.img_file_name?.length ? `${IMG_BASE_URL}${plant.img_file_name[0]}` : (plant.image_url ?? PlantIcon1)}
+							src={plant.images?.length ? `${IMG_BASE_URL}${plant.images[0].img_file_name}` : (plant.image_url ?? PlantIcon1)}
 							alt={plant.scientific_name}
 							class="h-full w-full object-cover"
 							loading="lazy"
