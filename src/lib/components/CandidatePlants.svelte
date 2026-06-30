@@ -3,6 +3,7 @@
 	import PlantModal from '$lib/components/PlantModal.svelte';
 	import PlantFilters from '$lib/components/PlantFilters.svelte';
 	import type { PlantSummary } from '$lib/types/plant.js';
+	import { fetchCandidatePlants } from '$lib/api/plants.js';
 	import {
 		createPlantFilters,
 		clearPlantFilters,
@@ -77,16 +78,12 @@
 
 	/** Fetch the unfiltered total for this location to seed the "of N" count. */
 	function seedTotals(signal: AbortSignal) {
-		fetch(`/api/plants?${locationParams().toString()}`, { signal })
-			.then((res) => {
-				if (res.status === 500) return null;
-				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-				return res.json() as Promise<PlantSummary[]>;
-			})
+		fetchCandidatePlants(locationParams(), signal)
 			.then((data) => {
-				if (data !== null) allSummaries = data;
+				allSummaries = data;
 			})
 			.catch((err: unknown) => {
+				// Ignore aborts and backend errors; the "of N" count just stays hidden.
 				if (err instanceof Error && err.name === 'AbortError') return;
 			});
 	}
@@ -149,27 +146,18 @@
 			seedTotals(controller.signal);
 		}
 
-		fetch(`/api/plants?${params.toString()}`, { signal: controller.signal })
-			.then((res) => {
-				if (res.status === 500) {
-					const placeholders = makePlaceholderPlants();
-					plants = placeholders;
-					if (!filtersActive) allSummaries = placeholders;
-					return null;
-				}
-				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-				return res.json() as Promise<PlantSummary[]>;
-			})
+		fetchCandidatePlants(params, controller.signal)
 			.then((data) => {
-				if (data === null) return;
 				plants = data;
 				// An unfiltered fetch also seeds the total for the "of N" count.
 				if (!filtersActive) allSummaries = data;
 			})
 			.catch((err: unknown) => {
 				if (err instanceof Error && err.name === 'AbortError') return;
-				error = err instanceof Error ? err.message : 'Unknown error';
-				plants = [];
+				// Backend unreachable: fall back to a placeholder demo grid.
+				const placeholders = makePlaceholderPlants();
+				plants = placeholders;
+				if (!filtersActive) allSummaries = placeholders;
 			})
 			.finally(() => {
 				loading = false;

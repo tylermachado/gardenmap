@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
 	import type { Plant, PlantSummary } from '$lib/types/plant.js';
+	import { fetchPlantDetail } from '$lib/api/plants.js';
 
 	interface PlantModalProps {
 		plant: PlantSummary;
@@ -18,11 +19,7 @@
 
 	onMount(() => {
 		closeBtn?.focus();
-		fetch(`/api/plants/${plant.id}`)
-			.then((res) => {
-				if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-				return res.json() as Promise<Plant>;
-			})
+		fetchPlantDetail(plant.id)
 			.then((data) => {
 				detail = data;
 			})

@@ -6,6 +6,7 @@
 	import PlantSearchResults from '$lib/components/PlantSearchResults.svelte';
 	import PlantFilters from '$lib/components/PlantFilters.svelte';
 	import type { PlantSearchResult } from '$lib/types/plant.js';
+	import { searchPlants } from '$lib/api/plants.js';
 	import { createPlantFilters, clearPlantFilters, countActiveFilters } from '$lib/plant-filters.js';
 
 	import { GeocodingService } from '$lib/services/geocoding.js';
@@ -51,11 +52,9 @@
 		plantSearchLoading = true;
 		plantSearchError = null;
 		try {
-			const params = new URLSearchParams({ q: term });
-			if (searchResultAddress?.postcode) params.set('zipcode', searchResultAddress.postcode);
-			const res = await fetch(`/api/plants/search?${params.toString()}`);
-			if (!res.ok) throw new Error(`Search failed: ${res.status}`);
-			plantSearchResults = (await res.json()) as PlantSearchResult[];
+			plantSearchResults = await searchPlants(term, {
+				zipcode: searchResultAddress?.postcode
+			});
 		} catch (err) {
 			plantSearchError = err instanceof Error ? err.message : 'Unknown error';
 			plantSearchResults = [];

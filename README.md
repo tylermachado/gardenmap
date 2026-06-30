@@ -13,7 +13,7 @@ The app has two complementary flows, both driven from the home page ([src/routes
 - **Location → plants.** Clicking the map or searching a ZIP code geocodes the point (client-side, via Nominatim), resolves which hardiness zone / ecoregion polygon contains it (client-side, via Turf), and fetches the plants appropriate for that location.
 - **Plant name → suitability.** Searching by plant name lists catalog matches and, once a location is set, annotates each match with whether it suits that location.
 
-Geocoding and the polygon lookup happen in the browser against bundled GeoJSON. Plant data is fetched through SvelteKit server routes under `/api/plants/*`, which proxy an upstream plants API configured by `PLANTS_API_URL`.
+Geocoding and the polygon lookup happen in the browser against bundled GeoJSON. Plant data is fetched directly from the browser via [src/lib/api/plants.ts](src/lib/api/plants.ts), which calls the plants API at the same-origin path `/api/plants/*`. In production the site and the API share an origin (`mynativeplantlist.com/api/...`), so these calls need no CORS; in local development the Vite dev server proxies `/api/*` to the API origin given by `PLANTS_API_URL` (see [vite.config.ts](vite.config.ts)).
 
 ---
 
@@ -24,14 +24,11 @@ src/
   routes/
     +page.svelte                  # Home page; orchestrates map, search, filters, results
     +page.ts                      # Loads layers-list.json and properties.json
-    api/plants/
-      +server.ts                  # GET /api/plants — location-filtered candidate list
-      search/+server.ts           # GET /api/plants/search — name search + suitability
-      [id]/+server.ts             # GET /api/plants/:id — full plant detail
   lib/
+    api/plants.ts                 # Browser client for the plants API: candidate list
+                                  #   (paged), name search + suitability, detail, summary
     components/                   # Map, SearchBar, LocationInfo, CandidatePlants,
                                   #   PlantFilters, PlantModal, PlantSearchResults, InfoModal
-    server/plants.ts              # Server-only upstream helpers (toSummary, SUMMARY_KEYS)
     services/geocoding.ts         # Nominatim geocoding (rate-limited, US-only)
     services/spatial-analysis.ts  # Turf point-in-polygon over bundled layers
     plant-filters.ts              # Canonical filter options + shared filter state
@@ -67,71 +64,39 @@ cp .env.example .env
 
 | Variable | Description |
 |---|---|
-| `PLANTS_API_URL` | Base URL of the upstream plants API (no trailing slash), e.g. `http://your-plants-api-host:8000/plants`. Imported via `$env/static/private` and consumed by every route under `src/routes/api/plants/`. |
+| `PLANTS_API_URL` | Plants API endpoint, e.g. `https://your-plants-api-host/api/plants`. Used **only by the Vite dev server** to proxy `/api/*` during local development (only its origin is read — see [vite.config.ts](vite.config.ts)). In production the site and API share an origin, so the browser calls `/api/*` directly and this is not needed. |
 
 ---
 
-## API Reference
+## Client data layer
 
-All three endpoints are SvelteKit server routes that proxy the upstream plants API. On failure they return `{ "error": "..." }` with a non-2xx status.
+The browser talks to the plants API through [src/lib/api/plants.ts](src/lib/api/plants.ts), which exposes three operations built on the backend's two endpoints — `GET /api/plants` (list) and `GET /api/plants/:id` (detail). There is no dedicated search endpoint; name search is composed client-side from list queries.
 
-### `GET /api/plants`
+### `fetchCandidatePlants(params, signal?) → PlantSummary[]`
 
-Returns every plant appropriate for a location, as a JSON array of [PlantSummary](#plantsummary) objects. The handler ([src/routes/api/plants/+server.ts](src/routes/api/plants/+server.ts)) pages through the upstream API in batches of 250 until exhausted, so the full result set is returned in one response — there is no client-controlled page size.
+Every plant appropriate for a location. The backend caps each response at 250 records, so this pages through `GET /api/plants` in batches of 250 (incrementing `offset`) until a short page, then trims each record to the [PlantSummary](#plantsummary) shape. `params` carries the location and any filters:
 
-#### Query parameters
+| Parameter   | Type    | Description |
+|-------------|---------|-------------|
+| `ecoregion` | string  | EPA Level III ecoregion code (e.g. `"9.4.1"`). |
+| `zone`      | string  | USDA Plant Hardiness Zone label (e.g. `"7b"`). |
+| `zipcode`   | string  | US ZIP code. |
 
-| Parameter   | Type    | Default | Description |
-|-------------|---------|---------|-------------|
-| `ecoregion` | string  | —       | EPA Level III ecoregion code (e.g. `"9.4.1"`). Forwarded to the upstream API. |
-| `zone`      | string  | —       | USDA Plant Hardiness Zone label (e.g. `"7b"`). Forwarded to the upstream API. |
-| `zipcode`   | string  | —       | US ZIP code. Forwarded to the upstream API. |
-| `offset`    | integer | `0`     | Starting offset for upstream pagination. The handler keeps fetching subsequent pages from here. |
+Plus any of the [filter parameters](#filter-parameters) below. `limit` and `offset` are managed internally by the pager.
 
-Plus any of the [filter parameters](#filter-parameters) below. `limit` is fixed at `250` internally and is not a client parameter.
+### `searchPlants(term, location?, signal?) → PlantSearchResult[]`
 
-#### Example
+Name search. Queries `GET /api/plants` twice — once by `scientific_name` and once by `common_name` — and returns the de-duplicated union as [PlantSearchResult](#plantsearchresult) objects. When a `location` (`zipcode`, `ecoregion`, and/or `zone`) is supplied, it runs the pair of queries a second time with the location filter applied and sets each result's `appropriate` flag accordingly; with no location, `appropriate` is `null`. A blank `term` returns `[]`.
 
-```
-GET /api/plants?zone=7b&plant_type=Tree&monarchs=true
-```
+### `fetchPlantDetail(id, signal?) → Plant`
 
-Returns a JSON array of [PlantSummary](#plantsummary) objects.
-
----
-
-### `GET /api/plants/search`
-
-Name search ([src/routes/api/plants/search/+server.ts](src/routes/api/plants/search/+server.ts)). For a search term it queries the upstream API by both `scientific_name` and `common_name` and returns the de-duplicated union as [PlantSearchResult](#plantsearchresult) objects.
-
-When location parameters are supplied, the handler runs the search a second time with the location filter applied and sets each result's `appropriate` flag accordingly. With no location, `appropriate` is `null`.
-
-#### Query parameters
-
-| Parameter   | Type   | Description |
-|-------------|--------|-------------|
-| `q`         | string | Search term, matched against scientific and common names. An empty/blank term returns `[]`. |
-| `zipcode`   | string | Optional location filter used to compute `appropriate`. |
-| `ecoregion` | string | Optional location filter used to compute `appropriate`. |
-| `zone`      | string | Optional location filter used to compute `appropriate`. |
-
-#### Example
-
-```
-GET /api/plants/search?q=milkweed&zipcode=97201
-```
-
----
-
-### `GET /api/plants/:id`
-
-Returns the full record for a single plant ([src/routes/api/plants/[id]/+server.ts](src/routes/api/plants/[id]/+server.ts)), as a [Plant](#plant) object. Proxies straight through to the upstream API by id; returns `{ "error": "Plant not found" }` when the upstream returns a non-2xx status.
+The full record for a single plant via `GET /api/plants/:id`, as a [Plant](#plant) object. Throws when the backend returns a non-2xx status.
 
 ---
 
 ## Filter parameters
 
-The list endpoint forwards these filter parameters to the upstream API when present (`FILTER_PARAMS` in [src/routes/api/plants/+server.ts](src/routes/api/plants/+server.ts)):
+`fetchCandidatePlants` forwards these filter parameters to the API when present (built from the filter state by `applyPlantFilterParams` in [src/lib/plant-filters.ts](src/lib/plant-filters.ts)):
 
 `plant_type`, `sun_and_shade`, `soil_moisture`, and the boolean wildlife flags `monarchs`, `native_bees`, `honey_bees`, `bombus`, `butterflies`, `moths`, `hummingbirds`, `beetles_wasps_flies`, `bats`, `nesting_and_structure_bees`, `larval_host_monarch`, `larval_host_butterfly`, `larval_host_moth`.
 
@@ -148,11 +113,11 @@ The UI offers a canonical set of option values defined in [src/lib/plant-filters
 
 ## Data Dictionary
 
-Types are defined in [src/lib/types/plant.ts](src/lib/types/plant.ts). The list and search endpoints return a trimmed **summary** shape; the detail endpoint returns the fuller **Plant** shape.
+Types are defined in [src/lib/types/plant.ts](src/lib/types/plant.ts). `fetchCandidatePlants` and `searchPlants` return a trimmed **summary** shape; `fetchPlantDetail` returns the fuller **Plant** shape.
 
 ### PlantSummary
 
-Returned by `GET /api/plants`. The server trims upstream records to these keys (`SUMMARY_KEYS` in [src/lib/server/plants.ts](src/lib/server/plants.ts)).
+Returned by `fetchCandidatePlants`. The client trims API records to these keys (`SUMMARY_KEYS` in [src/lib/api/plants.ts](src/lib/api/plants.ts)).
 
 | Field             | Type           | Description |
 |-------------------|----------------|-------------|
@@ -169,7 +134,7 @@ Returned by `GET /api/plants`. The server trims upstream records to these keys (
 
 ### PlantSearchResult
 
-Returned by `GET /api/plants/search`. Extends [PlantSummary](#plantsummary) with:
+Returned by `searchPlants`. Extends [PlantSummary](#plantsummary) with:
 
 | Field         | Type             | Description |
 |---------------|------------------|-------------|
@@ -177,7 +142,7 @@ Returned by `GET /api/plants/search`. Extends [PlantSummary](#plantsummary) with
 
 ### Plant
 
-Returned by `GET /api/plants/:id`. Extends [PlantSummary](#plantsummary) with:
+Returned by `fetchPlantDetail`. Extends [PlantSummary](#plantsummary) with:
 
 | Field              | Type        | Description |
 |--------------------|-------------|-------------|
