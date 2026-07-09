@@ -29,6 +29,8 @@
 	let mapRef: Map | null = $state(null);
 	// Change to array of selected layers
 	let selectedLayers: LayerOption[] = $state(layers.filter(l => l.path === 'geodata/phz.json'));	let showLayersDropdown: boolean = $state(false);
+	// Independent add-on layer, not part of the mutually-exclusive polygon layer selection
+	let showNurseries: boolean = $state(false);
 
 	let searchQuery: string = $state('');
 	let numFlowers: number = $state(0);
@@ -160,6 +162,12 @@
 			// Add layer filtering logic here
 			console.log('Map instance available for layer operations', selectedLayers);
 		}
+	}
+
+	// Nurseries are an optional add-on layer that can be shown alongside a polygon layer,
+	// so this toggles independently rather than replacing selectedLayers.
+	function toggleNurseries(): void {
+		showNurseries = !showNurseries;
 	}
 
 	// any time map updates, pick a random number inclusively between 3 and 12 and set numFlowers
@@ -421,7 +429,7 @@
 				<!-- Map -->
 				<div class="sm:w-3/5 relative bg-stone-100 flex-shrink-0">
 					<div class="w-full h-[300px] sm:h-full overflow-hidden">
-						<Map bind:this={mapRef} center={currentCoords ? [currentCoords.lat, currentCoords.lng] : undefined} zoom={currentCoords ? 6 : undefined} marker={currentCoords ? { lat: currentCoords.lat, lng: currentCoords.lng } : undefined} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onZoomChange={handleZoomChange} />
+						<Map bind:this={mapRef} center={currentCoords ? [currentCoords.lat, currentCoords.lng] : undefined} zoom={currentCoords ? 6 : undefined} marker={currentCoords ? { lat: currentCoords.lat, lng: currentCoords.lng } : undefined} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} showNurseries={showNurseries} onMapClick={handleMapClick} onZoomChange={handleZoomChange} />
 					</div>
 					<div class="absolute top-4 right-4" style="z-index: 1000;">
 						<button
@@ -430,7 +438,7 @@
 							aria-haspopup="true"
 							aria-expanded={showLayersDropdown}
 						>
-							<span>Layers ({selectedLayers.length})</span>
+							<span>Layers ({selectedLayers.length + (showNurseries ? 1 : 0)})</span>
 							<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 							</svg>
@@ -446,6 +454,15 @@
 										<span>{layer.name}</span>
 									</button>
 								{/each}
+								<!-- Independent add-on layer: toggles on top of whichever polygon layer (if any) is active. -->
+								<button
+									class={`flex w-full items-center justify-start px-4 py-5 text-l ${showNurseries ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
+									onclick={toggleNurseries}
+									title="Visible when zoomed in to roughly county level or closer"
+								>
+									<span class="mr-2">{showNurseries ? '☑' : '☐'}</span>
+									<span>Native Plant Nurseries</span>
+								</button>
 							</div>
 						{/if}
 					</div>
