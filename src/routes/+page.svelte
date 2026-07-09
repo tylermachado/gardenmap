@@ -416,11 +416,11 @@
 				</div>
 			{:else}
 			<!-- Full-width row: map on left, location info on right (zone + ecoregion columns on large screens) -->
-			<div id="location-info" class="flex flex-col sm:flex-row w-full border-b border-stone-700 shrink-0">
+			<div id="location-info" class="relative z-20 flex flex-col sm:flex-row w-full border-b border-stone-700 shrink-0">
 
 				<!-- Map -->
-				<div class="sm:w-3/5 relative overflow-hidden bg-stone-100 flex-shrink-0">
-					<div class="w-full h-[300px] sm:h-full">
+				<div class="sm:w-3/5 relative bg-stone-100 flex-shrink-0">
+					<div class="w-full h-[300px] sm:h-full overflow-hidden">
 						<Map bind:this={mapRef} center={currentCoords ? [currentCoords.lat, currentCoords.lng] : undefined} zoom={currentCoords ? 6 : undefined} marker={currentCoords ? { lat: currentCoords.lat, lng: currentCoords.lng } : undefined} shapefiles={selectedLayers.map(layer => layer.path)} colorArray={hardinessZoneColors} onMapClick={handleMapClick} onZoomChange={handleZoomChange} />
 					</div>
 					<div class="absolute top-4 right-4" style="z-index: 1000;">
