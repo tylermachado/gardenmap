@@ -109,10 +109,10 @@
 			tabindex="-1"
 			onkeydown={trapFocus}
 			bind:this={dialogEl}
-			class="relative flex w-[52rem] max-w-[92vw] overflow-hidden rounded-xl bg-white shadow-2xl"
+			class="relative flex h-[85vh] max-h-[90vh] w-[52rem] max-w-[92vw] flex-col overflow-hidden rounded-xl bg-white shadow-2xl md:h-auto md:flex-row"
 		>
-			<!-- Left: full-height image gallery -->
-			<div class="flex w-1/2 shrink-0 flex-col bg-stone-900">
+			<!-- Top (mobile) / Left (desktop): image gallery -->
+			<div class="flex w-full shrink-0 basis-1/2 flex-col bg-stone-900 md:w-1/2 md:basis-auto">
 				<div class="relative flex-1">
 					<img
 						src={currentImageUrl}
@@ -150,7 +150,7 @@
 				{/if}
 			</div>
 
-			<!-- Right: close button + names + table -->
+			<!-- Bottom (mobile) / Right (desktop): close button + names + table -->
 			<div class="flex flex-1 flex-col overflow-y-auto p-6">
 				<button
 					type="button"
