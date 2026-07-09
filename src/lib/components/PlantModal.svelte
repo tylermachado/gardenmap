@@ -109,7 +109,7 @@
 			tabindex="-1"
 			onkeydown={trapFocus}
 			bind:this={dialogEl}
-			class="relative flex h-[85vh] max-h-[90vh] w-[52rem] max-w-[92vw] flex-col overflow-hidden rounded-xl bg-white shadow-2xl md:h-auto md:flex-row"
+			class="relative flex h-[85vh] max-h-[90vh] w-[58rem] max-w-[92vw] flex-col overflow-hidden rounded-xl bg-white shadow-2xl md:h-auto md:flex-row"
 		>
 			<!-- Top (mobile) / Left (desktop): image gallery -->
 			<div class="flex w-full shrink-0 basis-1/2 flex-col bg-stone-900 md:w-1/2 md:basis-auto">
