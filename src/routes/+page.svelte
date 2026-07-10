@@ -458,7 +458,7 @@
 								<button
 									class={`flex w-full items-center justify-start px-4 py-5 text-l ${showNurseries ? 'active bg-lime-200 font-bold' : 'cursor-pointer bg-stone-100 hover:bg-lime-100'}`}
 									onclick={toggleNurseries}
-									title="Visible when zoomed in to roughly county level or closer"
+									title="Grouped into clusters when zoomed out; zoom in to see individual nurseries"
 								>
 									<span class="mr-2">{showNurseries ? '☑' : '☐'}</span>
 									<span>Native Plant Nurseries</span>

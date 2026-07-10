@@ -37,9 +37,6 @@ interface MapProps {
   showNurseries?: boolean;
 }
 
-// Nursery pins only make sense once you've zoomed in roughly to county scale -
-// at wider zooms 1000+ points across the country is just noise.
-const NURSERY_MIN_ZOOM = 9;
 const NURSERIES_URL = 'geodata/nurseries.json';
 
 const { center = [39.8283, -98.5795], zoom = 4, shapefiles = [], colorArray = [
@@ -53,7 +50,7 @@ let LeafletLib: typeof L | null = null;
 let currentGeoJsonLayers: L.GeoJSON[] = [];
 let searchMarker: L.Marker | null = null;
 let resizeObserver: ResizeObserver | null = null;
-let nurseryLayerGroup: L.LayerGroup | null = null;
+let nurseryLayerGroup: L.MarkerClusterGroup | null = null;
 let nurseryDataLoaded = false;
 
 const epaEcoregionColors: { [key: string]: string } = {};
@@ -70,6 +67,11 @@ onMount(() => {
       if (destroyed) return;
       LeafletLib = leafletModule.default;
       await import('leaflet/dist/leaflet.css');
+      // Extends the same Leaflet module instance with L.markerClusterGroup(); relies on
+      // module resolution deduping 'leaflet' to the singleton already assigned above.
+      await import('leaflet.markercluster');
+      await import('leaflet.markercluster/dist/MarkerCluster.css');
+      await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
       if (destroyed) return;
       delete (LeafletLib.Icon.Default.prototype as any)._getIconUrl;
       LeafletLib.Icon.Default.mergeOptions({
@@ -114,7 +116,6 @@ onMount(() => {
         if (onZoomChange && map) {
           onZoomChange(map.getZoom());
         }
-        updateNurseryVisibility();
       });
       if (shapefiles.length > 0) {
         await loadShapefiles();
@@ -172,23 +173,34 @@ async function ensureNurseryLayerLoaded(): Promise<void> {
       }
       nurseryRecordsCache = await response.json();
     }
-    nurseryLayerGroup = LeafletLib.layerGroup(
-      (nurseryRecordsCache ?? []).map((nursery) => {
-        const nurseryMarker = LeafletLib!.circleMarker([nursery.latitude, nursery.longitude], {
-          radius: 6,
-          color: '#ffffff',
-          weight: 1,
-          fillColor: '#15803d',
-          fillOpacity: 0.9
+    nurseryLayerGroup = LeafletLib.markerClusterGroup({
+      maxClusterRadius: 60,
+      iconCreateFunction: (cluster: L.MarkerCluster) => {
+        const count = cluster.getChildCount();
+        const size = count < 10 ? 32 : count < 100 ? 40 : 48;
+        return LeafletLib!.divIcon({
+          html: `<div>${count}</div>`,
+          className: 'nursery-cluster-icon',
+          iconSize: [size, size]
         });
-        const location = [nursery.city, nursery.state].filter(Boolean).join(', ');
-        const link = nursery.url ? `<br/><a href="${nursery.url}" target="_blank" rel="noopener noreferrer">${nursery.url}</a>` : '';
-        nurseryMarker.bindPopup(
-          `<strong>${nursery.name}</strong><br/>${[nursery.address, location].filter(Boolean).join('<br/>')}${nursery.phoneNumber ? `<br/>${nursery.phoneNumber}` : ''}${link}`
-        );
-        return nurseryMarker;
-      })
-    );
+      }
+    });
+    const nurseryMarkers = (nurseryRecordsCache ?? []).map((nursery) => {
+      const nurseryMarker = LeafletLib!.circleMarker([nursery.latitude, nursery.longitude], {
+        radius: 6,
+        color: '#ffffff',
+        weight: 1,
+        fillColor: '#15803d',
+        fillOpacity: 0.9
+      });
+      const location = [nursery.city, nursery.state].filter(Boolean).join(', ');
+      const link = nursery.url ? `<br/><a href="${nursery.url}" target="_blank" rel="noopener noreferrer">${nursery.url}</a>` : '';
+      nurseryMarker.bindPopup(
+        `<strong>${nursery.name}</strong><br/>${[nursery.address, location].filter(Boolean).join('<br/>')}${nursery.phoneNumber ? `<br/>${nursery.phoneNumber}` : ''}${link}`
+      );
+      return nurseryMarker;
+    });
+    nurseryLayerGroup.addLayers(nurseryMarkers);
   } catch (error) {
     console.error('Error loading nursery data:', error);
     nurseryDataLoaded = false;
@@ -197,11 +209,10 @@ async function ensureNurseryLayerLoaded(): Promise<void> {
 
 function updateNurseryVisibility(): void {
   if (!browser || !map || !nurseryLayerGroup) return;
-  const shouldShow = showNurseries && map.getZoom() >= NURSERY_MIN_ZOOM;
   const isShown = map.hasLayer(nurseryLayerGroup);
-  if (shouldShow && !isShown) {
+  if (showNurseries && !isShown) {
     nurseryLayerGroup.addTo(map);
-  } else if (!shouldShow && isShown) {
+  } else if (!showNurseries && isShown) {
     map.removeLayer(nurseryLayerGroup);
   }
 }
@@ -380,5 +391,20 @@ export function removeSearchMarker(): void {
     height: 100%;
     width: 100%;
     min-height: 0;
+  }
+
+  /* Leaflet's own .leaflet-marker-icon rule (display: block) loads asynchronously and can
+     win the cascade tie-break against a same-specificity rule here, so pair the class with
+     .leaflet-marker-icon to guarantee this wins regardless of stylesheet load order. */
+  :global(.leaflet-marker-icon.nursery-cluster-icon) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(21, 128, 61, 0.85);
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   }
 </style>
