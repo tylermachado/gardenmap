@@ -492,7 +492,12 @@
 						hasLocation={!!searchResultAddress?.postcode}
 					/>
 				{:else}
-					<CandidatePlants zipcode={searchResultAddress?.postcode} filters={plantFilters} />
+					<CandidatePlants
+						zipcode={searchResultAddress?.postcode}
+						ecoregion={searchResultAddress?.postcode ? undefined : pointLayerData.ecoregions?.US_L3CODE}
+						phzZone={searchResultAddress?.postcode ? undefined : pointLayerData.phz?.zone}
+						filters={plantFilters}
+					/>
 				{/if}
 			</div>
 

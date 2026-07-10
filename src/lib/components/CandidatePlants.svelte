@@ -71,7 +71,8 @@
 	function locationParams(): URLSearchParams {
 		const params = new URLSearchParams();
 		if (ecoregion) params.set('ecoregion', ecoregion);
-		if (phzZone) params.set('zone', phzZone);
+		// The API takes the hardiness zone as a bare integer (e.g. "7b" -> "7").
+		if (phzZone) params.set('hardiness_zone', phzZone.match(/^\d+/)?.[0] ?? phzZone);
 		if (zipcode) params.set('zipcode', zipcode);
 		return params;
 	}
