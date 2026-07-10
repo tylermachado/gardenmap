@@ -1,5 +1,17 @@
 <script module lang="ts">
   const geoDataCache: Record<string, GeoJSON.FeatureCollection> = {};
+  let nurseryRecordsCache: Array<{
+    uniqueId: number;
+    name: string;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    zipCode: string | null;
+    phoneNumber: string | null;
+    longitude: number;
+    latitude: number;
+    url: string | null;
+  }> | null = null;
 </script>
 
 <script lang="ts">
@@ -22,12 +34,18 @@ interface MapProps {
   onMapClick?: (lat: number, lng: number) => void;
   onZoomChange?: (zoom: number) => void;
   marker?: { lat: number; lng: number } | null;
+  showNurseries?: boolean;
 }
+
+// Nursery pins only make sense once you've zoomed in roughly to county scale -
+// at wider zooms 1000+ points across the country is just noise.
+const NURSERY_MIN_ZOOM = 9;
+const NURSERIES_URL = 'geodata/nurseries.json';
 
 const { center = [39.8283, -98.5795], zoom = 4, shapefiles = [], colorArray = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FCEA2B',
   '#FF9F43', '#EE5A24', '#0FB9B1', '#3742FA', '#2F3542'
-], onMapClick, onZoomChange, marker = null }: MapProps = $props();
+], onMapClick, onZoomChange, marker = null, showNurseries = false }: MapProps = $props();
 
 let mapContainer: HTMLDivElement | null = null;
 let map: L.Map | null = null;
@@ -35,6 +53,8 @@ let LeafletLib: typeof L | null = null;
 let currentGeoJsonLayers: L.GeoJSON[] = [];
 let searchMarker: L.Marker | null = null;
 let resizeObserver: ResizeObserver | null = null;
+let nurseryLayerGroup: L.LayerGroup | null = null;
+let nurseryDataLoaded = false;
 
 const epaEcoregionColors: { [key: string]: string } = {};
 epaEcoregionColorsData.forEach(item => {
@@ -94,12 +114,17 @@ onMount(() => {
         if (onZoomChange && map) {
           onZoomChange(map.getZoom());
         }
+        updateNurseryVisibility();
       });
       if (shapefiles.length > 0) {
         await loadShapefiles();
       }
       if (marker) {
         addSearchMarker(marker.lat, marker.lng);
+      }
+      if (showNurseries) {
+        await ensureNurseryLayerLoaded();
+        updateNurseryVisibility();
       }
       // The map container's height is content-driven (it stretches to match the
       // adjacent info column), so the size can change after init when location
@@ -128,7 +153,65 @@ onMount(() => {
       map.remove();
       map = null;
     }
+    nurseryLayerGroup = null;
+    nurseryDataLoaded = false;
   };
+});
+
+// --- Nursery pin layer: independent add-on, not exclusive with the polygon layers ---
+async function ensureNurseryLayerLoaded(): Promise<void> {
+  if (!browser || !LeafletLib || nurseryDataLoaded) return;
+  nurseryDataLoaded = true;
+  try {
+    if (!nurseryRecordsCache) {
+      let url = `${base}/${NURSERIES_URL}`.replace(/\/+/, '/');
+      if (!url.startsWith('/')) url = '/' + url;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      nurseryRecordsCache = await response.json();
+    }
+    nurseryLayerGroup = LeafletLib.layerGroup(
+      (nurseryRecordsCache ?? []).map((nursery) => {
+        const nurseryMarker = LeafletLib!.circleMarker([nursery.latitude, nursery.longitude], {
+          radius: 6,
+          color: '#ffffff',
+          weight: 1,
+          fillColor: '#15803d',
+          fillOpacity: 0.9
+        });
+        const location = [nursery.city, nursery.state].filter(Boolean).join(', ');
+        const link = nursery.url ? `<br/><a href="${nursery.url}" target="_blank" rel="noopener noreferrer">${nursery.url}</a>` : '';
+        nurseryMarker.bindPopup(
+          `<strong>${nursery.name}</strong><br/>${[nursery.address, location].filter(Boolean).join('<br/>')}${nursery.phoneNumber ? `<br/>${nursery.phoneNumber}` : ''}${link}`
+        );
+        return nurseryMarker;
+      })
+    );
+  } catch (error) {
+    console.error('Error loading nursery data:', error);
+    nurseryDataLoaded = false;
+  }
+}
+
+function updateNurseryVisibility(): void {
+  if (!browser || !map || !nurseryLayerGroup) return;
+  const shouldShow = showNurseries && map.getZoom() >= NURSERY_MIN_ZOOM;
+  const isShown = map.hasLayer(nurseryLayerGroup);
+  if (shouldShow && !isShown) {
+    nurseryLayerGroup.addTo(map);
+  } else if (!shouldShow && isShown) {
+    map.removeLayer(nurseryLayerGroup);
+  }
+}
+
+$effect(() => {
+  if (showNurseries && browser && map && LeafletLib) {
+    ensureNurseryLayerLoaded().then(updateNurseryVisibility);
+  } else {
+    updateNurseryVisibility();
+  }
 });
 
 
