@@ -104,7 +104,7 @@ The UI offers a canonical set of option values defined in [src/lib/plant-filters
 
 | Filter          | Param            | Options |
 |-----------------|------------------|---------|
-| Plant type      | `plant_type`     | `Cactus`, `Fern`, `Grass`, `Grass-like`, `Herb`, `Shrub`, `Subshrub`, `Succulent`, `Tree`, `Vine` |
+| Plant type      | `plant_type`     | `Cactus`, `Fern`, `Grass`, `Grass-like`, `Perennial`, `Shrub`, `Subshrub`, `Succulent`, `Tree`, `Vine` |
 | Sun & shade     | `sun_and_shade`  | `Sun`, `Part-shade`, `Shade` |
 | Soil moisture   | `soil_moisture`  | `Dry`, `Moist`, `Wet` |
 | Wildlife value  | (boolean flags)  | Set the relevant flag(s) above to `true`. |

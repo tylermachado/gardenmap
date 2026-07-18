@@ -6,7 +6,7 @@ import type { PlantSummary } from '$lib/types/plant.js';
  * chosen (e.g. on the splash screen) without first fetching results.
  */
 export const PLANT_TYPE_OPTIONS = [
-	'Cactus', 'Fern', 'Grass', 'Grass-like', 'Herb',
+	'Cactus', 'Fern', 'Grass', 'Grass-like', 'Perennial',
 	'Shrub', 'Subshrub', 'Succulent', 'Tree', 'Vine',
 ] as const;
 
