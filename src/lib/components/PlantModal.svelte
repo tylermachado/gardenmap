@@ -44,10 +44,18 @@
 	});
 
 	onDestroy(() => {
-		const params = new URLSearchParams(untrack(() => $page.url.searchParams));
+		clearTimeout(copiedTimeout);
+		const currentUrl = untrack(() => $page.url);
+		// Only clean up the URL if this modal still "owns" the current plant param.
+		if (currentUrl.searchParams.get('plant') !== plant.id) return;
+		const params = new URLSearchParams(currentUrl.searchParams);
 		params.delete('plant');
 		const query = params.toString();
-		goto(query ? `?${query}` : '?', { replaceState: true, noScroll: true, keepFocus: true });
+		goto(`${currentUrl.pathname}${query ? `?${query}` : ''}`, {
+			replaceState: true,
+			noScroll: true,
+			keepFocus: true
+		});
 	});
 
 	let copied = $state(false);
