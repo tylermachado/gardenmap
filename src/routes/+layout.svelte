@@ -72,7 +72,7 @@
 				>Federal Highway Administration</a
 			>.
 		</p>
-		<p>
+		<p class="text-sm">
 			Additional data was compiled from these publicly available sources: Arizona Sonora Desert,
 			California Native Plant Society Calscape, Denver Botanic Garden, Institute For Regional
 			Conservation, Missouri Botanical Garden, Native Plant Trust, North Carolina State Extension,
@@ -81,7 +81,7 @@
 			IFAS Extension, USDA NRCS Plants Database, Utah State University Extension, and Washington
 			Native Plant Society.
 		</p>
-		<p>
+		<p class="text-sm">
 			For questions, comments, suggestions, etc. please email <a
 				href="mailto:admin@mynativeplantlist.com">admin@mynativeplantlist.com</a
 			>.
