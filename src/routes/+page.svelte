@@ -94,7 +94,9 @@
 	function updateUrlWithLocation(lat: number, lng: number, zoom?: number): void {
 		const map = mapRef?.getMap();
 		const zoomLevel = zoom ?? map?.getZoom() ?? 6;
-		const params = new URLSearchParams();
+		// Preserve unrelated params (e.g. a plant modal's ?plant=<id>) instead of
+		// overwriting the whole query string.
+		const params = new URLSearchParams($page.url.searchParams);
 		params.set('lat', lat.toFixed(6));
 		params.set('lng', lng.toFixed(6));
 		params.set('zoom', zoomLevel.toString());

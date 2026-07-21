@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
 	import type { Plant, PlantSummary } from '$lib/types/plant.js';
 	import { fetchPlantDetail } from '$lib/api/plants.js';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 
 	interface PlantModalProps {
 		plant: PlantSummary;
@@ -30,6 +32,41 @@
 				loadingDetail = false;
 			});
 	});
+
+	// Reflect the open plant in the URL (?plant=<id>) so the modal is shareable and
+	// restorable on load; clear it again when this modal closes/unmounts. Reads $page via
+	// untrack (not $effect) so unrelated URL changes elsewhere (e.g. map zoom) don't
+	// re-fire this and fight with goto in a loop.
+	onMount(() => {
+		const params = new URLSearchParams(untrack(() => $page.url.searchParams));
+		params.set('plant', plant.id);
+		goto(`?${params.toString()}`, { replaceState: true, noScroll: true, keepFocus: true });
+	});
+
+	onDestroy(() => {
+		const params = new URLSearchParams(untrack(() => $page.url.searchParams));
+		params.delete('plant');
+		const query = params.toString();
+		goto(query ? `?${query}` : '?', { replaceState: true, noScroll: true, keepFocus: true });
+	});
+
+	let copied = $state(false);
+	let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
+
+	function shareUrl(): string {
+		return $page.url.href;
+	}
+
+	async function copyLink() {
+		try {
+			await navigator.clipboard.writeText(shareUrl());
+			copied = true;
+			clearTimeout(copiedTimeout);
+			copiedTimeout = setTimeout(() => (copied = false), 1500);
+		} catch {
+			// Clipboard API unavailable (e.g. insecure context); nothing more we can do here.
+		}
+	}
 
 	function trapFocus(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
@@ -99,6 +136,38 @@
 	}
 </script>
 
+{#snippet shareButton()}
+	<div class="absolute right-12 top-3">
+		<button
+			type="button"
+			class="flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+			onclick={copyLink}
+			aria-label="Copy link to this plant"
+		>
+			{#if copied}
+				<svg class="h-4 w-4 text-lime-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+				</svg>
+			{:else}
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+					/>
+				</svg>
+			{/if}
+		</button>
+		<span
+			aria-live="polite"
+			class="pointer-events-none absolute right-0 top-9 whitespace-nowrap rounded bg-stone-800 px-2 py-1 text-[11px] text-white shadow transition-opacity duration-200 {copied ? 'opacity-100' : 'opacity-0'}"
+		>
+			{copied ? 'Link copied!' : ''}
+		</span>
+	</div>
+{/snippet}
+
 <div
 	role="presentation"
 	class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
@@ -156,6 +225,7 @@
 
 			<!-- Bottom (mobile) / Right (desktop): close button + names + table -->
 			<div class="flex flex-1 flex-col overflow-y-auto p-6">
+				{@render shareButton()}
 				<button
 					type="button"
 					class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
@@ -248,6 +318,7 @@
 			bind:this={dialogEl}
 			class="relative w-[28rem] max-w-[92vw] rounded-xl bg-white p-6 shadow-2xl"
 		>
+			{@render shareButton()}
 			<button
 				type="button"
 				class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"

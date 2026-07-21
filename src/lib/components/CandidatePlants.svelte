@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
 	import PlantModal from '$lib/components/PlantModal.svelte';
 	import PlantFilters from '$lib/components/PlantFilters.svelte';
 	import type { PlantSummary } from '$lib/types/plant.js';
-	import { fetchCandidatePlants } from '$lib/api/plants.js';
+	import { fetchCandidatePlants, fetchPlantDetail } from '$lib/api/plants.js';
+	import { page } from '$app/stores';
 	import {
 		createPlantFilters,
 		clearPlantFilters,
@@ -33,6 +35,20 @@
 	let loading = $state(false);
 	let error: string | null = $state(null);
 	let selectedPlant: PlantSummary | null = $state(null);
+
+	// A shared link (?plant=<id>) reopens that plant's modal on load, independent of
+	// whatever location/filters are also in the URL.
+	onMount(() => {
+		const sharedId = $page.url.searchParams.get('plant');
+		if (!sharedId) return;
+		fetchPlantDetail(sharedId)
+			.then((detail) => {
+				selectedPlant = detail;
+			})
+			.catch(() => {
+				// Unknown/removed plant id: ignore, modal simply doesn't open.
+			});
+	});
 
 	let displayCount = $state(PAGE_SIZE);
 	let sentinelEl: HTMLDivElement | undefined = $state();
