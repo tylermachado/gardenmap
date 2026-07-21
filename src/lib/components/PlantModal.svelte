@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount, onDestroy, untrack } from 'svelte';
-	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
 	import type { Plant, PlantSummary } from '$lib/types/plant.js';
 	import { fetchPlantDetail } from '$lib/api/plants.js';
 	import { goto } from '$app/navigation';
@@ -98,6 +97,7 @@
 	}
 
 	const IMG_BASE_URL = 'https://d10s8hlfsm6n8p.cloudfront.net/images/';
+	const PlantIcon1 = '/logos/plant.svg';
 
 	// Gallery: the image list comes from detail once loaded, falling back to the summary.
 	let images = $derived((detail ?? plant).images ?? []);

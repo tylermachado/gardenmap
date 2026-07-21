@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
 	import PlantModal from '$lib/components/PlantModal.svelte';
 	import type { PlantSearchResult, PlantSummary } from '$lib/types/plant.js';
 	import { fetchPlantDetail } from '$lib/api/plants.js';
 	import { page } from '$app/stores';
 
 	const IMG_BASE_URL = 'https://d10s8hlfsm6n8p.cloudfront.net/images/';
+	const PlantIcon1 = '/logos/plant.svg';
 
 	interface PlantSearchResultsProps {
 		results: PlantSearchResult[];
@@ -61,7 +61,7 @@
 						<img
 							src={plant.images?.length ? `${IMG_BASE_URL}${plant.images[0].img_file_name}` : (plant.image_url ?? PlantIcon1)}
 							alt={plant.scientific_name}
-							class="h-full w-full object-cover"
+							class="h-full w-full {plant.images?.length || plant.image_url ? 'object-cover' : 'object-contain p-4'}"
 							loading="lazy"
 						/>
 					</div>
