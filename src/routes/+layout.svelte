@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { dev } from '$app/environment';
 	import InfoModal from '$lib/components/InfoModal.svelte';
+	import SavedPlantsTab from '$lib/components/SavedPlantsTab.svelte';
 
 	const GA_MEASUREMENT_ID = 'G-2XBQGFE0ZJ';
 
@@ -129,6 +130,8 @@
 		{/if}
 	</main>
 </div>
+
+<SavedPlantsTab />
 
 <style>
 	:global(html, body) {
