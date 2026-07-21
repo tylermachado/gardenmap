@@ -392,6 +392,9 @@
 				</div>
 			</div>
 		</div>
+		<p class="absolute bottom-4 left-0 right-0 z-10 text-center text-xs text-stone-300/80">
+			© 2025-{new Date().getFullYear()} White Flower Farm and Sustainable Gardening Institute
+		</p>
 	</div>
 {:else}
 	<div
