@@ -12,6 +12,10 @@
 		onPlantSearch?: (term: string) => void;
 		variant?: 'default' | 'splash';
 		searchResultAddress?: NominatimAddress | null;
+		/** Two-way bound plant-name query, kept separate from the location ZIP query. */
+		plantQuery?: string;
+		/** Called when the user clears an active plant-name search/filter. */
+		onClearPlantSearch?: () => void;
 	}
 
 	let {
@@ -21,15 +25,15 @@
 		mode = $bindable('location'),
 		onPlantSearch,
 		variant = 'default',
-		searchResultAddress = null
+		searchResultAddress = null,
+		plantQuery = $bindable(''),
+		onClearPlantSearch
 	}: SearchBarProps = $props();
 
 	const isSplash = $derived(variant === 'splash');
 	const isPlantMode = $derived(mode === 'plant');
 	let showValidationError = $state(false);
 	let editMode = $state(false);
-	// Plant-name query is kept separate from the location ZIP query.
-	let plantQuery = $state('');
 
 	const cityStateLabel = $derived(getCityStateLabel(searchResultAddress));
 	// The location result summary only takes over in location mode.
@@ -78,6 +82,11 @@
 
 		if (e.key === 'Enter') handleSearch();
 	}
+
+	function handleClearPlantSearch() {
+		plantQuery = '';
+		onClearPlantSearch?.();
+	}
 </script>
 
 <div class={isSplash ? 'w-full flex flex-col gap-2' : 'w-full flex flex-col relative'}>
@@ -112,15 +121,32 @@
 	{#if isPlantMode}
 		<!-- Plant-name search: no ZIP validation, always shows the input -->
 		<div class="flex flex-row items-stretch">
-			<input
-				type="text"
-				bind:value={plantQuery}
-				placeholder="Search by plant name (common or scientific)"
-				class={isSplash
-					? 'flex-1 min-w-0 rounded-l border-y border-l border-r-0 px-3 py-2 focus:outline-none bg-white/10 text-stone-100 placeholder-stone-300 border-stone-300'
-					: 'flex-1 min-w-0 border-y border-l border-r-0 px-3 py-3 focus:outline-none bg-stone-100 border-lime-950'}
-				onkeydown={handleKeydown}
-			/>
+			<div class="relative flex-1 min-w-0">
+				<input
+					type="text"
+					bind:value={plantQuery}
+					placeholder="Search by plant name (common or scientific)"
+					class={isSplash
+						? 'w-full rounded-l border-y border-l border-r-0 px-3 py-2 pr-8 focus:outline-none bg-white/10 text-stone-100 placeholder-stone-300 border-stone-300'
+						: 'w-full border-y border-l border-r-0 px-3 py-3 pr-8 focus:outline-none bg-stone-100 border-lime-950'}
+					onkeydown={handleKeydown}
+				/>
+				{#if plantQuery}
+					<button
+						type="button"
+						class={isSplash
+							? 'absolute right-2 top-1/2 -translate-y-1/2 text-stone-300 hover:text-white'
+							: 'absolute right-2 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-800'}
+						onclick={handleClearPlantSearch}
+						aria-label="Clear plant search"
+						title="Clear search"
+					>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				{/if}
+			</div>
 			<button
 				class={isSplash
 					? 'rounded-r border bg-stone-100 px-4 py-2 text-lime-950 font-semibold shrink-0 hover:bg-lime-100 border-stone-300'

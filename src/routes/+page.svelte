@@ -37,16 +37,12 @@
 
 	// Plant-name search (the "is this plant right for here?" flow)
 	let searchMode: 'location' | 'plant' = $state('location');
+	let plantQuery: string = $state('');
 	let plantSearchActive: boolean = $state(false);
 	let plantSearchTerm: string = $state('');
 	let plantSearchResults: PlantSearchResult[] = $state([]);
 	let plantSearchLoading: boolean = $state(false);
 	let plantSearchError: string | null = $state(null);
-
-	// Returning to location mode clears the plant-search view.
-	$effect(() => {
-		if (searchMode === 'location') plantSearchActive = false;
-	});
 
 	async function searchPlantByName(term: string) {
 		plantSearchActive = true;
@@ -63,6 +59,27 @@
 		} finally {
 			plantSearchLoading = false;
 		}
+	}
+
+	// A location added (or changed) after a plant search already ran needs the
+	// suitability verdicts re-fetched with the now-known zipcode.
+	let verdictZip: string | undefined;
+	$effect(() => {
+		const zip = searchResultAddress?.postcode;
+		if (plantSearchActive && plantSearchTerm && zip !== verdictZip) {
+			verdictZip = zip;
+			searchPlantByName(plantSearchTerm);
+		}
+	});
+
+	function clearPlantSearch() {
+		plantSearchActive = false;
+		plantSearchTerm = '';
+		plantSearchResults = [];
+		plantSearchError = null;
+		plantQuery = '';
+		verdictZip = undefined;
+		searchMode = 'location';
 	}
 
 	// Shared plant filters: pre-selected on the splash, then carried into the results.
@@ -94,7 +111,9 @@
 	function updateUrlWithLocation(lat: number, lng: number, zoom?: number): void {
 		const map = mapRef?.getMap();
 		const zoomLevel = zoom ?? map?.getZoom() ?? 6;
-		const params = new URLSearchParams();
+		// Preserve unrelated params (e.g. a plant modal's ?plant=<id>) instead of
+		// overwriting the whole query string.
+		const params = new URLSearchParams($page.url.searchParams);
 		params.set('lat', lat.toFixed(6));
 		params.set('lng', lng.toFixed(6));
 		params.set('zoom', zoomLevel.toString());
@@ -320,7 +339,7 @@
 </script>
 
 <svelte:head>
-	<title>MyNativePlantList.com</title>
+	<title>My Native Plant List</title>
 	<meta name="description" content="Explore geographic data with interactive maps" />
 </svelte:head>
 
@@ -350,8 +369,10 @@
 					variant="splash"
 					bind:searchQuery
 					bind:mode={searchMode}
+					bind:plantQuery
 					onSearch={searchLocation}
 					onPlantSearch={searchPlantByName}
+					onClearPlantSearch={clearPlantSearch}
 					onFindLocation={findMyLocation}
 				/>
 
@@ -392,6 +413,9 @@
 				</div>
 			</div>
 		</div>
+		<p class="absolute bottom-4 left-0 right-0 z-10 text-center text-xs text-stone-300/80">
+			© 2025-{new Date().getFullYear()} White Flower Farm and Sustainable Gardening Institute
+		</p>
 	</div>
 {:else}
 	<div
@@ -401,8 +425,10 @@
 		<SearchBar
 			bind:searchQuery
 			bind:mode={searchMode}
+			bind:plantQuery
 			onSearch={searchLocation}
 			onPlantSearch={searchPlantByName}
+			onClearPlantSearch={clearPlantSearch}
 			onFindLocation={findMyLocation}
 			searchResultAddress={searchResultAddress}
 		/>

@@ -1,9 +1,10 @@
 <script lang="ts">
-	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
+	import { onMount } from 'svelte';
 	import PlantModal from '$lib/components/PlantModal.svelte';
 	import PlantFilters from '$lib/components/PlantFilters.svelte';
 	import type { PlantSummary } from '$lib/types/plant.js';
-	import { fetchCandidatePlants } from '$lib/api/plants.js';
+	import { fetchCandidatePlants, fetchPlantDetail } from '$lib/api/plants.js';
+	import { page } from '$app/stores';
 	import {
 		createPlantFilters,
 		clearPlantFilters,
@@ -14,6 +15,7 @@
 	} from '$lib/plant-filters.js';
 
 	const IMG_BASE_URL = 'https://d10s8hlfsm6n8p.cloudfront.net/images/';
+	const PlantIcon1 = '/logos/plant.svg';
 	const PAGE_SIZE = 20;
 
 	interface CandidatePlantsProps {
@@ -33,6 +35,20 @@
 	let loading = $state(false);
 	let error: string | null = $state(null);
 	let selectedPlant: PlantSummary | null = $state(null);
+
+	// A shared link (?plant=<id>) reopens that plant's modal on load, independent of
+	// whatever location/filters are also in the URL.
+	onMount(() => {
+		const sharedId = $page.url.searchParams.get('plant');
+		if (!sharedId) return;
+		fetchPlantDetail(sharedId)
+			.then((detail) => {
+				selectedPlant = detail;
+			})
+			.catch(() => {
+				// Unknown/removed plant id: ignore, modal simply doesn't open.
+			});
+	});
 
 	let displayCount = $state(PAGE_SIZE);
 	let sentinelEl: HTMLDivElement | undefined = $state();
@@ -237,7 +253,7 @@
 						<img
 							src={plant.images?.length ? `${IMG_BASE_URL}${plant.images[0].img_file_name}` : (plant.image_url ?? PlantIcon1)}
 							alt={plant.scientific_name}
-							class="h-full w-full object-cover"
+							class="h-full w-full {plant.images?.length || plant.image_url ? 'object-cover' : 'object-contain p-4'}"
 							loading="lazy"
 						/>
 					</div>

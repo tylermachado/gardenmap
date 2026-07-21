@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import PlantIcon1 from '$lib/icons/noun-plant-6741.svg';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import type { Plant, PlantSummary } from '$lib/types/plant.js';
 	import { fetchPlantDetail } from '$lib/api/plants.js';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { savedPlants } from '$lib/stores/savedPlants.svelte.js';
 
 	interface PlantModalProps {
 		plant: PlantSummary;
@@ -30,6 +32,49 @@
 				loadingDetail = false;
 			});
 	});
+
+	// Reflect the open plant in the URL (?plant=<id>) so the modal is shareable and
+	// restorable on load; clear it again when this modal closes/unmounts. Reads $page via
+	// untrack (not $effect) so unrelated URL changes elsewhere (e.g. map zoom) don't
+	// re-fire this and fight with goto in a loop.
+	onMount(() => {
+		const params = new URLSearchParams(untrack(() => $page.url.searchParams));
+		params.set('plant', plant.id);
+		goto(`?${params.toString()}`, { replaceState: true, noScroll: true, keepFocus: true });
+	});
+
+	onDestroy(() => {
+		clearTimeout(copiedTimeout);
+		const currentUrl = untrack(() => $page.url);
+		// Only clean up the URL if this modal still "owns" the current plant param.
+		if (currentUrl.searchParams.get('plant') !== plant.id) return;
+		const params = new URLSearchParams(currentUrl.searchParams);
+		params.delete('plant');
+		const query = params.toString();
+		goto(`${currentUrl.pathname}${query ? `?${query}` : ''}`, {
+			replaceState: true,
+			noScroll: true,
+			keepFocus: true
+		});
+	});
+
+	let copied = $state(false);
+	let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
+
+	function shareUrl(): string {
+		return $page.url.href;
+	}
+
+	async function copyLink() {
+		try {
+			await navigator.clipboard.writeText(shareUrl());
+			copied = true;
+			clearTimeout(copiedTimeout);
+			copiedTimeout = setTimeout(() => (copied = false), 1500);
+		} catch {
+			// Clipboard API unavailable (e.g. insecure context); nothing more we can do here.
+		}
+	}
 
 	function trapFocus(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
@@ -60,6 +105,7 @@
 	}
 
 	const IMG_BASE_URL = 'https://d10s8hlfsm6n8p.cloudfront.net/images/';
+	const PlantIcon1 = '/logos/plant.svg';
 
 	// Gallery: the image list comes from detail once loaded, falling back to the summary.
 	let images = $derived((detail ?? plant).images ?? []);
@@ -75,7 +121,11 @@
 			? `${IMG_BASE_URL}${images[imageIndex].img_file_name}`
 			: ((detail ?? plant).image_url ?? PlantIcon1)
 	);
-	let currentAttribution = $derived(images[imageIndex]?.img_attribution);
+	let currentAttribution = $derived(
+		images[imageIndex]?.img_src_attribution === 'Lady Bird'
+			? `Courtesy of ${images[imageIndex]?.img_attribution}, Lady Bird Johnson Wildflower Center`
+			: images[imageIndex]?.img_attribution
+	);
 
 	function prevImage() {
 		if (images.length) imageIndex = (imageIndex - 1 + images.length) % images.length;
@@ -87,6 +137,10 @@
 	// True if the plant summary already carries a real image URL
 	let hasImage = $derived(!!(plant.images?.length || plant.image_url));
 
+	// Save target: prefer the richer detail record once loaded, falling back to the summary.
+	let saveTarget = $derived(detail ?? plant);
+	let saved = $derived(savedPlants.isSaved(plant.id));
+
 	function heightRange(min?: number, max?: number): string {
 		if (min != null && max != null) return `${min}–${max} ft`;
 		if (min != null) return `${min}+ ft`;
@@ -94,6 +148,59 @@
 		return '';
 	}
 </script>
+
+{#snippet heartButton()}
+	<button
+		type="button"
+		class="absolute right-20 top-3 flex h-7 w-7 items-center justify-center rounded-full hover:bg-stone-100 {saved
+			? 'text-red-600'
+			: 'text-stone-500 hover:text-stone-800'}"
+		onclick={() => savedPlants.toggle(saveTarget)}
+		aria-pressed={saved}
+		aria-label={saved ? 'Remove from My Saved Plants' : 'Add to My Saved Plants'}
+	>
+		<svg class="h-4 w-4" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M12 21s-6.716-4.35-9.428-8.223C.686 10.25 1.03 6.9 3.343 5.06c2.02-1.61 4.774-1.24 6.2.6L12 8.4l2.457-2.74c1.426-1.84 4.18-2.21 6.2-.6 2.313 1.84 2.657 5.19.771 7.717C18.716 16.65 12 21 12 21z"
+			/>
+		</svg>
+	</button>
+{/snippet}
+
+{#snippet shareButton()}
+	<div class="absolute right-12 top-3">
+		<button
+			type="button"
+			class="flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+			onclick={copyLink}
+			aria-label="Copy link to this plant"
+		>
+			{#if copied}
+				<svg class="h-4 w-4 text-lime-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+				</svg>
+			{:else}
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+					/>
+				</svg>
+			{/if}
+		</button>
+		<span
+			aria-live="polite"
+			class="pointer-events-none absolute right-0 top-9 whitespace-nowrap rounded bg-stone-800 px-2 py-1 text-[11px] text-white shadow transition-opacity duration-200 {copied ? 'opacity-100' : 'opacity-0'}"
+		>
+			{copied ? 'Link copied!' : ''}
+		</span>
+	</div>
+{/snippet}
 
 <div
 	role="presentation"
@@ -152,6 +259,8 @@
 
 			<!-- Bottom (mobile) / Right (desktop): close button + names + table -->
 			<div class="flex flex-1 flex-col overflow-y-auto p-6">
+				{@render heartButton()}
+				{@render shareButton()}
 				<button
 					type="button"
 					class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
@@ -244,6 +353,8 @@
 			bind:this={dialogEl}
 			class="relative w-[28rem] max-w-[92vw] rounded-xl bg-white p-6 shadow-2xl"
 		>
+			{@render heartButton()}
+			{@render shareButton()}
 			<button
 				type="button"
 				class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
