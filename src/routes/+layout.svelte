@@ -111,6 +111,11 @@
 				onclick={() => (showAbout = true)}
 				class="text-sm text-stone-300 transition-colors hover:text-stone-100">About</button
 			>
+			<a
+				href="/terms"
+				class="text-sm font-normal text-stone-300 no-underline transition-colors hover:text-stone-100"
+				>Terms of Use</a
+			>
 		</nav>
 	</header>
 
