@@ -320,7 +320,7 @@
 </script>
 
 <svelte:head>
-	<title>MyNativePlantList.com</title>
+	<title>My Native Plant List</title>
 	<meta name="description" content="Explore geographic data with interactive maps" />
 </svelte:head>
 

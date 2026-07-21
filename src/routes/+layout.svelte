@@ -33,7 +33,7 @@
 <InfoModal title="About" open={showAbout} onclose={() => (showAbout = false)}>
 	{#snippet children()}
 		<p>
-			MyNativePlantList.com is a collaboration between <a href="https://www.sustainablegardeninginstitute.org/" target="_blank" rel="noopener">The Sustainable Gardening Institute</a> and <a href="https://www.whiteflowerfarm.com/" target="_blank" rel="noopener">White Flower Farm</a>. It is designed to help users find plant species that are:
+			My Native Plant List is a collaboration between <a href="https://www.sustainablegardeninginstitute.org/" target="_blank" rel="noopener">The Sustainable Gardening Institute</a> and <a href="https://www.whiteflowerfarm.com/" target="_blank" rel="noopener">White Flower Farm</a>. It is designed to help users find plant species that are:
 		</p>
 		<ul>
 			<li>Native to the user’s Level III Ecoregion.</li>
@@ -54,7 +54,21 @@ You can read more about Ecoregions and Hardiness Zones via the links below.
 
 <div class="h-screen bg-stone-300 flex flex-col overflow-hidden">
 	<header class="bg-lime-950 p-4 flex items-center justify-between">
-		<a href="/"><h1 class="font-serif text-xl sm:text-3xl font-bold text-stone-100">MyNativePlantList.com</h1></a>
+		<a href="/" class="flex items-center gap-3">
+			<h1 class="font-serif text-xl sm:text-3xl font-bold text-stone-100">My Native Plant List</h1>
+			<span
+				role="img"
+				aria-label="The Sustainable Gardening Institute"
+				class="inline-block h-8 sm:h-10 bg-stone-100"
+				style="aspect-ratio: 163.7 / 88; mask: url(/logos/sgi.svg) center / contain no-repeat; -webkit-mask: url(/logos/sgi.svg) center / contain no-repeat;"
+			></span>
+			<span
+				role="img"
+				aria-label="White Flower Farm"
+				class="inline-block h-8 sm:h-10 bg-stone-100"
+				style="aspect-ratio: 811.7 / 724.5; mask: url(/logos/wff.svg) center / contain no-repeat; -webkit-mask: url(/logos/wff.svg) center / contain no-repeat;"
+			></span>
+		</a>
 		<nav class="flex items-center gap-4">
 			<button onclick={() => (showAbout = true)} class="text-stone-300 text-sm hover:text-stone-100 transition-colors">About</button>
 		</nav>
