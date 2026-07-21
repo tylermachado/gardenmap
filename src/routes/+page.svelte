@@ -43,11 +43,6 @@
 	let plantSearchLoading: boolean = $state(false);
 	let plantSearchError: string | null = $state(null);
 
-	// Returning to location mode clears the plant-search view.
-	$effect(() => {
-		if (searchMode === 'location') plantSearchActive = false;
-	});
-
 	async function searchPlantByName(term: string) {
 		plantSearchActive = true;
 		plantSearchTerm = term;
@@ -64,6 +59,17 @@
 			plantSearchLoading = false;
 		}
 	}
+
+	// A location added (or changed) after a plant search already ran needs the
+	// suitability verdicts re-fetched with the now-known zipcode.
+	let verdictZip: string | undefined;
+	$effect(() => {
+		const zip = searchResultAddress?.postcode;
+		if (plantSearchActive && plantSearchTerm && zip !== verdictZip) {
+			verdictZip = zip;
+			searchPlantByName(plantSearchTerm);
+		}
+	});
 
 	// Shared plant filters: pre-selected on the splash, then carried into the results.
 	let plantFilters = $state(createPlantFilters());
