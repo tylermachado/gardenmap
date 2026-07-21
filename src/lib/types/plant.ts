@@ -3,6 +3,7 @@ export interface PlantImage {
 	img_file_name: string;
 	img_src_url?: string;
 	img_attribution?: string;
+	img_src_attribution?: string;
 }
 
 /** Lightweight shape returned by GET /api/plants (list endpoint). */

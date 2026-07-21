@@ -75,7 +75,11 @@
 			? `${IMG_BASE_URL}${images[imageIndex].img_file_name}`
 			: ((detail ?? plant).image_url ?? PlantIcon1)
 	);
-	let currentAttribution = $derived(images[imageIndex]?.img_attribution);
+	let currentAttribution = $derived(
+		images[imageIndex]?.img_src_attribution === 'Lady Bird'
+			? `Courtesy of ${images[imageIndex]?.img_attribution}, Lady Bird Johnson Wildflower Center`
+			: images[imageIndex]?.img_attribution
+	);
 
 	function prevImage() {
 		if (images.length) imageIndex = (imageIndex - 1 + images.length) % images.length;
