@@ -345,6 +345,7 @@
 			bind:this={dialogEl}
 			class="relative w-[28rem] max-w-[92vw] rounded-xl bg-white p-6 shadow-2xl"
 		>
+			{@render heartButton()}
 			{@render shareButton()}
 			<button
 				type="button"

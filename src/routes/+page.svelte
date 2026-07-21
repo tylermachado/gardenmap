@@ -37,6 +37,7 @@
 
 	// Plant-name search (the "is this plant right for here?" flow)
 	let searchMode: 'location' | 'plant' = $state('location');
+	let plantQuery: string = $state('');
 	let plantSearchActive: boolean = $state(false);
 	let plantSearchTerm: string = $state('');
 	let plantSearchResults: PlantSearchResult[] = $state([]);
@@ -70,6 +71,16 @@
 			searchPlantByName(plantSearchTerm);
 		}
 	});
+
+	function clearPlantSearch() {
+		plantSearchActive = false;
+		plantSearchTerm = '';
+		plantSearchResults = [];
+		plantSearchError = null;
+		plantQuery = '';
+		verdictZip = undefined;
+		searchMode = 'location';
+	}
 
 	// Shared plant filters: pre-selected on the splash, then carried into the results.
 	let plantFilters = $state(createPlantFilters());
@@ -358,8 +369,10 @@
 					variant="splash"
 					bind:searchQuery
 					bind:mode={searchMode}
+					bind:plantQuery
 					onSearch={searchLocation}
 					onPlantSearch={searchPlantByName}
+					onClearPlantSearch={clearPlantSearch}
 					onFindLocation={findMyLocation}
 				/>
 
@@ -412,8 +425,10 @@
 		<SearchBar
 			bind:searchQuery
 			bind:mode={searchMode}
+			bind:plantQuery
 			onSearch={searchLocation}
 			onPlantSearch={searchPlantByName}
+			onClearPlantSearch={clearPlantSearch}
 			onFindLocation={findMyLocation}
 			searchResultAddress={searchResultAddress}
 		/>
