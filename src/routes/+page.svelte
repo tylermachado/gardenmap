@@ -450,8 +450,7 @@
 				</div>
 			{:else}
 			<!-- Full-width row: map on left, location info on right (zone + ecoregion columns on large screens) -->
-			<div id="location-info" class="relative z-20 flex flex-col sm:flex-row w-full h-[400px] border-b border-stone-700 shrink-0">
-
+ 			<div id="location-info" class="relative z-20 flex flex-col sm:flex-row w-full sm:h-[400px] border-b border-stone-700 shrink-0">
 				<!-- Map -->
 				<div class="sm:w-3/5 relative bg-stone-100 flex-shrink-0">
 					<div class="w-full h-[400px] sm:h-full overflow-hidden">
