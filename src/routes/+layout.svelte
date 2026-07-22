@@ -13,23 +13,22 @@
 
 	onMount(() => {
 		mounted = true;
-
-		// Only load Google Analytics in production builds, not during `vite dev`.
-		if (!dev) {
-			const script = document.createElement('script');
-			script.async = true;
-			script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-			document.head.appendChild(script);
-
-			window.dataLayer = window.dataLayer || [];
-			function gtag(...args: unknown[]) {
-				window.dataLayer.push(args);
-			}
-			gtag('js', new Date());
-			gtag('config', GA_MEASUREMENT_ID);
-		}
 	});
 </script>
+
+<svelte:head>
+	{#if !dev}
+		<script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag() {
+				dataLayer.push(arguments);
+			}
+			gtag('js', new Date());
+			gtag('config', `${GA_MEASUREMENT_ID}`);
+		</script>
+	{/if}
+</svelte:head>
 
 <InfoModal title="About" open={showAbout} onclose={() => (showAbout = false)}>
 	{#snippet children()}
