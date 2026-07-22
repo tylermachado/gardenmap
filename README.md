@@ -10,7 +10,7 @@ Built with SvelteKit (Svelte 5 runes), Leaflet for the map, Turf.js for point-in
 
 The app has two complementary flows, both driven from the home page ([src/routes/+page.svelte](src/routes/+page.svelte)):
 
-- **Location → plants.** Clicking the map or searching a ZIP code geocodes the point (client-side, via Nominatim), resolves which hardiness zone / ecoregion polygon contains it (client-side, via Turf), and fetches the plants appropriate for that location.
+- **Location → plants.** Clicking the map or searching a ZIP code geocodes the point (client-side, via Nominatim, with Geocodio as a ZIP-code fallback), resolves which hardiness zone / ecoregion polygon contains it (client-side, via Turf), and fetches the plants appropriate for that location.
 - **Plant name → suitability.** Searching by plant name lists catalog matches and, once a location is set, annotates each match with whether it suits that location.
 
 Geocoding and the polygon lookup happen in the browser against bundled GeoJSON. Plant data is fetched directly from the browser via [src/lib/api/plants.ts](src/lib/api/plants.ts), which calls the plants API at the same-origin path `/api/plants/*`. In production the site and the API share an origin (`mynativeplantlist.com/api/...`), so these calls need no CORS; in local development the Vite dev server proxies `/api/*` to the API origin given by `PLANTS_API_URL` (see [vite.config.ts](vite.config.ts)).
@@ -29,7 +29,7 @@ src/
                                   #   (paged), name search + suitability, detail, summary
     components/                   # Map, SearchBar, LocationInfo, CandidatePlants,
                                   #   PlantFilters, PlantModal, PlantSearchResults, InfoModal
-    services/geocoding.ts         # Nominatim geocoding (rate-limited, US-only)
+    services/geocoding.ts         # Nominatim geocoding (rate-limited, US-only) + Geocodio ZIP fallback
     services/spatial-analysis.ts  # Turf point-in-polygon over bundled layers
     plant-filters.ts              # Canonical filter options + shared filter state
     types/plant.ts                # PlantSummary, PlantSearchResult, Plant, PlantImage
@@ -65,6 +65,7 @@ cp .env.example .env
 | Variable | Description |
 |---|---|
 | `PLANTS_API_URL` | Plants API endpoint, e.g. `https://your-plants-api-host/api/plants`. Used **only by the Vite dev server** to proxy `/api/*` during local development (only its origin is read — see [vite.config.ts](vite.config.ts)). In production the site and API share an origin, so the browser calls `/api/*` directly and this is not needed. |
+| `VITE_GEOCODIO_API_KEY` | **Optional.** [Geocodio](https://www.geocod.io/) API key used as a backup reverse geocoder when Nominatim returns no ZIP code for a clicked point. If unset, the fallback is skipped. Because this is a static client-side app, the key is inlined into the browser bundle — restrict it by domain/referrer in the Geocodio dashboard. |
 
 ---
 
@@ -105,7 +106,7 @@ The UI offers a canonical set of option values defined in [src/lib/plant-filters
 | Filter          | Param            | Options |
 |-----------------|------------------|---------|
 | Plant type      | `plant_type`     | `Cactus`, `Fern`, `Grass`, `Grass-like`, `Perennial`, `Shrub`, `Subshrub`, `Succulent`, `Tree`, `Vine` |
-| Sun & shade     | `sun_and_shade`  | `Sun`, `Part-shade`, `Shade` |
+| Sun & shade     | `sun_and_shade`  | `Sun`, `Part-Shade`, `Shade` |
 | Soil moisture   | `soil_moisture`  | `Dry`, `Moist`, `Wet` |
 | Wildlife value  | (boolean flags)  | Set the relevant flag(s) above to `true`. |
 
@@ -128,7 +129,7 @@ Returned by `fetchCandidatePlants`. The client trims API records to these keys (
 | `image_url`       | `string?`      | URL of a representative image. |
 | `images`          | `PlantImage[]?`| Ordered list of images (see [PlantImage](#plantimage)). |
 | `plant_type`      | `string[]?`    | Plant categories (e.g. `"Tree"`, `"Shrub"`). |
-| `sun_and_shade`   | `string[]?`    | Light requirements (`"Sun"`, `"Part-shade"`, `"Shade"`). |
+| `sun_and_shade`   | `string[]?`    | Light requirements (`"Sun"`, `"Part-Shade"`, `"Shade"`). |
 | `soil_moisture`   | `string[]?`    | Soil moisture needs (`"Dry"`, `"Moist"`, `"Wet"`). |
 | Wildlife flags    | `boolean?`     | `monarchs`, `native_bees`, `honey_bees`, `bombus`, `butterflies`, `moths`, `hummingbirds`, `beetles_wasps_flies`, `bats`, `nesting_and_structure_bees`, `larval_host_monarch`, `larval_host_butterfly`, `larval_host_moth`. |
 
@@ -168,6 +169,8 @@ Returned by `fetchPlantDetail`. Extends [PlantSummary](#plantsummary) with:
 ### Geocoding — [src/lib/services/geocoding.ts](src/lib/services/geocoding.ts)
 
 `GeocodingService` calls the OpenStreetMap **Nominatim** API directly from the browser for forward (`searchLocation`) and reverse (`reverseGeocode`) geocoding. Requests are throttled to one per second and limited to the US (`countrycodes=us`). A forward search requires a 5-digit (or ZIP+4) US ZIP code in the query.
+
+Nominatim doesn't always return a ZIP code for a clicked point. When `reverseGeocode` gets no result or a result missing a `postcode`, it falls back to **Geocodio** to recover the ZIP — backfilling it into Nominatim's address when one exists, or building the result from Geocodio otherwise. The fallback requires `VITE_GEOCODIO_API_KEY` and is skipped when the key is unset.
 
 ### Spatial analysis — [src/lib/services/spatial-analysis.ts](src/lib/services/spatial-analysis.ts)
 
