@@ -10,7 +10,7 @@ export const PLANT_TYPE_OPTIONS = [
 	'Shrub', 'Subshrub', 'Succulent', 'Tree', 'Vine',
 ] as const;
 
-export const SUN_SHADE_OPTIONS = ['Sun', 'Part-shade', 'Shade'] as const;
+export const SUN_SHADE_OPTIONS = ['Sun', 'Part-Shade', 'Shade'] as const;
 
 export const MOISTURE_OPTIONS = ['Dry', 'Moist', 'Wet'] as const;
 

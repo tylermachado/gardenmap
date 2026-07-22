@@ -105,7 +105,7 @@ The UI offers a canonical set of option values defined in [src/lib/plant-filters
 | Filter          | Param            | Options |
 |-----------------|------------------|---------|
 | Plant type      | `plant_type`     | `Cactus`, `Fern`, `Grass`, `Grass-like`, `Perennial`, `Shrub`, `Subshrub`, `Succulent`, `Tree`, `Vine` |
-| Sun & shade     | `sun_and_shade`  | `Sun`, `Part-shade`, `Shade` |
+| Sun & shade     | `sun_and_shade`  | `Sun`, `Part-Shade`, `Shade` |
 | Soil moisture   | `soil_moisture`  | `Dry`, `Moist`, `Wet` |
 | Wildlife value  | (boolean flags)  | Set the relevant flag(s) above to `true`. |
 
@@ -128,7 +128,7 @@ Returned by `fetchCandidatePlants`. The client trims API records to these keys (
 | `image_url`       | `string?`      | URL of a representative image. |
 | `images`          | `PlantImage[]?`| Ordered list of images (see [PlantImage](#plantimage)). |
 | `plant_type`      | `string[]?`    | Plant categories (e.g. `"Tree"`, `"Shrub"`). |
-| `sun_and_shade`   | `string[]?`    | Light requirements (`"Sun"`, `"Part-shade"`, `"Shade"`). |
+| `sun_and_shade`   | `string[]?`    | Light requirements (`"Sun"`, `"Part-Shade"`, `"Shade"`). |
 | `soil_moisture`   | `string[]?`    | Soil moisture needs (`"Dry"`, `"Moist"`, `"Wet"`). |
 | Wildlife flags    | `boolean?`     | `monarchs`, `native_bees`, `honey_bees`, `bombus`, `butterflies`, `moths`, `hummingbirds`, `beetles_wasps_flies`, `bats`, `nesting_and_structure_bees`, `larval_host_monarch`, `larval_host_butterfly`, `larval_host_moth`. |
 
