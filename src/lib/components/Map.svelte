@@ -12,6 +12,16 @@
     latitude: number;
     url: string | null;
   }> | null = null;
+
+  // Safari has no requestIdleCallback; a short timeout is an adequate fallback since the
+  // goal is just "after the current paint," not true idle scheduling.
+  function scheduleIdle(fn: () => void): void {
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => fn());
+    } else {
+      setTimeout(fn, 0);
+    }
+  }
 </script>
 
 <script lang="ts">
@@ -63,21 +73,27 @@ onMount(() => {
   let destroyed = false;
   (async () => {
     try {
-      const leafletModule = await import('leaflet');
+      // 'leaflet.markercluster' is a UMD plugin that references the bare global `L`
+      // leaflet's own module sets as a side effect, so it must not start executing until
+      // the 'leaflet' import has finished — these two can't be parallelized. Their CSS
+      // has no such ordering constraint, so it loads alongside both.
+      const [leafletModule] = await Promise.all([
+        import('leaflet'),
+        import('leaflet/dist/leaflet.css')
+      ]);
       if (destroyed) return;
       LeafletLib = leafletModule.default;
-      await import('leaflet/dist/leaflet.css');
-      // Extends the same Leaflet module instance with L.markerClusterGroup(); relies on
-      // module resolution deduping 'leaflet' to the singleton already assigned above.
-      await import('leaflet.markercluster');
-      await import('leaflet.markercluster/dist/MarkerCluster.css');
-      await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
+      await Promise.all([
+        import('leaflet.markercluster'),
+        import('leaflet.markercluster/dist/MarkerCluster.css'),
+        import('leaflet.markercluster/dist/MarkerCluster.Default.css')
+      ]);
       if (destroyed) return;
       delete (LeafletLib.Icon.Default.prototype as any)._getIconUrl;
       LeafletLib.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconRetinaUrl: `${base}/leaflet/marker-icon-2x.png`,
+        iconUrl: `${base}/leaflet/marker-icon.png`,
+        shadowUrl: `${base}/leaflet/marker-shadow.png`,
       });
       map = LeafletLib.map(mapContainer!, { closePopupOnClick: false }).setView(center, zoom);
       LeafletLib.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -118,7 +134,12 @@ onMount(() => {
         }
       });
       if (shapefiles.length > 0) {
-        await loadShapefiles();
+        // Parsing and rendering this layer (up to a few MB of national polygon data) is a
+        // long synchronous task. Scheduling it on idle instead of awaiting it here lets the
+        // browser paint the base map/tiles first, so this layer no longer gates LCP.
+        scheduleIdle(() => {
+          if (!destroyed) loadShapefiles();
+        });
       }
       if (marker) {
         addSearchMarker(marker.lat, marker.lng);

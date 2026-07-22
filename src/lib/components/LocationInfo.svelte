@@ -43,7 +43,7 @@
 	{/if}
 {/snippet}
 
-<div class="w-full flex flex-col sm:flex-row text-left">
+<div class="w-full h-full flex flex-col sm:flex-row text-left">
 
 
 	{#if Object.keys(pointLayerData).length > 0}
