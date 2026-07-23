@@ -340,7 +340,41 @@
 
 <svelte:head>
 	<title>My Native Plant List</title>
-	<meta name="description" content="Explore geographic data with interactive maps" />
+	<meta
+		name="description"
+		content="Find plants native to your ecoregion, hardy in your USDA zone, and commercially available. A free tool from The Sustainable Gardening Institute and White Flower Farm."
+	/>
+	<link rel="canonical" href="https://mynativeplantlist.com/" />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="My Native Plant List" />
+	<meta property="og:title" content="My Native Plant List" />
+	<meta
+		property="og:description"
+		content="Find plants native to your ecoregion, hardy in your USDA zone, and commercially available."
+	/>
+	<meta property="og:url" content="https://mynativeplantlist.com/" />
+	<meta property="og:image" content="https://mynativeplantlist.com/img/splash.jpg" />
+	<meta property="og:image:width" content="1600" />
+	<meta property="og:image:height" content="1066" />
+	<meta
+		property="og:image:alt"
+		content="A garden of native plants in bloom"
+	/>
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="My Native Plant List" />
+	<meta
+		name="twitter:description"
+		content="Find plants native to your ecoregion, hardy in your USDA zone, and commercially available."
+	/>
+	<meta name="twitter:image" content="https://mynativeplantlist.com/img/splash.jpg" />
+	<meta
+		name="twitter:image:alt"
+		content="A garden of native plants in bloom"
+	/>
 </svelte:head>
 
 {#if showSplash}
