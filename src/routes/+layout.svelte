@@ -4,8 +4,6 @@
 	import InfoModal from '$lib/components/InfoModal.svelte';
 	import SavedPlantsTab from '$lib/components/SavedPlantsTab.svelte';
 
-	const GA_MEASUREMENT_ID = 'G-2XBQGFE0ZJ';
-
 	let { children } = $props();
 	let mounted = $state(false);
 	let showAbout = $state(false);
@@ -16,14 +14,14 @@
 </script>
 
 <svelte:head>
-	<script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
+	<script async src={`https://www.googletagmanager.com/gtag/js?id=G-2XBQGFE0ZJ`}></script>
 	<script>
 		window.dataLayer = window.dataLayer || [];
 		function gtag() {
 			dataLayer.push(arguments);
 		}
 		gtag('js', new Date());
-		gtag('config', `${GA_MEASUREMENT_ID}`);
+		gtag('config', `G-2XBQGFE0ZJ`);
 	</script>
 </svelte:head>
 
