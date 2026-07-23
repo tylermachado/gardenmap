@@ -401,8 +401,8 @@ export function removeSearchMarker(): void {
 <div
   bind:this={mapContainer}
   class="map-container"
-  role="application"
-  aria-label="Interactive map. Use arrow keys to pan and the plus and minus keys to zoom."
+  role="region"
+  aria-label="Interactive map of the selected location. Use arrow keys to pan and the plus and minus keys to zoom."
   style="width:100%;height:100%;overflow:hidden;"
 ></div>
 

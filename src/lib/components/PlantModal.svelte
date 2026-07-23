@@ -159,7 +159,7 @@
 		aria-pressed={saved}
 		aria-label={saved ? 'Remove from My Saved Plants' : 'Add to My Saved Plants'}
 	>
-		<svg class="h-4 w-4" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+		<svg class="h-4 w-4" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 			<path
 				stroke-linecap="round"
 				stroke-linejoin="round"
@@ -179,11 +179,11 @@
 			aria-label="Copy link to this plant"
 		>
 			{#if copied}
-				<svg class="h-4 w-4 text-lime-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<svg class="h-4 w-4 text-lime-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 				</svg>
 			{:else}
-				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 					<path
 						stroke-linecap="round"
 						stroke-linejoin="round"
@@ -234,7 +234,7 @@
 							onclick={prevImage}
 							aria-label="Previous image"
 						>
-							<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 							</svg>
 						</button>
@@ -244,7 +244,7 @@
 							onclick={nextImage}
 							aria-label="Next image"
 						>
-							<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 							</svg>
 						</button>
