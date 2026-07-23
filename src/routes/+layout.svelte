@@ -85,6 +85,12 @@
 </InfoModal>
 
 <div class="flex h-screen flex-col overflow-hidden bg-stone-300">
+	<a
+		href="#main-content"
+		class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[2000] focus:rounded focus:bg-stone-100 focus:px-4 focus:py-2 focus:font-semibold focus:text-lime-950 focus:shadow-lg focus:ring-2 focus:ring-lime-800"
+	>
+		Skip to main content
+	</a>
 	<header
 		class="flex flex-col-reverse gap-2 bg-lime-950 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0"
 	>
@@ -123,7 +129,7 @@
 		</nav>
 	</header>
 
-	<main class="flex min-h-0 flex-1 flex-col overflow-hidden">
+	<main id="main-content" tabindex="-1" class="flex min-h-0 flex-1 flex-col overflow-hidden">
 		{#if mounted}
 			{@render children()}
 		{:else}

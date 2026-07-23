@@ -91,7 +91,7 @@
 
 <div class={isSplash ? 'w-full flex flex-col gap-2' : 'w-full flex flex-col relative'}>
 	<!-- Mode toggle: search by location or by plant name -->
-	<div class={isSplash ? 'flex gap-1 self-start text-[13px]' : 'flex gap-1 self-start px-3 pt-2 text-[13px]'}>
+	<div class={isSplash ? 'flex gap-1 self-start text-[13px] [text-shadow:0_1px_3px_rgba(0,0,0,0.9)]' : 'flex gap-1 self-start px-3 pt-2 text-[13px]'}>
 		<button
 			type="button"
 			class={`rounded-t border-b-2 px-3 py-1 font-medium transition-colors ${

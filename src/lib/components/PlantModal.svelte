@@ -152,7 +152,7 @@
 {#snippet heartButton()}
 	<button
 		type="button"
-		class="absolute right-20 top-3 flex h-7 w-7 items-center justify-center rounded-full hover:bg-stone-100 {saved
+		class="absolute right-20 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 {saved
 			? 'text-red-600'
 			: 'text-stone-500 hover:text-stone-800'}"
 		onclick={() => savedPlants.toggle(saveTarget)}
@@ -174,7 +174,7 @@
 	<div class="absolute right-12 top-3">
 		<button
 			type="button"
-			class="flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+			class="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
 			onclick={copyLink}
 			aria-label="Copy link to this plant"
 		>
@@ -226,33 +226,34 @@
 						alt={plant.scientific_name}
 						class="absolute inset-0 h-full w-full object-cover"
 					/>
+					{#if images.length > 1}
+						<!-- Prev/next arrows, vertically centered on each side of the photo -->
+						<button
+							type="button"
+							class="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm hover:bg-black/60"
+							onclick={prevImage}
+							aria-label="Previous image"
+						>
+							<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+							</svg>
+						</button>
+						<button
+							type="button"
+							class="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm hover:bg-black/60"
+							onclick={nextImage}
+							aria-label="Next image"
+						>
+							<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+							</svg>
+						</button>
+					{/if}
 				</div>
-				{#if currentAttribution || images.length > 1}
-					<!-- Thin gallery bar: Last | attribution | Next -->
-					<div class="flex shrink-0 items-center gap-2 px-2 py-1 text-[10px] text-white/70">
-						{#if images.length > 1}
-							<button
-								type="button"
-								class="shrink-0 px-1 hover:text-white"
-								onclick={prevImage}
-								aria-label="Previous image"
-							>‹ Last</button>
-						{:else}
-							<span class="w-10 shrink-0"></span>
-						{/if}
-						<span class="min-w-0 flex-1 truncate text-center text-white/60">
-							{currentAttribution ?? ''}
-						</span>
-						{#if images.length > 1}
-							<button
-								type="button"
-								class="shrink-0 px-1 hover:text-white"
-								onclick={nextImage}
-								aria-label="Next image"
-							>Next ›</button>
-						{:else}
-							<span class="w-10 shrink-0"></span>
-						{/if}
+				{#if currentAttribution}
+					<!-- Attribution bar: full width now that arrows overlay the photo -->
+					<div class="shrink-0 px-2 py-1 text-center text-[12px] text-white/60">
+						{currentAttribution}
 					</div>
 				{/if}
 			</div>
@@ -263,7 +264,7 @@
 				{@render shareButton()}
 				<button
 					type="button"
-					class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+					class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
 					onclick={onclose}
 					aria-label="Close"
 					bind:this={closeBtn}
@@ -357,7 +358,7 @@
 			{@render shareButton()}
 			<button
 				type="button"
-				class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+				class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
 				onclick={onclose}
 				aria-label="Close"
 				bind:this={closeBtn}
