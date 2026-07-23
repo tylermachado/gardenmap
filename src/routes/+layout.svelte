@@ -1,7 +1,6 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { dev } from '$app/environment';
 	import InfoModal from '$lib/components/InfoModal.svelte';
 	import SavedPlantsTab from '$lib/components/SavedPlantsTab.svelte';
 
@@ -17,17 +16,15 @@
 </script>
 
 <svelte:head>
-	{#if !dev}
-		<script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
-		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag() {
-				dataLayer.push(arguments);
-			}
-			gtag('js', new Date());
-			gtag('config', `${GA_MEASUREMENT_ID}`);
-		</script>
-	{/if}
+	<script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() {
+			dataLayer.push(arguments);
+		}
+		gtag('js', new Date());
+		gtag('config', `${GA_MEASUREMENT_ID}`);
+	</script>
 </svelte:head>
 
 <InfoModal title="About" open={showAbout} onclose={() => (showAbout = false)}>
