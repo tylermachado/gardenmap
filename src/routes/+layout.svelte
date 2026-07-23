@@ -85,23 +85,32 @@
 </InfoModal>
 
 <div class="flex h-screen flex-col overflow-hidden bg-stone-300">
-	<header class="flex items-center justify-between bg-lime-950 p-4">
-		<a href="/" class="flex items-center gap-3">
+	<header
+		class="flex flex-col-reverse gap-2 bg-lime-950 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0"
+	>
+		<a
+			href="/"
+			class="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start"
+		>
 			<h1 class="font-serif text-xl font-bold text-stone-100 sm:text-3xl">My Native Plant List</h1>
-			<span
-				role="img"
-				aria-label="The Sustainable Gardening Institute"
-				class="inline-block h-8 bg-stone-100 sm:h-10"
-				style="aspect-ratio: 163.7 / 88; mask: url(/logos/sgi.svg) center / contain no-repeat; -webkit-mask: url(/logos/sgi.svg) center / contain no-repeat;"
-			></span>
-			<span
-				role="img"
-				aria-label="White Flower Farm"
-				class="inline-block h-8 bg-stone-100 sm:h-10"
-				style="aspect-ratio: 811.7 / 724.5; mask: url(/logos/wff.svg) center / contain no-repeat; -webkit-mask: url(/logos/wff.svg) center / contain no-repeat;"
-			></span>
+			<div class="flex items-center gap-3">
+				<span
+					role="img"
+					aria-label="The Sustainable Gardening Institute"
+					class="inline-block h-8 bg-stone-100 sm:h-10"
+					style="aspect-ratio: 163.7 / 88; mask: url(/logos/sgi.svg) center / contain no-repeat; -webkit-mask: url(/logos/sgi.svg) center / contain no-repeat;"
+				></span>
+				<span
+					role="img"
+					aria-label="White Flower Farm"
+					class="inline-block h-8 bg-stone-100 sm:h-10"
+					style="aspect-ratio: 811.7 / 724.5; mask: url(/logos/wff.svg) center / contain no-repeat; -webkit-mask: url(/logos/wff.svg) center / contain no-repeat;"
+				></span>
+			</div>
 		</a>
-		<nav class="flex items-center gap-4">
+		<nav
+			class="-mx-4 -mt-4 flex w-[calc(100%+2rem)] items-center justify-end gap-4 bg-stone-950 px-4 py-2 sm:m-0 sm:w-auto sm:bg-transparent sm:p-0"
+		>
 			<button
 				onclick={() => (showAbout = true)}
 				class="text-sm text-stone-300 transition-colors hover:text-stone-100">About</button
