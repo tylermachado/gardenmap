@@ -36,7 +36,7 @@
 			onclick={() => infoModalLayer = layer}
 			aria-label={`About this data: ${layer.name}`}
 		>
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 			</svg>
 		</button>
@@ -50,10 +50,10 @@
 		<!-- USDA Hardiness Zone column -->
 		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
 			{#if pointLayerData.phz}
-				<h4 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
+				<h2 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
 					USDA 2023 Plant Hardiness Zone
 					{@render infoButton(phzLayer)}
-				</h4>
+				</h2>
 				{#if pointLayerData.phz.zone}
 					<div class="font-mono text-3xl font-bold leading-none text-stone-800 mt-1">{pointLayerData.phz.zone}</div>
 				{/if}
@@ -70,10 +70,10 @@
 		<!-- Ecoregion column -->
 		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
 			{#if pointLayerData.ecoregions}
-				<h4 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
+				<h2 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
 					North American Ecoregions - Level III
 					{@render infoButton(ecoregionsLayer)}
-				</h4>
+				</h2>
 				{#if pointLayerData.ecoregions.NA_L3NAME}
 					<div class="mt-1 flex flex-col gap-2">
 						<div class="hidden sm:block">
