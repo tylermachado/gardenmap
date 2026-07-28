@@ -78,6 +78,25 @@
 		}
 	}
 
+	// Prefer the native OS share sheet (mobile browsers, Safari) and fall back to
+	// copy-to-clipboard everywhere else.
+	async function share() {
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: plant.scientific_name ?? plant.name,
+					text: plant.common_name?.length ? plant.common_name.join(', ') : undefined,
+					url: shareUrl()
+				});
+			} catch (err) {
+				// AbortError just means the user dismissed the share sheet.
+				if ((err as Error)?.name !== 'AbortError') await copyLink();
+			}
+			return;
+		}
+		await copyLink();
+	}
+
 	function trapFocus(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			e.preventDefault();
@@ -154,14 +173,14 @@
 {#snippet heartButton()}
 	<button
 		type="button"
-		class="absolute right-20 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 {saved
+		class="absolute right-24 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 {saved
 			? 'text-red-600'
 			: 'text-stone-500 hover:text-stone-800'}"
 		onclick={() => savedPlants.toggle(saveTarget)}
 		aria-pressed={saved}
 		aria-label={saved ? 'Remove from My Saved Plants' : 'Add to My Saved Plants'}
 	>
-		<svg class="h-4 w-4" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+		<svg class="h-5 w-5" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 			<path
 				stroke-linecap="round"
 				stroke-linejoin="round"
@@ -173,31 +192,31 @@
 {/snippet}
 
 {#snippet shareButton()}
-	<div class="absolute right-12 top-3">
+	<div class="absolute right-14 top-3">
 		<button
 			type="button"
-			class="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
-			onclick={copyLink}
-			aria-label="Copy link to this plant"
+			class="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
+			onclick={share}
+			aria-label="Share this plant"
 		>
 			{#if copied}
-				<svg class="h-4 w-4 text-lime-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+				<svg class="h-5 w-5 text-lime-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 				</svg>
 			{:else}
-				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 					<path
 						stroke-linecap="round"
 						stroke-linejoin="round"
 						stroke-width="2"
-						d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+						d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25"
 					/>
 				</svg>
 			{/if}
 		</button>
 		<span
 			aria-live="polite"
-			class="pointer-events-none absolute right-0 top-9 whitespace-nowrap rounded bg-stone-800 px-2 py-1 text-[11px] text-white shadow transition-opacity duration-200 {copied ? 'opacity-100' : 'opacity-0'}"
+			class="pointer-events-none absolute right-0 top-11 whitespace-nowrap rounded bg-stone-800 px-2 py-1 text-[11px] text-white shadow transition-opacity duration-200 {copied ? 'opacity-100' : 'opacity-0'}"
 		>
 			{copied ? 'Link copied!' : ''}
 		</span>
@@ -266,7 +285,7 @@
 				{@render shareButton()}
 				<button
 					type="button"
-					class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
+					class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
 					onclick={onclose}
 					aria-label="Close"
 					bind:this={closeBtn}
@@ -360,7 +379,7 @@
 			{@render shareButton()}
 			<button
 				type="button"
-				class="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
+				class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg text-stone-500 shadow ring-1 ring-black/5 backdrop-blur-sm hover:bg-stone-100 hover:text-stone-800"
 				onclick={onclose}
 				aria-label="Close"
 				bind:this={closeBtn}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { page } from '$app/stores';
 	import InfoModal from '$lib/components/InfoModal.svelte';
 	import SavedPlantsTab from '$lib/components/SavedPlantsTab.svelte';
 
@@ -11,6 +12,42 @@
 	onMount(() => {
 		mounted = true;
 	});
+
+	let copied = $state(false);
+	let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
+
+	onDestroy(() => {
+		clearTimeout(copiedTimeout);
+	});
+
+	async function copyLink() {
+		try {
+			await navigator.clipboard.writeText($page.url.href);
+			copied = true;
+			clearTimeout(copiedTimeout);
+			copiedTimeout = setTimeout(() => (copied = false), 1500);
+		} catch {
+			// Clipboard API unavailable (e.g. insecure context); nothing more we can do here.
+		}
+	}
+
+	// Prefer the native OS share sheet (mobile browsers, Safari) and fall back to
+	// copy-to-clipboard everywhere else.
+	async function share() {
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: document.title,
+					url: $page.url.href
+				});
+			} catch (err) {
+				// AbortError just means the user dismissed the share sheet.
+				if ((err as Error)?.name !== 'AbortError') await copyLink();
+			}
+			return;
+		}
+		await copyLink();
+	}
 </script>
 
 <svelte:head>
@@ -132,6 +169,31 @@
 				class="text-sm font-normal text-stone-300 no-underline transition-colors hover:text-stone-100"
 				>Terms of Use</a
 			>
+			<div class="relative hidden md:block">
+				<button
+					type="button"
+					onclick={share}
+					class="flex items-center text-stone-300 transition-colors hover:text-stone-100"
+					aria-label="Share this page"
+				>
+					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25"
+						/>
+					</svg>
+				</button>
+				<span
+					aria-live="polite"
+					class="pointer-events-none absolute right-0 top-full mt-1 whitespace-nowrap rounded bg-stone-800 px-2 py-1 text-[11px] text-white shadow transition-opacity duration-200 {copied
+						? 'opacity-100'
+						: 'opacity-0'}"
+				>
+					{copied ? 'Link copied!' : ''}
+				</span>
+			</div>
 		</nav>
 	</header>
 
