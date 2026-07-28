@@ -553,8 +553,8 @@
 				{:else}
 					<CandidatePlants
 						zipcode={searchResultAddress?.postcode}
-						ecoregion={searchResultAddress?.postcode ? undefined : pointLayerData.ecoregions?.NA_L3CODE}
-						phzZone={searchResultAddress?.postcode ? undefined : pointLayerData.phz?.zone}
+						ecoregion={pointLayerData.ecoregions?.NA_L3CODE}
+						phzZone={pointLayerData.phz?.zone}
 						filters={plantFilters}
 					/>
 				{/if}

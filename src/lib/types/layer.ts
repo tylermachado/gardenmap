@@ -1,8 +1,11 @@
 export interface NominatimAddress {
+  neighbourhood?: string;
   suburb?: string;
+  hamlet?: string;
   village?: string;
   town?: string;
   city?: string;
+  municipality?: string;
   county?: string;
   state?: string;
   postcode?: string;
@@ -43,10 +46,13 @@ export function isLayerSelected(layer: LayerOption, selectedLayers: LayerOption[
 
 export function getCityStateLabel(address: NominatimAddress | null | undefined): string {
   return [
+    address?.neighbourhood,
     address?.suburb,
+    address?.hamlet,
     address?.village,
     address?.town,
     address?.city,
+    address?.municipality,
     address?.state
   ]
     .filter(Boolean)

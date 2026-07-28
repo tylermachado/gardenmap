@@ -47,7 +47,9 @@
 		clearTimeout(copiedTimeout);
 		const currentUrl = untrack(() => $page.url);
 		// Only clean up the URL if this modal still "owns" the current plant param.
-		if (currentUrl.searchParams.get('plant') !== plant.id) return;
+		// searchParams values are always strings, so coerce plant.id (which the API
+		// can return as a number despite the PlantSummary type) before comparing.
+		if (currentUrl.searchParams.get('plant') !== String(plant.id)) return;
 		const params = new URLSearchParams(currentUrl.searchParams);
 		params.delete('plant');
 		const query = params.toString();

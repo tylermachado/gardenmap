@@ -35,6 +35,10 @@
 	let loading = $state(false);
 	let error: string | null = $state(null);
 	let selectedPlant: PlantSummary | null = $state(null);
+	// The backend's per-zipcode data can be incomplete. When a zipcode lookup comes back
+	// empty, fall back to the ecoregion/hardiness-zone already resolved client-side
+	// (point-in-polygon against the bundled geodata) instead of showing nothing.
+	let usingFallback = $state(false);
 
 	// A shared link (?plant=<id>) reopens that plant's modal on load, independent of
 	// whatever location/filters are also in the URL.
@@ -84,12 +88,17 @@
 
 	const activeFilterCount = $derived(countActiveFilters(filters));
 
+	// Zipcode takes priority over ecoregion/zone, unless the zipcode lookup already came
+	// back empty for this location (see maybeFallBackToLocation below).
 	function locationParams(): URLSearchParams {
 		const params = new URLSearchParams();
+		if (zipcode && !usingFallback) {
+			params.set('zipcode', zipcode);
+			return params;
+		}
 		if (ecoregion) params.set('ecoregion', ecoregion);
 		// The API takes the hardiness zone as a bare integer (e.g. "7b" -> "7").
 		if (phzZone) params.set('hardiness_zone', phzZone.match(/^\d+/)?.[0] ?? phzZone);
-		if (zipcode) params.set('zipcode', zipcode);
 		return params;
 	}
 
@@ -98,6 +107,7 @@
 		fetchCandidatePlants(locationParams(), signal)
 			.then((data) => {
 				allSummaries = data;
+				maybeFallBackToLocation(data);
 			})
 			.catch((err: unknown) => {
 				// Ignore aborts and backend errors; the "of N" count just stays hidden.
@@ -105,12 +115,28 @@
 			});
 	}
 
-	// Plain (non-reactive) variable used to detect location changes without itself being a tracked dep
+	/**
+	 * If a zipcode-based lookup came back with zero plants total (not just zero after
+	 * filtering) and we have ecoregion/hardiness-zone data for this spot, switch to
+	 * querying by those instead. One-shot per location: `usingFallback` only flips false->true.
+	 */
+	function maybeFallBackToLocation(unfilteredData: PlantSummary[]) {
+		if (!usingFallback && zipcode && (ecoregion || phzZone) && unfilteredData.length === 0) {
+			usingFallback = true;
+		}
+	}
+
+	// Plain (non-reactive) variables used to detect location/fallback changes without
+	// themselves being tracked deps.
 	let prevLocationKey = '';
+	let prevUsingFallback = false;
 
 	$effect(() => {
-		// Read ALL reactive deps at the top so Svelte tracks them even when we return early
-		const locationKey = [ecoregion, phzZone, zipcode].join('|');
+		// Read ALL reactive deps at the top so Svelte tracks them even when we return early.
+		// Identity is zipcode alone when present: ecoregion/phzZone resolve asynchronously
+		// (point-in-polygon lookup) slightly after the zipcode is known, and that arrival
+		// shouldn't be treated as a brand-new location (which would clear filters/results).
+		const locationKey = zipcode || [ecoregion, phzZone].join('|');
 		const ft = filters.plantType;
 		const fs = filters.sunShade;
 		const fm = filters.moisture;
@@ -118,6 +144,7 @@
 
 		if (!ecoregion && !phzZone && !zipcode) {
 			prevLocationKey = locationKey;
+			prevUsingFallback = usingFallback = false;
 			allSummaries = [];
 			plants = [];
 			loading = false;
@@ -127,12 +154,13 @@
 		const isNewLocation = locationKey !== prevLocationKey;
 		// A real previous location (not the initial mount or the empty/no-location key).
 		const hadRealPreviousLocation =
-			isNewLocation && prevLocationKey !== '' && prevLocationKey !== '||';
+			isNewLocation && prevLocationKey !== '' && prevLocationKey !== '|';
 
 		// Moving between two real locations: drop stale filters (selections may not fit the
 		// new place). The very first load is exempt so splash pre-selections survive.
 		if (hadRealPreviousLocation) {
 			prevLocationKey = locationKey;
+			prevUsingFallback = usingFallback = false;
 			allSummaries = [];
 			plants = [];
 			loading = true;
@@ -157,9 +185,11 @@
 
 		const controller = new AbortController();
 
-		// First load arriving with pre-selected filters (from the splash): the main fetch is
-		// filtered, so seed the unfiltered total separately for the "of N" count.
-		if (isNewLocation && filtersActive) {
+		// Re-seed the unfiltered total whenever this is a new location OR the zip->ecoregion
+		// fallback just switched on (the previously seeded total was zip-based and is now stale).
+		const fallbackJustSwitched = usingFallback !== prevUsingFallback;
+		prevUsingFallback = usingFallback;
+		if ((isNewLocation || fallbackJustSwitched) && filtersActive) {
 			seedTotals(controller.signal);
 		}
 
@@ -167,7 +197,10 @@
 			.then((data) => {
 				plants = data;
 				// An unfiltered fetch also seeds the total for the "of N" count.
-				if (!filtersActive) allSummaries = data;
+				if (!filtersActive) {
+					allSummaries = data;
+					maybeFallBackToLocation(data);
+				}
 			})
 			.catch((err: unknown) => {
 				if (err instanceof Error && err.name === 'AbortError') return;
