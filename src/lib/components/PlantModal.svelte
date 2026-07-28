@@ -63,8 +63,13 @@
 	let copied = $state(false);
 	let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
 
+	// Built explicitly (not read from $page.url) because the ?plant= param is added via an
+	// async goto() in onMount — $page.url may not have caught up yet if the user shares
+	// immediately after the modal opens.
 	function shareUrl(): string {
-		return $page.url.href;
+		const params = new URLSearchParams($page.url.searchParams);
+		params.set('plant', String(plant.id));
+		return `${$page.url.origin}${$page.url.pathname}?${params.toString()}`;
 	}
 
 	async function copyLink() {
