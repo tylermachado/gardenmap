@@ -92,30 +92,36 @@
 		Skip to main content
 	</a>
 	<header
-		class="flex flex-col-reverse gap-2 bg-lime-950 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0"
+		class="flex flex-col-reverse gap-2 bg-lime-950 p-4 md:relative md:flex-row md:items-center md:justify-end md:gap-0"
 	>
-		<a
-			href="/"
-			class="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start"
-		>
-			<h1 class="font-serif text-xl font-bold text-stone-100 sm:text-3xl">My Native Plant List</h1>
-			<div class="flex items-center gap-3">
+		<div class="flex w-full items-center justify-between gap-3 md:w-auto">
+			<a
+				href="/"
+				class="md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2"
+			>
+				<h1 class="font-serif text-xl font-bold text-stone-100 md:text-3xl">
+					My Native Plant List
+				</h1>
+			</a>
+			<div
+				class="flex items-center gap-3 md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2"
+			>
 				<span
 					role="img"
 					aria-label="The Sustainable Gardening Institute"
-					class="inline-block h-8 bg-stone-100 sm:h-10"
+					class="inline-block h-[1.8rem] bg-stone-100 md:h-[2.25rem]"
 					style="aspect-ratio: 163.7 / 88; mask: url(/logos/sgi.svg) center / contain no-repeat; -webkit-mask: url(/logos/sgi.svg) center / contain no-repeat;"
 				></span>
 				<span
 					role="img"
 					aria-label="White Flower Farm"
-					class="inline-block h-8 bg-stone-100 sm:h-10"
+					class="inline-block h-[1.8rem] bg-stone-100 md:h-[2.25rem]"
 					style="aspect-ratio: 811.7 / 724.5; mask: url(/logos/wff.svg) center / contain no-repeat; -webkit-mask: url(/logos/wff.svg) center / contain no-repeat;"
 				></span>
 			</div>
-		</a>
+		</div>
 		<nav
-			class="-mx-4 -mt-4 flex w-[calc(100%+2rem)] items-center justify-end gap-4 bg-stone-950 px-4 py-2 sm:m-0 sm:w-auto sm:bg-transparent sm:p-0"
+			class="-mx-4 -mt-4 flex w-[calc(100%+2rem)] items-center justify-end gap-4 bg-stone-950 px-4 py-2 md:m-0 md:w-auto md:bg-transparent md:p-0"
 		>
 			<button
 				onclick={() => (showAbout = true)}
