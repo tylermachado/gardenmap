@@ -5,7 +5,7 @@ export class GeocodingService {
   private static readonly RATE_LIMIT_MS = 1000; // 1 second between requests
   private static readonly USER_AGENT = 'GardenMap/1.0 (https://github.com/tylermachado/gardenmap)';
   private static requestQueue: Promise<void> = Promise.resolve();
-  private static readonly ZIP_API_BASE = 'https://www.mynativeplantlist.com/api/zip';
+  private static readonly ZIP_API_BASE = '/api/zip';
 
   private static hasZipcode(query: string): boolean {
     // Match 5-digit or 5+4 digit ZIP codes
@@ -53,10 +53,13 @@ export class GeocodingService {
 
       const meta = await this.zipMetadata(zipcode);
 
+      const displayName =
+        meta?.city && meta?.state ? `${meta.city}, ${meta.state} ${zipcode}` : zipcode;
+
       return {
         lat,
         lon,
-        display_name: meta ? `${meta.city}, ${meta.state} ${zipcode}` : zipcode,
+        display_name: displayName,
         address: {
           postcode: zipcode,
           city: meta?.city,

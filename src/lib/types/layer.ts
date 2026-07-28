@@ -1,8 +1,11 @@
 export interface NominatimAddress {
+  neighbourhood?: string;
   suburb?: string;
+  hamlet?: string;
   village?: string;
   town?: string;
   city?: string;
+  municipality?: string;
   county?: string;
   state?: string;
   postcode?: string;

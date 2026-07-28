@@ -154,7 +154,7 @@
 		const isNewLocation = locationKey !== prevLocationKey;
 		// A real previous location (not the initial mount or the empty/no-location key).
 		const hadRealPreviousLocation =
-			isNewLocation && prevLocationKey !== '' && prevLocationKey !== '||';
+			isNewLocation && prevLocationKey !== '' && prevLocationKey !== '|';
 
 		// Moving between two real locations: drop stale filters (selections may not fit the
 		// new place). The very first load is exempt so splash pre-selections survive.
