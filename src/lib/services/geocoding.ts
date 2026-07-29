@@ -122,9 +122,10 @@ export class GeocodingService {
       const result = response.ok ? await response.json() : null;
 
       const hasUsAddress = result?.address && result.address.country_code === 'us';
-      return hasUsAddress
-        ? { lat, lon, address: result.address, display_name: result.display_name }
-        : null;
+      if (!hasUsAddress) return null;
+
+      const address: NominatimAddress = { ...result.address, state: toFullStateName(result.address.state) };
+      return { lat, lon, address, display_name: result.display_name };
     } catch (error) {
       console.error('Reverse geocoding failed:', error);
       return null;
@@ -164,6 +165,8 @@ export class GeocodingService {
           address.city = meta.city;
         }
       }
+
+      address.state = toFullStateName(address.state);
 
       return {
         lat: parseFloat(result.lat),
