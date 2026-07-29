@@ -1,3 +1,5 @@
+import { toFullStateName } from '../utils/usStates.js';
+
 export interface NominatimAddress {
   neighbourhood?: string;
   suburb?: string;
@@ -45,16 +47,15 @@ export function isLayerSelected(layer: LayerOption, selectedLayers: LayerOption[
 }
 
 export function getCityStateLabel(address: NominatimAddress | null | undefined): string {
-  return [
-    address?.neighbourhood,
-    address?.suburb,
-    address?.hamlet,
-    address?.village,
-    address?.town,
-    address?.city,
-    address?.municipality,
-    address?.state
-  ]
-    .filter(Boolean)
-    .join(', ');
+  const place =
+    address?.neighbourhood ??
+    address?.suburb ??
+    address?.hamlet ??
+    address?.village ??
+    address?.town ??
+    address?.city ??
+    address?.municipality ??
+    address?.county;
+
+  return [place, toFullStateName(address?.state)].filter(Boolean).join(', ');
 }

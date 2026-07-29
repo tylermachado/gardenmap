@@ -1,4 +1,5 @@
 import type { SearchResult, NominatimAddress } from '../types/layer.js';
+import { toFullStateName } from '../utils/usStates.js';
 
 export class GeocodingService {
   private static lastRequestTime = 0;
@@ -11,6 +12,23 @@ export class GeocodingService {
     // Match 5-digit or 5+4 digit ZIP codes
     const zipRegex = /\b\d{5}(?:-\d{4})?\b/;
     return zipRegex.test(query);
+  }
+
+  private static extractZipcode(query: string): string | null {
+    const match = query.match(/\b\d{5}(?:-\d{4})?\b/);
+    return match ? match[0].slice(0, 5) : null;
+  }
+
+  private static hasPlaceName(address: NominatimAddress | undefined): boolean {
+    return Boolean(
+      address?.neighbourhood ||
+        address?.suburb ||
+        address?.hamlet ||
+        address?.village ||
+        address?.town ||
+        address?.city ||
+        address?.municipality
+    );
   }
 
   private static rateLimitedFetch(url: string): Promise<Response> {
@@ -85,7 +103,7 @@ export class GeocodingService {
       if (!response.ok) return null;
 
       const data = await response.json();
-      return { city: data?.city, state: data?.state };
+      return { city: data?.city, state: toFullStateName(data?.state) };
     } catch (error) {
       console.error('ZIP metadata lookup failed:', error);
       return null;
@@ -104,9 +122,10 @@ export class GeocodingService {
       const result = response.ok ? await response.json() : null;
 
       const hasUsAddress = result?.address && result.address.country_code === 'us';
-      return hasUsAddress
-        ? { lat, lon, address: result.address, display_name: result.display_name }
-        : null;
+      if (!hasUsAddress) return null;
+
+      const address: NominatimAddress = { ...result.address, state: toFullStateName(result.address.state) };
+      return { lat, lon, address, display_name: result.display_name };
     } catch (error) {
       console.error('Reverse geocoding failed:', error);
       return null;
@@ -130,13 +149,29 @@ export class GeocodingService {
       
       const results = await response.json();
       const result = results?.[0];
-      
+
       if (!result) return null;
-      
+
+      const address: NominatimAddress = result.address ?? {};
+
+      // Nominatim's postcode boundaries sometimes lack a city/town/village tag
+      // (e.g. unincorporated ZCTAs like 99154/Mohler, WA). Fill in from the
+      // Census-backed ZIP metadata used for map-click reverse geocoding, so
+      // both paths resolve to the same place name.
+      if (!this.hasPlaceName(address)) {
+        const zipcode = this.extractZipcode(query);
+        const meta = zipcode ? await this.zipMetadata(zipcode) : null;
+        if (meta?.city) {
+          address.city = meta.city;
+        }
+      }
+
+      address.state = toFullStateName(address.state);
+
       return {
         lat: parseFloat(result.lat),
         lon: parseFloat(result.lon),
-        address: result.address,
+        address,
         display_name: result.display_name
       };
     } catch (error) {
