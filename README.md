@@ -78,15 +78,17 @@ Every plant appropriate for a location. The backend caps each response at 250 re
 
 | Parameter   | Type    | Description |
 |-------------|---------|-------------|
-| `ecoregion` | string  | EPA Level III ecoregion code (e.g. `"9.4.1"`). |
-| `zone`      | string  | USDA Plant Hardiness Zone label (e.g. `"7b"`). |
+| `ecoregion` | string  | North American Level III ecoregion code — the polygon's `NA_L3CODE` (e.g. `"9.4.1"`). |
+| `hardiness_zone` | string | USDA Plant Hardiness Zone as a bare integer, with the half-zone letter dropped (e.g. `"7"` for zone `7b`). |
 | `zipcode`   | string  | US ZIP code. |
 
 Plus any of the [filter parameters](#filter-parameters) below. `limit` and `offset` are managed internally by the pager.
 
+`locationParams()` in [src/lib/components/CandidatePlants.svelte](src/lib/components/CandidatePlants.svelte) builds these: when a `zipcode` is known it is sent **alone**, and `ecoregion` / `hardiness_zone` are used only when there is no ZIP or when a ZIP lookup came back with zero plants (see the fallback described there).
+
 ### `searchPlants(term, location?, signal?) → PlantSearchResult[]`
 
-Name search. Queries `GET /api/plants` twice — once by `scientific_name` and once by `common_name` — and returns the de-duplicated union as [PlantSearchResult](#plantsearchresult) objects. When a `location` (`zipcode`, `ecoregion`, and/or `zone`) is supplied, it runs the pair of queries a second time with the location filter applied and sets each result's `appropriate` flag accordingly; with no location, `appropriate` is `null`. A blank `term` returns `[]`.
+Name search. Queries `GET /api/plants` twice — once by `scientific_name` and once by `common_name` — and returns the de-duplicated union as [PlantSearchResult](#plantsearchresult) objects. When a `location` (`zipcode`, `ecoregion`, and/or `zone` — this path sends `zone`, not the `hardiness_zone` used by `fetchCandidatePlants`) is supplied, it runs the pair of queries a second time with the location filter applied and sets each result's `appropriate` flag accordingly; with no location, `appropriate` is `null`. A blank `term` returns `[]`.
 
 ### `fetchPlantDetail(id, signal?) → Plant`
 
@@ -207,7 +209,7 @@ Processed GeoJSON: `static/geodata/phz.geojson` / `static/geodata/phz.json`
 |-------------|-------------|
 | `Id`        | Internal record identifier. |
 | `gridcode`  | Numeric grid code corresponding to the zone. |
-| `zone`      | Zone label (e.g. `"7b"`). Used as the `zone` query parameter. |
+| `zone`      | Zone label (e.g. `"7b"`). Sent as the `hardiness_zone` query parameter, reduced to its leading integer. |
 | `trange`    | Average annual extreme minimum temperature range for this zone (°F). |
 | `zonetitle` | Full human-readable zone title. |
 
@@ -220,9 +222,9 @@ Processed GeoJSON: `static/geodata/ecoregions.geojson` / `static/geodata/ecoregi
 
 | Field        | Description |
 |--------------|-------------|
-| `US_L3CODE`  | US Level III ecoregion code. Used as the `ecoregion` query parameter. |
+| `US_L3CODE`  | US Level III ecoregion code (e.g. `"1"`). |
 | `US_L3NAME`  | US Level III ecoregion name. |
-| `NA_L3CODE`  | North American Level III ecoregion code. |
+| `NA_L3CODE`  | North American Level III ecoregion code (e.g. `"7.1.8"`). Used as the `ecoregion` query parameter. |
 | `NA_L3NAME`  | North American Level III ecoregion name. |
 | `NA_L2CODE`  | North American Level II ecoregion code (parent of Level III). |
 | `NA_L2NAME`  | North American Level II ecoregion name. |
