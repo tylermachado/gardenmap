@@ -1,17 +1,10 @@
 import { toFullStateName } from '../utils/usStates.js';
 
-export interface NominatimAddress {
-  neighbourhood?: string;
-  suburb?: string;
-  hamlet?: string;
-  village?: string;
-  town?: string;
+/** The fields mynativeplantlist's ZIP lookup resolves for a location. */
+export interface LocationAddress {
   city?: string;
-  municipality?: string;
-  county?: string;
   state?: string;
   postcode?: string;
-  country?: string;
 }
 
 export interface LayerOption {
@@ -25,20 +18,21 @@ export interface LayerData {
 }
 
 export interface MapSearchResult {
-  address: NominatimAddress;
+  address: LocationAddress;
   layerData: Record<string, Record<string, any>>;
 }
 
 export interface LocationData {
   lat: number;
   lng: number;
-  address?: NominatimAddress;
+  address?: LocationAddress;
 }
 
 export interface SearchResult {
-  lat: number;
-  lon: number;
-  address: NominatimAddress;
+  /** null when the ZIP is real but has no mappable area — show it without a pin. */
+  lat: number | null;
+  lon: number | null;
+  address: LocationAddress;
   display_name: string;
 }
 
@@ -46,16 +40,6 @@ export function isLayerSelected(layer: LayerOption, selectedLayers: LayerOption[
   return selectedLayers.some(selected => selected.name === layer.name);
 }
 
-export function getCityStateLabel(address: NominatimAddress | null | undefined): string {
-  const place =
-    address?.neighbourhood ??
-    address?.suburb ??
-    address?.hamlet ??
-    address?.village ??
-    address?.town ??
-    address?.city ??
-    address?.municipality ??
-    address?.county;
-
-  return [place, toFullStateName(address?.state)].filter(Boolean).join(', ');
+export function getCityStateLabel(address: LocationAddress | null | undefined): string {
+  return [address?.city, toFullStateName(address?.state)].filter(Boolean).join(', ');
 }

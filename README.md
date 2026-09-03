@@ -10,7 +10,7 @@ Built with SvelteKit (Svelte 5 runes), Leaflet for the map, Turf.js for point-in
 
 The app has two complementary flows, both driven from the home page ([src/routes/+page.svelte](src/routes/+page.svelte)):
 
-- **Location → plants.** Clicking the map or searching a ZIP code geocodes the point (client-side, via the mynativeplantlist ZIP API, with Nominatim as a fallback), resolves which hardiness zone / ecoregion polygon contains it (client-side, via Turf), and fetches the plants appropriate for that location.
+- **Location → plants.** Clicking the map or searching a ZIP code geocodes the point (client-side, via the mynativeplantlist ZIP API and a bundled ZIP centroid table), resolves which hardiness zone / ecoregion polygon contains it (client-side, via Turf), and fetches the plants appropriate for that location.
 - **Plant name → suitability.** Searching by plant name lists catalog matches and, once a location is set, annotates each match with whether it suits that location.
 
 Geocoding and the polygon lookup happen in the browser against bundled GeoJSON. Plant data is fetched directly from the browser via [src/lib/api/plants.ts](src/lib/api/plants.ts), which calls the plants API at the same-origin path `/api/plants/*`. In production the site and the API share an origin (`mynativeplantlist.com/api/...`), so these calls need no CORS; in local development the Vite dev server proxies `/api/*` to the API origin given by `PLANTS_API_URL` (see [vite.config.ts](vite.config.ts)).
@@ -29,7 +29,7 @@ src/
                                   #   (paged), name search + suitability, detail, summary
     components/                   # Map, SearchBar, LocationInfo, CandidatePlants,
                                   #   PlantFilters, PlantModal, PlantSearchResults, InfoModal
-    services/geocoding.ts         # mynativeplantlist ZIP geocoding, with Nominatim fallback (rate-limited, US-only)
+    services/geocoding.ts         # mynativeplantlist ZIP geocoding + bundled ZIP centroids (US-only)
     services/spatial-analysis.ts  # Turf point-in-polygon over bundled layers
     plant-filters.ts              # Canonical filter options + shared filter state
     types/plant.ts                # PlantSummary, PlantSearchResult, Plant, PlantImage
@@ -167,9 +167,32 @@ Returned by `fetchPlantDetail`. Extends [PlantSummary](#plantsummary) with:
 
 ### Geocoding — [src/lib/services/geocoding.ts](src/lib/services/geocoding.ts)
 
-`GeocodingService.reverseGeocode` (used for map clicks and "use my location") calls mynativeplantlist's `/api/zip` endpoints as the primary source: `GET /api/zip?longitude=&latitude=` maps a point to a ZIP code (Census Bureau data, either a `"contains"` match or the `"nearest"` known ZIP), then `GET /api/zip/{zipcode}` resolves that ZIP to town/state metadata (a small number of ZIPs aren't in the metadata dataset — handled as ZIP-only, no town/state). If the primary lookup fails entirely, `reverseGeocode` falls back to the OpenStreetMap **Nominatim** reverse API.
+Geocoding uses mynativeplantlist's `/api/zip` endpoints plus a bundled ZIP centroid table.
 
-`GeocodingService.searchLocation` (forward ZIP-text search) still calls Nominatim directly, since it needs to resolve a typed ZIP to map coordinates, which the mynativeplantlist endpoints don't provide. Nominatim requests are throttled to one per second and limited to the US (`countrycodes=us`); a forward search requires a 5-digit (or ZIP+4) US ZIP code in the query.
+`GeocodingService.reverseGeocode` (used for map clicks and "use my location") calls `GET /api/zip?longitude=&latitude=` to map a point to a ZIP code (Census Bureau data, either a `"contains"` match or the `"nearest"` known ZIP). It returns `null` when the point isn't in a US ZIP area, so off-map clicks are ignored.
+
+`GeocodingService.searchLocation` (forward ZIP-text search) resolves a typed ZIP to coordinates against [static/geodata/zip-centroids.json](static/geodata/zip-centroids.json), fetched once and cached in memory. A search requires a 5-digit (or ZIP+4) US ZIP code in the query.
+
+**Non-ZCTA ZIPs.** PO-box-only, military, and single-organization ZIPs cover no land area, so they have no centroid of their own — `89222` (Nellis AFB) and `12345` (General Electric, Schenectady) are examples. `GET /api/zip/{zipcode}` reports a `matched_zip` for those, a nearby ZIP it substituted, and `searchLocation` uses that ZIP's centroid. The typed ZIP stays as the result's `postcode` either way.
+
+A ZIP resolves into one of three states:
+
+| | Result |
+|---|---|
+| Has a centroid, directly or via `matched_zip` | Full location: marker, map view, `?lat=&lng=` in the URL, polygon lookups |
+| Recognised by the API but no centroid either way | Location **without a pin** — city/state and plant results by zipcode, no marker, no polygon data, no coords in the URL |
+| Not recognised by the API at all | Throws a message naming the ZIP |
+
+The pin-less state exists because a ZIP like `00501` is a real place the app simply can't put on a map; dropping the search entirely would be worse than showing it un-pinned. `searchLocation` signals it by returning `lat`/`lon` as `null`.
+
+Two consequences of deferring to the API's substitution are worth knowing:
+
+- **The API answers for any 5-digit string** — `00000` returns "Mt Meadows Area, California" — so typos resolve to real-looking places instead of erroring. In practice the third row above is unreachable for well-formed input, and there is no client-side validation of whether a ZIP genuinely exists.
+- **A few substitutions cross state lines**: `00801` (US Virgin Islands) resolves to Agawam, Massachusetts, and `45999` (IRS Cincinnati, OH) to Alexandria, Indiana. These are backend matching issues; the client has no independent read on where an area-less ZIP sits.
+
+Both paths then resolve town/state via `GET /api/zip/{zipcode}` and build their result through the same helper, so a given ZIP always renders the same place name whether it was clicked or typed. A small number of ZIPs aren't in the metadata dataset — handled as ZIP-only, no town/state. State abbreviations are expanded to full names by [toFullStateName](src/lib/utils/usStates.ts).
+
+**ZIP centroid table.** [static/geodata/zip-centroids.json](static/geodata/zip-centroids.json) (~890 KB, ~290 KB gzipped) maps 33,791 ZIPs to `[lat, lon]` at 4-decimal precision. The coordinates are ZCTA *internal points* from the [2024 US Census Gazetteer](https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html) — guaranteed to fall inside the ZIP's own polygon rather than being true centroids, so each one round-trips back through `/api/zip` to the same ZIP and lands in the correct hardiness-zone and ecoregion polygon. Rebuild it from the Gazetteer's `GEOID`/`INTPTLAT`/`INTPTLONG` columns when refreshing to a newer vintage.
 
 ### Spatial analysis — [src/lib/services/spatial-analysis.ts](src/lib/services/spatial-analysis.ts)
 

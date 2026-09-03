@@ -20,7 +20,7 @@
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
-	import type { LayerOption, NominatimAddress } from '$lib/types/layer.js';
+	import type { LayerOption, LocationAddress, SearchResult } from '$lib/types/layer.js';
 	import { isLayerSelected } from '$lib/types/layer.js';
 
 	let { data }: { data: PageData } = $props();
@@ -86,14 +86,18 @@
 	let plantFilters = $state(createPlantFilters());
 	let showSplashFilters: boolean = $state(false);
 	const splashFilterCount = $derived(countActiveFilters(plantFilters));
-	let searchResultAddress = $state<NominatimAddress | null>(null);
+	let searchResultAddress = $state<LocationAddress | null>(null);
 	let currentCoords: { lat: number; lng: number } | null = $state(null);
 	// URL with lat/lng (e.g. a shared link) skips the splash even before
 	// currentCoords resolves asynchronously via setLocation.
 	const urlHasCoords = $derived(
 		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng')
 	);
-	const showSplash = $derived(currentCoords === null && !urlHasCoords && !plantSearchActive);
+	// A ZIP with no mappable area sets an address but never any coords, so the
+	// address alone also has to count as "we have a location".
+	const showSplash = $derived(
+		currentCoords === null && searchResultAddress === null && !urlHasCoords && !plantSearchActive
+	);
 
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
@@ -118,6 +122,16 @@
 		params.set('lng', lng.toFixed(6));
 		params.set('zoom', zoomLevel.toString());
 		goto(`?${params.toString()}`, { replaceState: true });
+	}
+
+	// Drops the location params while preserving unrelated ones (e.g. ?plant=<id>),
+	// so a pin-less ZIP doesn't leave stale coordinates in a shareable URL.
+	function clearUrlLocation(): void {
+		const params = new URLSearchParams($page.url.searchParams);
+		params.delete('lat');
+		params.delete('lng');
+		params.delete('zoom');
+		goto(params.toString() ? `?${params.toString()}` : '?', { replaceState: true });
 	}
 
 	// Load location from URL params on mount, and reset back to the splash
@@ -257,13 +271,33 @@
 	}
 
 	async function searchLocation() {
-		const result = await GeocodingService.searchLocation(searchQuery);
+		let result: SearchResult | null;
+		try {
+			result = await GeocodingService.searchLocation(searchQuery);
+		} catch (e) {
+			// Problems the searcher can fix (unusable ZIP) carry their own message.
+			alert(e instanceof Error ? e.message : 'Location not found.');
+			return;
+		}
+
 		if (!result) {
 			alert('Location not found.');
 			return;
 		}
 
 		const { lat, lon, address } = result;
+
+		// A real ZIP with no mappable area: keep the location so plants still
+		// load by zipcode, but there's no point to pin or analyze.
+		if (lat === null || lon === null) {
+			searchResultAddress = address;
+			currentCoords = null;
+			pointLayerData = {};
+			mapRef?.removeSearchMarker();
+			clearUrlLocation();
+			return;
+		}
+
 		await setLocation(lat, lon, address);
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
@@ -274,7 +308,7 @@
 	async function setLocation(
 		lat: number,
 		lng: number,
-		address?: NominatimAddress | null
+		address?: LocationAddress | null
 	): Promise<void> {
 		const resolved =
 			address !== undefined

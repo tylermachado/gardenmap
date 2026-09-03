@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { LayerOption, NominatimAddress } from '$lib/types/layer.js';
+	import type { LayerOption, LocationAddress } from '$lib/types/layer.js';
 	import { getCityStateLabel } from '$lib/types/layer.js';
 	import InfoModal from './InfoModal.svelte';
 
 	interface LocationInfoProps {
-		searchResultAddress: NominatimAddress | null;
+		searchResultAddress: LocationAddress | null;
 		pointLayerData: Record<string, Record<string, any>>;
 		layers: LayerOption[];
 		onEditLocation?: () => void;
