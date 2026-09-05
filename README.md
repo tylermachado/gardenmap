@@ -79,16 +79,29 @@ Every plant appropriate for a location. The backend caps each response at 250 re
 | Parameter   | Type    | Description |
 |-------------|---------|-------------|
 | `ecoregion` | string  | North American Level III ecoregion code — the polygon's `NA_L3CODE` (e.g. `"9.4.1"`). |
-| `hardiness_zone` | string | USDA Plant Hardiness Zone as a bare integer, with the half-zone letter dropped (e.g. `"7"` for zone `7b`). |
-| `zipcode`   | string  | US ZIP code. |
+| `hardiness_zone` | string | USDA Plant Hardiness Zone as a bare integer, with the half-zone letter dropped (e.g. `"7"` for zone `7b`). The API returns **400** for `"7b"`. |
+| `state`     | string  | Full state name, e.g. `"Connecticut"`. Abbreviations return no results. |
+| `zipcode`   | string  | US ZIP code. Fallback only — see below. |
 
 Plus any of the [filter parameters](#filter-parameters) below. `limit` and `offset` are managed internally by the pager.
 
-`locationParams()` in [src/lib/components/CandidatePlants.svelte](src/lib/components/CandidatePlants.svelte) builds these: when a `zipcode` is known it is sent **alone**, and `ecoregion` / `hardiness_zone` are used only when there is no ZIP or when a ZIP lookup came back with zero plants (see the fallback described there).
+### How a point is matched — `locationParams(location)`
+
+A location is matched on **ecoregion + hardiness zone + state**. [`locationParams`](src/lib/api/plants.ts) in the API client is the single source of that rule; both the candidate list and the plant-name suitability check go through it.
+
+> **The API only honours `state` when both `ecoregion` and `hardiness_zone` are also present.** Sent with a partial set — or alongside `zipcode` — it is silently dropped and the response is over-broad (verified: `hardiness_zone=6&state=Florida` returns the same 473 records as `hardiness_zone=6` alone). So `state` is only ever sent as part of the complete triple.
+
+| Input | Query sent |
+|---|---|
+| `ecoregion` + `zone` (+ optional `state`) | `ecoregion` + `hardiness_zone` + `state` |
+| No polygon data, but a ZIP | `zipcode` |
+| Only one of `ecoregion` / `zone`, no ZIP | whichever resolved (no `state` — it would be ignored) |
+
+The ZIP fallback covers two cases: the point-in-polygon lookup still being in flight (it resolves a moment after the ZIP does), and a ZIP with no mappable area, which never gets coordinates to analyze. Once the polygons land, the query upgrades to the triple and re-runs.
 
 ### `searchPlants(term, location?, signal?) → PlantSearchResult[]`
 
-Name search. Queries `GET /api/plants` twice — once by `scientific_name` and once by `common_name` — and returns the de-duplicated union as [PlantSearchResult](#plantsearchresult) objects. When a `location` (`zipcode`, `ecoregion`, and/or `zone` — this path sends `zone`, not the `hardiness_zone` used by `fetchCandidatePlants`) is supplied, it runs the pair of queries a second time with the location filter applied and sets each result's `appropriate` flag accordingly; with no location, `appropriate` is `null`. A blank `term` returns `[]`.
+Name search. Queries `GET /api/plants` twice — once by `scientific_name` and once by `common_name` — and returns the de-duplicated union as [PlantSearchResult](#plantsearchresult) objects. When a `location` ([`PlantLocation`](src/lib/api/plants.ts), resolved through the same `locationParams` rule above) is supplied, it runs the pair of queries a second time with the location filter applied and sets each result's `appropriate` flag accordingly; with no location, `appropriate` is `null`. A blank `term` returns `[]`.
 
 ### `fetchPlantDetail(id, signal?) → Plant`
 

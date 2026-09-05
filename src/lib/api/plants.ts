@@ -51,6 +51,51 @@ function toSummary(plant: PlantRecord): PlantSummary {
 	) as unknown as PlantSummary;
 }
 
+/** The location keys a plant query can be matched on. */
+export interface PlantLocation {
+	/** North American Level III ecoregion code, e.g. "8.1.7" (the polygon's NA_L3CODE). */
+	ecoregion?: string;
+	/** USDA hardiness zone label, e.g. "7b" — reduced here to the integer the API wants. */
+	zone?: string;
+	/** Full state name, e.g. "Connecticut". The API returns nothing for abbreviations. */
+	state?: string;
+	/** Fallback for locations with no polygon data (a ZIP with no mappable area). */
+	zipcode?: string;
+}
+
+/**
+ * Location half of a plant query: a point is matched by ecoregion + hardiness zone + state.
+ *
+ * The API only honours `state` when BOTH `ecoregion` and `hardiness_zone` are also present
+ * — sent with a partial set, or alongside `zipcode`, it is silently dropped and the response
+ * is over-broad — so state only ever rides along with the complete triple. `hardiness_zone`
+ * must be the bare integer; the API 400s on a half-zone letter like "7b".
+ */
+export function locationParams(location: PlantLocation): URLSearchParams {
+	const params = new URLSearchParams();
+	const zone = location.zone?.match(/^\d+/)?.[0] ?? location.zone;
+
+	if (location.ecoregion && zone) {
+		params.set('ecoregion', location.ecoregion);
+		params.set('hardiness_zone', zone);
+		if (location.state) params.set('state', location.state);
+		return params;
+	}
+
+	// No polygon data: the point-in-polygon lookup is either still in flight, or this is a
+	// ZIP with no mappable area, which never gets coordinates to analyze. Falling back to
+	// the ZIP keeps plants on screen for both.
+	if (location.zipcode) {
+		params.set('zipcode', location.zipcode);
+		return params;
+	}
+
+	// Only half the polygon data resolved; `state` would be ignored, so it is omitted.
+	if (location.ecoregion) params.set('ecoregion', location.ecoregion);
+	if (zone) params.set('hardiness_zone', zone);
+	return params;
+}
+
 async function getPage(params: URLSearchParams, signal?: AbortSignal): Promise<PlantRecord[]> {
 	const response = await fetch(`${API_BASE}?${params.toString()}`, { signal });
 	if (!response.ok) throw new Error(`API request failed: ${response.status}`);
@@ -59,7 +104,7 @@ async function getPage(params: URLSearchParams, signal?: AbortSignal): Promise<P
 
 /**
  * Every plant matching the given location/filter params, paged past the backend cap.
- * `params` already carries the location (ecoregion/zone/zipcode) and any filter keys.
+ * `params` already carries the location (from `locationParams`) and any filter keys.
  */
 export async function fetchCandidatePlants(
 	params: URLSearchParams,
@@ -102,28 +147,19 @@ async function searchByName(
 	return [...byId.values()];
 }
 
-export interface SearchLocation {
-	zipcode?: string;
-	ecoregion?: string;
-	zone?: string;
-}
-
 /**
  * Name search annotated with suitability: every catalog match, each flagged
  * `appropriate` (true/false) when a location is given, or `null` when it isn't.
  */
 export async function searchPlants(
 	term: string,
-	location?: SearchLocation,
+	location?: PlantLocation,
 	signal?: AbortSignal
 ): Promise<PlantSearchResult[]> {
 	const trimmed = term.trim();
 	if (!trimmed) return [];
 
-	const loc = new URLSearchParams();
-	if (location?.zipcode) loc.set('zipcode', location.zipcode);
-	if (location?.ecoregion) loc.set('ecoregion', location.ecoregion);
-	if (location?.zone) loc.set('zone', location.zone);
+	const loc = location ? locationParams(location) : new URLSearchParams();
 	const hasLocation = [...loc.keys()].length > 0;
 
 	// All catalog matches (no location filter).

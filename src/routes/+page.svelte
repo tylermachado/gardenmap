@@ -6,7 +6,11 @@
 	import PlantSearchResults from '$lib/components/PlantSearchResults.svelte';
 	import PlantFilters from '$lib/components/PlantFilters.svelte';
 	import type { PlantSearchResult } from '$lib/types/plant.js';
-	import { searchPlants } from '$lib/api/plants.js';
+	import {
+		searchPlants,
+		locationParams as buildLocationParams,
+		type PlantLocation
+	} from '$lib/api/plants.js';
 	import { createPlantFilters, clearPlantFilters, countActiveFilters } from '$lib/plant-filters.js';
 
 	import { GeocodingService } from '$lib/services/geocoding.js';
@@ -50,9 +54,7 @@
 		plantSearchLoading = true;
 		plantSearchError = null;
 		try {
-			plantSearchResults = await searchPlants(term, {
-				zipcode: searchResultAddress?.postcode
-			});
+			plantSearchResults = await searchPlants(term, plantLocation);
 		} catch (err) {
 			plantSearchError = err instanceof Error ? err.message : 'Unknown error';
 			plantSearchResults = [];
@@ -61,13 +63,14 @@
 		}
 	}
 
-	// A location added (or changed) after a plant search already ran needs the
-	// suitability verdicts re-fetched with the now-known zipcode.
-	let verdictZip: string | undefined;
+	// A location added (or changed) after a plant search already ran needs the suitability
+	// verdicts re-fetched. Keyed on the resolved query rather than the raw location, so the
+	// ecoregion/zone arriving after the ZIP (point-in-polygon runs later) also refreshes them.
+	let verdictLocationKey: string | undefined;
 	$effect(() => {
-		const zip = searchResultAddress?.postcode;
-		if (plantSearchActive && plantSearchTerm && zip !== verdictZip) {
-			verdictZip = zip;
+		const key = buildLocationParams(plantLocation).toString();
+		if (plantSearchActive && plantSearchTerm && key !== verdictLocationKey) {
+			verdictLocationKey = key;
 			searchPlantByName(plantSearchTerm);
 		}
 	});
@@ -78,7 +81,7 @@
 		plantSearchResults = [];
 		plantSearchError = null;
 		plantQuery = '';
-		verdictZip = undefined;
+		verdictLocationKey = undefined;
 		searchMode = 'location';
 	}
 
@@ -102,6 +105,15 @@
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
 	const propertiesConfig = data.propertiesConfig;
+
+	// How a point is matched to plants: ecoregion + hardiness zone + state. The ZIP is
+	// carried as the fallback for locations with no polygon data (see locationParams).
+	const plantLocation = $derived<PlantLocation>({
+		ecoregion: pointLayerData.ecoregions?.NA_L3CODE,
+		zone: pointLayerData.phz?.zone,
+		state: searchResultAddress?.state,
+		zipcode: searchResultAddress?.postcode
+	});
 
 	async function resolvePointData(lat: number, lon: number) {
 		try {
@@ -586,9 +598,10 @@
 					/>
 				{:else}
 					<CandidatePlants
-						zipcode={searchResultAddress?.postcode}
-						ecoregion={pointLayerData.ecoregions?.NA_L3CODE}
-						phzZone={pointLayerData.phz?.zone}
+						zipcode={plantLocation.zipcode}
+						ecoregion={plantLocation.ecoregion}
+						phzZone={plantLocation.zone}
+						stateName={plantLocation.state}
 						filters={plantFilters}
 					/>
 				{/if}
