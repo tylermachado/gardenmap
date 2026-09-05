@@ -6,7 +6,11 @@
 	import PlantSearchResults from '$lib/components/PlantSearchResults.svelte';
 	import PlantFilters from '$lib/components/PlantFilters.svelte';
 	import type { PlantSearchResult } from '$lib/types/plant.js';
-	import { searchPlants } from '$lib/api/plants.js';
+	import {
+		searchPlants,
+		locationParams as buildLocationParams,
+		type PlantLocation
+	} from '$lib/api/plants.js';
 	import { createPlantFilters, clearPlantFilters, countActiveFilters } from '$lib/plant-filters.js';
 
 	import { GeocodingService } from '$lib/services/geocoding.js';
@@ -20,7 +24,7 @@
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
-	import type { LayerOption, NominatimAddress } from '$lib/types/layer.js';
+	import type { LayerOption, LocationAddress, SearchResult } from '$lib/types/layer.js';
 	import { isLayerSelected } from '$lib/types/layer.js';
 
 	let { data }: { data: PageData } = $props();
@@ -50,9 +54,7 @@
 		plantSearchLoading = true;
 		plantSearchError = null;
 		try {
-			plantSearchResults = await searchPlants(term, {
-				zipcode: searchResultAddress?.postcode
-			});
+			plantSearchResults = await searchPlants(term, plantLocation);
 		} catch (err) {
 			plantSearchError = err instanceof Error ? err.message : 'Unknown error';
 			plantSearchResults = [];
@@ -61,13 +63,14 @@
 		}
 	}
 
-	// A location added (or changed) after a plant search already ran needs the
-	// suitability verdicts re-fetched with the now-known zipcode.
-	let verdictZip: string | undefined;
+	// A location added (or changed) after a plant search already ran needs the suitability
+	// verdicts re-fetched. Keyed on the resolved query rather than the raw location, so the
+	// ecoregion/zone arriving after the ZIP (point-in-polygon runs later) also refreshes them.
+	let verdictLocationKey: string | undefined;
 	$effect(() => {
-		const zip = searchResultAddress?.postcode;
-		if (plantSearchActive && plantSearchTerm && zip !== verdictZip) {
-			verdictZip = zip;
+		const key = buildLocationParams(plantLocation).toString();
+		if (plantSearchActive && plantSearchTerm && key !== verdictLocationKey) {
+			verdictLocationKey = key;
 			searchPlantByName(plantSearchTerm);
 		}
 	});
@@ -78,7 +81,7 @@
 		plantSearchResults = [];
 		plantSearchError = null;
 		plantQuery = '';
-		verdictZip = undefined;
+		verdictLocationKey = undefined;
 		searchMode = 'location';
 	}
 
@@ -86,18 +89,31 @@
 	let plantFilters = $state(createPlantFilters());
 	let showSplashFilters: boolean = $state(false);
 	const splashFilterCount = $derived(countActiveFilters(plantFilters));
-	let searchResultAddress = $state<NominatimAddress | null>(null);
+	let searchResultAddress = $state<LocationAddress | null>(null);
 	let currentCoords: { lat: number; lng: number } | null = $state(null);
 	// URL with lat/lng (e.g. a shared link) skips the splash even before
 	// currentCoords resolves asynchronously via setLocation.
 	const urlHasCoords = $derived(
 		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng')
 	);
-	const showSplash = $derived(currentCoords === null && !urlHasCoords && !plantSearchActive);
+	// A ZIP with no mappable area sets an address but never any coords, so the
+	// address alone also has to count as "we have a location".
+	const showSplash = $derived(
+		currentCoords === null && searchResultAddress === null && !urlHasCoords && !plantSearchActive
+	);
 
 	// New state for per-point polygon lookup results
 	let pointLayerData: Record<string, Record<string, any>> = $state({});
 	const propertiesConfig = data.propertiesConfig;
+
+	// How a point is matched to plants: ecoregion + hardiness zone + state. The ZIP is
+	// carried as the fallback for locations with no polygon data (see locationParams).
+	const plantLocation = $derived<PlantLocation>({
+		ecoregion: pointLayerData.ecoregions?.NA_L3CODE,
+		zone: pointLayerData.phz?.zone,
+		state: searchResultAddress?.state,
+		zipcode: searchResultAddress?.postcode
+	});
 
 	async function resolvePointData(lat: number, lon: number) {
 		try {
@@ -118,6 +134,16 @@
 		params.set('lng', lng.toFixed(6));
 		params.set('zoom', zoomLevel.toString());
 		goto(`?${params.toString()}`, { replaceState: true });
+	}
+
+	// Drops the location params while preserving unrelated ones (e.g. ?plant=<id>),
+	// so a pin-less ZIP doesn't leave stale coordinates in a shareable URL.
+	function clearUrlLocation(): void {
+		const params = new URLSearchParams($page.url.searchParams);
+		params.delete('lat');
+		params.delete('lng');
+		params.delete('zoom');
+		goto(params.toString() ? `?${params.toString()}` : '?', { replaceState: true });
 	}
 
 	// Load location from URL params on mount, and reset back to the splash
@@ -257,13 +283,33 @@
 	}
 
 	async function searchLocation() {
-		const result = await GeocodingService.searchLocation(searchQuery);
+		let result: SearchResult | null;
+		try {
+			result = await GeocodingService.searchLocation(searchQuery);
+		} catch (e) {
+			// Problems the searcher can fix (unusable ZIP) carry their own message.
+			alert(e instanceof Error ? e.message : 'Location not found.');
+			return;
+		}
+
 		if (!result) {
 			alert('Location not found.');
 			return;
 		}
 
 		const { lat, lon, address } = result;
+
+		// A real ZIP with no mappable area: keep the location so plants still
+		// load by zipcode, but there's no point to pin or analyze.
+		if (lat === null || lon === null) {
+			searchResultAddress = address;
+			currentCoords = null;
+			pointLayerData = {};
+			mapRef?.removeSearchMarker();
+			clearUrlLocation();
+			return;
+		}
+
 		await setLocation(lat, lon, address);
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
@@ -274,7 +320,7 @@
 	async function setLocation(
 		lat: number,
 		lng: number,
-		address?: NominatimAddress | null
+		address?: LocationAddress | null
 	): Promise<void> {
 		const resolved =
 			address !== undefined
@@ -552,9 +598,10 @@
 					/>
 				{:else}
 					<CandidatePlants
-						zipcode={searchResultAddress?.postcode}
-						ecoregion={pointLayerData.ecoregions?.NA_L3CODE}
-						phzZone={pointLayerData.phz?.zone}
+						zipcode={plantLocation.zipcode}
+						ecoregion={plantLocation.ecoregion}
+						phzZone={plantLocation.zone}
+						stateName={plantLocation.state}
 						filters={plantFilters}
 					/>
 				{/if}
