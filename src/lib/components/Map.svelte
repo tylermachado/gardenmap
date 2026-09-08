@@ -28,7 +28,6 @@
 import { onMount } from 'svelte';
 import { base } from '$app/paths';
 import { browser } from '$app/environment';
-import { PUBLIC_CARTO_API_KEY } from '$env/static/public';
 import type * as L from 'leaflet';
 // @ts-ignore - Leaflet types are not always available
 import * as topojson from 'topojson-client';
@@ -97,7 +96,7 @@ onMount(() => {
         shadowUrl: `${base}/leaflet/marker-shadow.png`,
       });
       map = LeafletLib.map(mapContainer!, { closePopupOnClick: false }).setView(center, zoom);
-      LeafletLib.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${PUBLIC_CARTO_API_KEY}`, {
+      LeafletLib.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_2tn9_1_e162f5026bd87d33f355218b`, {
         attribution: '© OpenStreetMap, © CARTO',
         minZoom: 4,
         maxZoom: 19
