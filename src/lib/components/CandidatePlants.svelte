@@ -25,8 +25,7 @@
 	interface CandidatePlantsProps {
 		ecoregion?: string;
 		phzZone?: string;
-		/** Full state name (e.g. "Connecticut"); the API rejects abbreviations.
-		 *  Not `state` — that would shadow the `$state` rune. */
+		/** Full state name (e.g. "Connecticut"); the API rejects abbreviations. */
 		stateName?: string;
 		/** Location identity + the fallback query for points with no polygon data. */
 		zipcode?: string;
@@ -98,9 +97,7 @@
 
 	const activeFilterCount = $derived(countActiveFilters(filters));
 
-	// Matched by ecoregion + hardiness zone + state; the exact rule (and the ZIP fallback
-	// for points with no polygon data) lives in the API client so the plant-name search
-	// applies the same one.
+	// Matched by ecoregion + hardiness zone + state.
 	function locationParams(): URLSearchParams {
 		return buildLocationParams({ ecoregion, zone: phzZone, state: stateName, zipcode });
 	}
@@ -117,23 +114,15 @@
 			});
 	}
 
-	// Plain (non-reactive) variables used to detect location/param changes without
-	// themselves being tracked deps.
+	// Plain (non-reactive) variables used to detect location/param changes.
 	let prevLocationKey = '';
 	let prevParamsKey = '';
 
 	$effect(() => {
-		// Read ALL reactive deps at the top so Svelte tracks them even when we return early.
-		// ecoregion/phzZone/state must be read unconditionally: they resolve asynchronously
-		// (point-in-polygon lookup) slightly after the zipcode, and the effect has to re-run
-		// when they land so the query upgrades from the ZIP fallback to the full triple.
 		const eco = ecoregion;
 		const zone = phzZone;
 		const st = stateName;
 		const zip = zipcode;
-		// Identity is zipcode alone when present, so that later arrival is treated as better
-		// data for the same place rather than a brand-new location (which would clear
-		// filters/results).
 		const locationKey = zip || [eco, zone, st].join('|');
 		const ft = filters.plantType;
 		const fs = filters.sunShade;
@@ -150,12 +139,9 @@
 		}
 
 		const isNewLocation = locationKey !== prevLocationKey;
-		// A real previous location (not the initial mount or the empty/no-location key).
 		const hadRealPreviousLocation =
 			isNewLocation && prevLocationKey !== '' && prevLocationKey !== '||';
 
-		// Moving between two real locations: drop stale filters (selections may not fit the
-		// new place). The very first load is exempt so splash pre-selections survive.
 		if (hadRealPreviousLocation) {
 			prevLocationKey = locationKey;
 			prevParamsKey = '';
@@ -184,9 +170,6 @@
 
 		const controller = new AbortController();
 
-		// Re-seed the unfiltered total whenever the location query itself changed — a new
-		// location, or the same one upgrading from the ZIP fallback to the full triple,
-		// which makes the previously seeded total stale.
 		const locationQueryChanged = paramsKey !== prevParamsKey;
 		prevParamsKey = paramsKey;
 		if (locationQueryChanged && filtersActive) {
