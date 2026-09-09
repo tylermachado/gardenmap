@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Location from '$lib/icons/location.svg';
-	import { getCityStateLabel, type NominatimAddress } from '$lib/types/layer.js';
+	import { getCityStateLabel, type LocationAddress } from '$lib/types/layer.js';
 
 	interface SearchBarProps {
 		searchQuery: string;
@@ -11,7 +11,7 @@
 		/** Called with the trimmed plant-name query when searching in plant mode. */
 		onPlantSearch?: (term: string) => void;
 		variant?: 'default' | 'splash';
-		searchResultAddress?: NominatimAddress | null;
+		searchResultAddress?: LocationAddress | null;
 		/** Two-way bound plant-name query, kept separate from the location ZIP query. */
 		plantQuery?: string;
 		/** Called when the user clears an active plant-name search/filter. */

@@ -51,6 +51,39 @@ function toSummary(plant: PlantRecord): PlantSummary {
 	) as unknown as PlantSummary;
 }
 
+/** The location keys a plant query can be matched on. */
+export interface PlantLocation {
+	/** North American Level III ecoregion NA_L3CODE. */
+	ecoregion?: string;
+	/** USDA hardiness zone as a bare integer string, e.g. "7". */
+	zone?: string;
+	/** Full state name, e.g. "Connecticut", not abbreviations. */
+	state?: string;
+	/** Location identity only — never queried on. See below. */
+	zipcode?: string;
+}
+
+/**
+ * Location half of a plant query: a point is matched by ecoregion + hardiness zone + state.
+ *
+ * All three come from a single ZIP lookup, so they are present together or not at all.
+ * An incomplete location yields no params rather than a partial query: the API silently
+ * ignores `state` unless both other keys are present, so a partial set would quietly
+ * return over-broad results. `zipcode` is carried for identity but never sent — querying
+ * by it would produce a different answer than the panel is showing.
+ */
+export function locationParams(location: PlantLocation): URLSearchParams {
+	const params = new URLSearchParams();
+	const zone = location.zone?.match(/^\d+/)?.[0] ?? location.zone;
+
+	if (!location.ecoregion || !zone || !location.state) return params;
+
+	params.set('ecoregion', location.ecoregion);
+	params.set('hardiness_zone', zone);
+	params.set('state', location.state);
+	return params;
+}
+
 async function getPage(params: URLSearchParams, signal?: AbortSignal): Promise<PlantRecord[]> {
 	const response = await fetch(`${API_BASE}?${params.toString()}`, { signal });
 	if (!response.ok) throw new Error(`API request failed: ${response.status}`);
@@ -58,8 +91,7 @@ async function getPage(params: URLSearchParams, signal?: AbortSignal): Promise<P
 }
 
 /**
- * Every plant matching the given location/filter params, paged past the backend cap.
- * `params` already carries the location (ecoregion/zone/zipcode) and any filter keys.
+ * Every plant matching the given location/filter params.
  */
 export async function fetchCandidatePlants(
 	params: URLSearchParams,
@@ -102,28 +134,19 @@ async function searchByName(
 	return [...byId.values()];
 }
 
-export interface SearchLocation {
-	zipcode?: string;
-	ecoregion?: string;
-	zone?: string;
-}
-
 /**
  * Name search annotated with suitability: every catalog match, each flagged
  * `appropriate` (true/false) when a location is given, or `null` when it isn't.
  */
 export async function searchPlants(
 	term: string,
-	location?: SearchLocation,
+	location?: PlantLocation,
 	signal?: AbortSignal
 ): Promise<PlantSearchResult[]> {
 	const trimmed = term.trim();
 	if (!trimmed) return [];
 
-	const loc = new URLSearchParams();
-	if (location?.zipcode) loc.set('zipcode', location.zipcode);
-	if (location?.ecoregion) loc.set('ecoregion', location.ecoregion);
-	if (location?.zone) loc.set('zone', location.zone);
+	const loc = location ? locationParams(location) : new URLSearchParams();
 	const hasLocation = [...loc.keys()].length > 0;
 
 	// All catalog matches (no location filter).

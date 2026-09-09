@@ -6,11 +6,14 @@
 	import PlantSearchResults from '$lib/components/PlantSearchResults.svelte';
 	import PlantFilters from '$lib/components/PlantFilters.svelte';
 	import type { PlantSearchResult } from '$lib/types/plant.js';
-	import { searchPlants } from '$lib/api/plants.js';
+	import {
+		searchPlants,
+		locationParams as buildLocationParams,
+		type PlantLocation
+	} from '$lib/api/plants.js';
 	import { createPlantFilters, clearPlantFilters, countActiveFilters } from '$lib/plant-filters.js';
 
 	import { GeocodingService } from '$lib/services/geocoding.js';
-	import { SpatialAnalysisService } from '$lib/services/spatial-analysis.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
@@ -20,7 +23,12 @@
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
-	import type { LayerOption, NominatimAddress } from '$lib/types/layer.js';
+	import type {
+		LayerOption,
+		LocationAddress,
+		SearchResult,
+		ZipEnvironment
+	} from '$lib/types/layer.js';
 	import { isLayerSelected } from '$lib/types/layer.js';
 
 	let { data }: { data: PageData } = $props();
@@ -50,9 +58,7 @@
 		plantSearchLoading = true;
 		plantSearchError = null;
 		try {
-			plantSearchResults = await searchPlants(term, {
-				zipcode: searchResultAddress?.postcode
-			});
+			plantSearchResults = await searchPlants(term, plantLocation);
 		} catch (err) {
 			plantSearchError = err instanceof Error ? err.message : 'Unknown error';
 			plantSearchResults = [];
@@ -61,13 +67,14 @@
 		}
 	}
 
-	// A location added (or changed) after a plant search already ran needs the
-	// suitability verdicts re-fetched with the now-known zipcode.
-	let verdictZip: string | undefined;
+	// A location added (or changed) after a plant search already ran needs the suitability
+	// verdicts re-fetched. Keyed on the resolved query rather than the raw location, so a
+	// location that resolves to the same ecoregion/zone/state doesn't re-fetch needlessly.
+	let verdictLocationKey: string | undefined;
 	$effect(() => {
-		const zip = searchResultAddress?.postcode;
-		if (plantSearchActive && plantSearchTerm && zip !== verdictZip) {
-			verdictZip = zip;
+		const key = buildLocationParams(plantLocation).toString();
+		if (plantSearchActive && plantSearchTerm && key !== verdictLocationKey) {
+			verdictLocationKey = key;
 			searchPlantByName(plantSearchTerm);
 		}
 	});
@@ -78,7 +85,7 @@
 		plantSearchResults = [];
 		plantSearchError = null;
 		plantQuery = '';
-		verdictZip = undefined;
+		verdictLocationKey = undefined;
 		searchMode = 'location';
 	}
 
@@ -86,27 +93,38 @@
 	let plantFilters = $state(createPlantFilters());
 	let showSplashFilters: boolean = $state(false);
 	const splashFilterCount = $derived(countActiveFilters(plantFilters));
-	let searchResultAddress = $state<NominatimAddress | null>(null);
+	let searchResultAddress = $state<LocationAddress | null>(null);
 	let currentCoords: { lat: number; lng: number } | null = $state(null);
 	// URL with lat/lng (e.g. a shared link) skips the splash even before
 	// currentCoords resolves asynchronously via setLocation.
 	const urlHasCoords = $derived(
 		!!$page.url.searchParams.get('lat') && !!$page.url.searchParams.get('lng')
 	);
-	const showSplash = $derived(currentCoords === null && !urlHasCoords && !plantSearchActive);
+	// A ZIP with no mappable area sets an address but never any coords, so the
+	// address alone also has to count as "we have a location".
+	const showSplash = $derived(
+		currentCoords === null && searchResultAddress === null && !urlHasCoords && !plantSearchActive
+	);
 
-	// New state for per-point polygon lookup results
-	let pointLayerData: Record<string, Record<string, any>> = $state({});
-	const propertiesConfig = data.propertiesConfig;
+	// Ecoregion + hardiness zone as resolved by the ZIP endpoint. This is the single
+	// source for both the info panel and the plant query, so the two can't disagree —
+	// they used to, because the panel read map polygons at the pin while the endpoint
+	// may have resolved the ZIP somewhere else entirely (e.g. 01093 → 01092).
+	let zipEnvironment = $state<ZipEnvironment | null>(null);
 
-	async function resolvePointData(lat: number, lon: number) {
-		try {
-			const results = await SpatialAnalysisService.analyzePoint(lat, lon, layers, propertiesConfig);
-			pointLayerData = results;
-		} catch (e) {
-			console.error('Failed resolving point data', e);
-		}
-	}
+	// How a point is matched to plants: ecoregion + hardiness zone + state, all from the
+	// same ZIP response. An incomplete response leaves the query empty rather than
+	// falling back to a partial location — see LocationInfo for the message shown.
+	const plantLocation = $derived<PlantLocation>(
+		zipEnvironment
+			? {
+					ecoregion: zipEnvironment.ecoregionCode,
+					zone: String(zipEnvironment.hardinessZone),
+					state: searchResultAddress?.state,
+					zipcode: searchResultAddress?.postcode
+				}
+			: {}
+	);
 
 	function updateUrlWithLocation(lat: number, lng: number, zoom?: number): void {
 		const map = mapRef?.getMap();
@@ -118,6 +136,16 @@
 		params.set('lng', lng.toFixed(6));
 		params.set('zoom', zoomLevel.toString());
 		goto(`?${params.toString()}`, { replaceState: true });
+	}
+
+	// Drops the location params while preserving unrelated ones (e.g. ?plant=<id>),
+	// so a pin-less ZIP doesn't leave stale coordinates in a shareable URL.
+	function clearUrlLocation(): void {
+		const params = new URLSearchParams($page.url.searchParams);
+		params.delete('lat');
+		params.delete('lng');
+		params.delete('zoom');
+		goto(params.toString() ? `?${params.toString()}` : '?', { replaceState: true });
 	}
 
 	// Load location from URL params on mount, and reset back to the splash
@@ -257,14 +285,34 @@
 	}
 
 	async function searchLocation() {
-		const result = await GeocodingService.searchLocation(searchQuery);
+		let result: SearchResult | null;
+		try {
+			result = await GeocodingService.searchLocation(searchQuery);
+		} catch (e) {
+			// Problems the searcher can fix (unusable ZIP) carry their own message.
+			alert(e instanceof Error ? e.message : 'Location not found.');
+			return;
+		}
+
 		if (!result) {
 			alert('Location not found.');
 			return;
 		}
 
-		const { lat, lon, address } = result;
-		await setLocation(lat, lon, address);
+		const { lat, lon, address, environment } = result;
+
+		// A real ZIP with no mappable area: the endpoint still resolves its ecoregion
+		// and zone, so plants load normally — there's just no point to pin.
+		if (lat === null || lon === null) {
+			searchResultAddress = address;
+			zipEnvironment = environment;
+			currentCoords = null;
+			mapRef?.removeSearchMarker();
+			clearUrlLocation();
+			return;
+		}
+
+		await setLocation(lat, lon, address, environment);
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
 			map.setView([lat, lon], 6);
@@ -274,24 +322,31 @@
 	async function setLocation(
 		lat: number,
 		lng: number,
-		address?: NominatimAddress | null
+		address?: LocationAddress | null,
+		environment?: ZipEnvironment | null
 	): Promise<void> {
-		const resolved =
-			address !== undefined
-				? address
-				: (await GeocodingService.reverseGeocode(lat, lng))?.address ?? null;
-		searchResultAddress = resolved;
+		// Address and environment always travel together: both come from the one ZIP
+		// response, so a caller that didn't already have them re-resolves both here.
+		let resolvedAddress = address ?? null;
+		let resolvedEnvironment = environment ?? null;
+		if (address === undefined) {
+			const result = await GeocodingService.reverseGeocode(lat, lng);
+			resolvedAddress = result?.address ?? null;
+			resolvedEnvironment = result?.environment ?? null;
+		}
+
+		searchResultAddress = resolvedAddress;
+		zipEnvironment = resolvedEnvironment;
 		currentCoords = { lat, lng };
 		mapRef?.addSearchMarker(lat, lng);
 		updateUrlWithLocation(lat, lng);
-		await resolvePointData(lat, lng);
 	}
 
 	async function handleMapClick(lat: number, lng: number) {
 		const result = await GeocodingService.reverseGeocode(lat, lng);
 		if (!result) return; // not a US address, ignore the click
 		searchQuery = '';
-		await setLocation(lat, lng, result.address);
+		await setLocation(lat, lng, result.address, result.environment);
 	}
 
 	function handleZoomChange(zoomLevel: number) {
@@ -303,8 +358,8 @@
 
 	function resetLocationState() {
 		searchResultAddress = null;
+		zipEnvironment = null;
 		currentCoords = null;
-		pointLayerData = {};
 		searchQuery = '';
 		clearPlantFilters(plantFilters);
 		showSplashFilters = false;
@@ -531,7 +586,7 @@
 				<div class="sm:w-2/5 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
 					<LocationInfo
 						searchResultAddress={searchResultAddress}
-						pointLayerData={pointLayerData}
+						environment={zipEnvironment}
 						layers={layers}
 						onEditLocation={handleLocationReset}
 					/>
@@ -552,9 +607,10 @@
 					/>
 				{:else}
 					<CandidatePlants
-						zipcode={searchResultAddress?.postcode}
-						ecoregion={pointLayerData.ecoregions?.NA_L3CODE}
-						phzZone={pointLayerData.phz?.zone}
+						zipcode={plantLocation.zipcode}
+						ecoregion={plantLocation.ecoregion}
+						phzZone={plantLocation.zone}
+						stateName={plantLocation.state}
 						filters={plantFilters}
 					/>
 				{/if}

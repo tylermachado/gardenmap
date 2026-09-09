@@ -1,17 +1,24 @@
 import { toFullStateName } from '../utils/usStates.js';
 
-export interface NominatimAddress {
-  neighbourhood?: string;
-  suburb?: string;
-  hamlet?: string;
-  village?: string;
-  town?: string;
+/** The fields mynativeplantlist's ZIP lookup resolves for a location. */
+export interface LocationAddress {
   city?: string;
-  municipality?: string;
-  county?: string;
   state?: string;
   postcode?: string;
-  country?: string;
+}
+
+/**
+ * Ecoregion + hardiness zone the ZIP endpoint resolves for a location. These are
+ * authoritative: they are what the plants API matches on, so the UI displays the
+ * same values it queries with rather than re-deriving them from map polygons.
+ */
+export interface ZipEnvironment {
+  /** USDA hardiness zone as a bare integer, e.g. 6. The API has no half-zone. */
+  hardinessZone: number;
+  /** North American Level III ecoregion code, e.g. "8.1.7". */
+  ecoregionCode: string;
+  /** Level III name as the API spells it; display prefers the bundled layer's. */
+  ecoregionName: string;
 }
 
 export interface LayerOption {
@@ -25,20 +32,26 @@ export interface LayerData {
 }
 
 export interface MapSearchResult {
-  address: NominatimAddress;
+  address: LocationAddress;
   layerData: Record<string, Record<string, any>>;
 }
 
 export interface LocationData {
   lat: number;
   lng: number;
-  address?: NominatimAddress;
+  address?: LocationAddress;
 }
 
 export interface SearchResult {
-  lat: number;
-  lon: number;
-  address: NominatimAddress;
+  /** null when the ZIP is real but has no mappable area — show it without a pin. */
+  lat: number | null;
+  lon: number | null;
+  address: LocationAddress;
+  /**
+   * null only when the ZIP lookup failed or came back incomplete. Every recognised
+   * ZIP resolves all three fields, so null is an error state, not a normal one.
+   */
+  environment: ZipEnvironment | null;
   display_name: string;
 }
 
@@ -46,16 +59,6 @@ export function isLayerSelected(layer: LayerOption, selectedLayers: LayerOption[
   return selectedLayers.some(selected => selected.name === layer.name);
 }
 
-export function getCityStateLabel(address: NominatimAddress | null | undefined): string {
-  const place =
-    address?.neighbourhood ??
-    address?.suburb ??
-    address?.hamlet ??
-    address?.village ??
-    address?.town ??
-    address?.city ??
-    address?.municipality ??
-    address?.county;
-
-  return [place, toFullStateName(address?.state)].filter(Boolean).join(', ');
+export function getCityStateLabel(address: LocationAddress | null | undefined): string {
+  return [address?.city, toFullStateName(address?.state)].filter(Boolean).join(', ');
 }

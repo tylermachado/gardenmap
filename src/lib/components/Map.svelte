@@ -96,7 +96,7 @@ onMount(() => {
         shadowUrl: `${base}/leaflet/marker-shadow.png`,
       });
       map = LeafletLib.map(mapContainer!, { closePopupOnClick: false }).setView(center, zoom);
-      LeafletLib.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      LeafletLib.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_2tn9_1_e162f5026bd87d33f355218b`, {
         attribution: '© OpenStreetMap, © CARTO',
         minZoom: 4,
         maxZoom: 19
