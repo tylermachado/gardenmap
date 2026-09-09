@@ -1,4 +1,4 @@
-import type { SearchResult, LocationAddress } from '../types/layer.js';
+import type { SearchResult, LocationAddress, ZipEnvironment } from '../types/layer.js';
 import { toFullStateName } from '../utils/usStates.js';
 
 type Centroid = [lat: number, lon: number];
@@ -8,6 +8,12 @@ interface ZipMetadata {
   state?: string;
   /** ZIP the API substituted when the requested one has no area of its own. */
   matchedZip?: string;
+  /**
+   * Ecoregion + hardiness zone for the ZIP, or null when the response was missing one
+   * of them. Every recognised ZIP should resolve all three of ecoregion, zone and
+   * state, so null means the API returned something it shouldn't have.
+   */
+  environment: ZipEnvironment | null;
 }
 
 export class GeocodingService {
@@ -121,17 +127,28 @@ export class GeocodingService {
       state: meta?.state
     };
 
+    // The plant query needs state alongside ecoregion and zone, so a response missing
+    // any of the three is incomplete rather than partially usable.
+    let environment = meta?.environment ?? null;
+    if (environment && !address.state) {
+      console.error(`ZIP ${zipcode} resolved an ecoregion and zone but no state`);
+      environment = null;
+    }
+
     return {
       lat,
       lon,
       address,
+      environment,
       display_name:
         address.city && address.state ? `${address.city}, ${address.state} ${zipcode}` : zipcode
     };
   }
 
   /**
-   * Looks up town/state metadata for a ZIP code.
+   * Looks up a ZIP code's town/state plus the ecoregion and hardiness zone the plants
+   * API matches on. Taking all of them from this one response is what keeps the panel
+   * and the plant query describing the same place.
    */
   private static async zipMetadata(zipcode: string): Promise<ZipMetadata | null> {
     try {
@@ -144,11 +161,35 @@ export class GeocodingService {
       return {
         city: data?.city,
         state: toFullStateName(data?.state),
-        matchedZip: typeof matchedZip === 'string' ? matchedZip : undefined
+        matchedZip: typeof matchedZip === 'string' ? matchedZip : undefined,
+        environment: this.toEnvironment(zipcode, data)
       };
     } catch (error) {
       console.error('ZIP metadata lookup failed:', error);
       return null;
     }
+  }
+
+  /**
+   * Pulls the ecoregion and hardiness zone out of a ZIP response. `ecoregions` is a
+   * list, but a ZIP resolves to a single ecoregion for plant matching, so the first
+   * entry is the one used. Returns null — and says so loudly — when either is absent,
+   * since a recognised ZIP is expected to carry both.
+   */
+  private static toEnvironment(zipcode: string, data: any): ZipEnvironment | null {
+    const zone = data?.hardiness_zone;
+    const ecoregion = Array.isArray(data?.ecoregions) ? data.ecoregions[0] : undefined;
+    const code: unknown = ecoregion?.code;
+
+    if (typeof zone !== 'number' || typeof code !== 'string' || !code) {
+      console.error(`ZIP ${zipcode} returned an incomplete ecoregion/zone`, data);
+      return null;
+    }
+
+    return {
+      hardinessZone: zone,
+      ecoregionCode: code,
+      ecoregionName: typeof ecoregion?.name === 'string' ? ecoregion.name : ''
+    };
   }
 }

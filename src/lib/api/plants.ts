@@ -55,35 +55,32 @@ function toSummary(plant: PlantRecord): PlantSummary {
 export interface PlantLocation {
 	/** North American Level III ecoregion NA_L3CODE. */
 	ecoregion?: string;
-	/** USDA hardiness zone label, e.g. "7b" but reduced to the integer. */
+	/** USDA hardiness zone as a bare integer string, e.g. "7". */
 	zone?: string;
 	/** Full state name, e.g. "Connecticut", not abbreviations. */
 	state?: string;
-	/** Fallback for locations with no polygon data (a ZIP with no mappable area). */
+	/** Location identity only — never queried on. See below. */
 	zipcode?: string;
 }
 
 /**
  * Location half of a plant query: a point is matched by ecoregion + hardiness zone + state.
+ *
+ * All three come from a single ZIP lookup, so they are present together or not at all.
+ * An incomplete location yields no params rather than a partial query: the API silently
+ * ignores `state` unless both other keys are present, so a partial set would quietly
+ * return over-broad results. `zipcode` is carried for identity but never sent — querying
+ * by it would produce a different answer than the panel is showing.
  */
 export function locationParams(location: PlantLocation): URLSearchParams {
 	const params = new URLSearchParams();
 	const zone = location.zone?.match(/^\d+/)?.[0] ?? location.zone;
 
-	if (location.ecoregion && zone) {
-		params.set('ecoregion', location.ecoregion);
-		params.set('hardiness_zone', zone);
-		if (location.state) params.set('state', location.state);
-		return params;
-	}
+	if (!location.ecoregion || !zone || !location.state) return params;
 
-	if (location.zipcode) {
-		params.set('zipcode', location.zipcode);
-		return params;
-	}
-
-	if (location.ecoregion) params.set('ecoregion', location.ecoregion);
-	if (zone) params.set('hardiness_zone', zone);
+	params.set('ecoregion', location.ecoregion);
+	params.set('hardiness_zone', zone);
+	params.set('state', location.state);
 	return params;
 }
 

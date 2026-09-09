@@ -2,7 +2,7 @@
 
 A SvelteKit map application (package name `MyNativePlantList`) for discovering native plants suited to a US location. Pick a spot on the map or search a ZIP code to see the plant-hardiness zone and ecoregion you land in, browse the plants appropriate for that location, filter them, and check whether a specific plant by name is a good fit.
 
-Built with SvelteKit (Svelte 5 runes), Leaflet for the map, Turf.js for point-in-polygon lookups, and Tailwind CSS. It ships as a static site via `@sveltejs/adapter-static`.
+Built with SvelteKit (Svelte 5 runes), Leaflet for the map, and Tailwind CSS. It ships as a static site via `@sveltejs/adapter-static`.
 
 ---
 
@@ -10,10 +10,10 @@ Built with SvelteKit (Svelte 5 runes), Leaflet for the map, Turf.js for point-in
 
 The app has two complementary flows, both driven from the home page ([src/routes/+page.svelte](src/routes/+page.svelte)):
 
-- **Location → plants.** Clicking the map or searching a ZIP code geocodes the point (client-side, via the mynativeplantlist ZIP API and a bundled ZIP centroid table), resolves which hardiness zone / ecoregion polygon contains it (client-side, via Turf), and fetches the plants appropriate for that location.
+- **Location → plants.** Clicking the map or searching a ZIP code resolves a ZIP (via the mynativeplantlist ZIP API, plus a bundled centroid table for placing the pin). That same ZIP response carries the location's hardiness zone, ecoregion and state, which are shown in the info panel *and* used to fetch the plants appropriate for it.
 - **Plant name → suitability.** Searching by plant name lists catalog matches and, once a location is set, annotates each match with whether it suits that location.
 
-Geocoding and the polygon lookup happen in the browser against bundled GeoJSON. Plant data is fetched directly from the browser via [src/lib/api/plants.ts](src/lib/api/plants.ts), which calls the plants API at the same-origin path `/api/plants/*`. In production the site and the API share an origin (`mynativeplantlist.com/api/...`), so these calls need no CORS; in local development the Vite dev server proxies `/api/*` to the API origin given by `PLANTS_API_URL` (see [vite.config.ts](vite.config.ts)).
+The ZIP endpoint is the single source of a location's zone, ecoregion and state — the map polygons are drawn for display only and are never read to identify a location. Plant data is fetched directly from the browser via [src/lib/api/plants.ts](src/lib/api/plants.ts), which calls the plants API at the same-origin path `/api/plants/*`. In production the site and the API share an origin (`mynativeplantlist.com/api/...`), so these calls need no CORS; in local development the Vite dev server proxies `/api/*` to the API origin given by `PLANTS_API_URL` (see [vite.config.ts](vite.config.ts)).
 
 ---
 
@@ -23,14 +23,16 @@ Geocoding and the polygon lookup happen in the browser against bundled GeoJSON. 
 src/
   routes/
     +page.svelte                  # Home page; orchestrates map, search, filters, results
-    +page.ts                      # Loads layers-list.json and properties.json
+    +page.ts                      # Loads layers-list.json
   lib/
     api/plants.ts                 # Browser client for the plants API: candidate list
                                   #   (paged), name search + suitability, detail, summary
     components/                   # Map, SearchBar, LocationInfo, CandidatePlants,
                                   #   PlantFilters, PlantModal, PlantSearchResults, InfoModal
-    services/geocoding.ts         # mynativeplantlist ZIP geocoding + bundled ZIP centroids (US-only)
-    services/spatial-analysis.ts  # Turf point-in-polygon over bundled layers
+    services/geocoding.ts         # mynativeplantlist ZIP geocoding: address, ecoregion,
+                                  #   hardiness zone + bundled ZIP centroids (US-only)
+    ecoregions.ts                 # Level I/II names for a Level III ecoregion code
+    hardiness.ts                  # Temperature band for a whole hardiness zone
     plant-filters.ts              # Canonical filter options + shared filter state
     types/plant.ts                # PlantSummary, PlantSearchResult, Plant, PlantImage
     types/layer.ts                # Layer / geocoding address types + helpers
@@ -78,26 +80,24 @@ Every plant appropriate for a location. The backend caps each response at 250 re
 
 | Parameter   | Type    | Description |
 |-------------|---------|-------------|
-| `ecoregion` | string  | North American Level III ecoregion code — the polygon's `NA_L3CODE` (e.g. `"9.4.1"`). |
-| `hardiness_zone` | string | USDA Plant Hardiness Zone as a bare integer, with the half-zone letter dropped (e.g. `"7"` for zone `7b`). The API returns **400** for `"7b"`. |
+| `ecoregion` | string  | North American Level III ecoregion code, as reported by `GET /api/zip/{zipcode}` (e.g. `"9.4.1"`). |
+| `hardiness_zone` | string | USDA Plant Hardiness Zone as a bare integer (e.g. `"7"`). The API returns **400** for `"7b"`. |
 | `state`     | string  | Full state name, e.g. `"Connecticut"`. Abbreviations return no results. |
-| `zipcode`   | string  | US ZIP code. Fallback only — see below. |
 
 Plus any of the [filter parameters](#filter-parameters) below. `limit` and `offset` are managed internally by the pager.
 
 ### How a point is matched — `locationParams(location)`
 
-A location is matched on **ecoregion + hardiness zone + state**. [`locationParams`](src/lib/api/plants.ts) in the API client is the single source of that rule; both the candidate list and the plant-name suitability check go through it.
+A location is matched on **ecoregion + hardiness zone + state**, all three taken from one `GET /api/zip/{zipcode}` response. [`locationParams`](src/lib/api/plants.ts) in the API client is the single source of that rule; both the candidate list and the plant-name suitability check go through it.
 
-> **The API only honours `state` when both `ecoregion` and `hardiness_zone` are also present.** Sent with a partial set — or alongside `zipcode` — it is silently dropped and the response is over-broad (verified: `hardiness_zone=6&state=Florida` returns the same 473 records as `hardiness_zone=6` alone). So `state` is only ever sent as part of the complete triple.
+> **The API only honours `state` when both `ecoregion` and `hardiness_zone` are also present.** Sent with a partial set it is silently dropped and the response is over-broad (verified: `hardiness_zone=6&state=Florida` returns the same 473 records as `hardiness_zone=6` alone). So `state` is only ever sent as part of the complete triple.
 
 | Input | Query sent |
 |---|---|
-| `ecoregion` + `zone` (+ optional `state`) | `ecoregion` + `hardiness_zone` + `state` |
-| No polygon data, but a ZIP | `zipcode` |
-| Only one of `ecoregion` / `zone`, no ZIP | whichever resolved (no `state` — it would be ignored) |
+| `ecoregion` + `zone` + `state` | `ecoregion` + `hardiness_zone` + `state` |
+| Any of the three missing | **nothing** — no query is made |
 
-The ZIP fallback covers two cases: the point-in-polygon lookup still being in flight (it resolves a moment after the ZIP does), and a ZIP with no mappable area, which never gets coordinates to analyze. Once the polygons land, the query upgrades to the triple and re-runs.
+Because the three values arrive together, an incomplete set is an error rather than a degraded mode: every recognised ZIP resolves all three. `zipcode` is carried on `PlantLocation` as the location's identity but is never sent as a query parameter — querying by ZIP could return a different answer than the one the info panel is displaying, which is exactly the divergence this design removes.
 
 ### `searchPlants(term, location?, signal?) → PlantSearchResult[]`
 
@@ -194,8 +194,8 @@ A ZIP resolves into one of three states:
 
 | | Result |
 |---|---|
-| Has a centroid, directly or via `matched_zip` | Full location: marker, map view, `?lat=&lng=` in the URL, polygon lookups |
-| Recognised by the API but no centroid either way | Location **without a pin** — city/state and plant results by zipcode, no marker, no polygon data, no coords in the URL |
+| Has a centroid, directly or via `matched_zip` | Full location: marker, map view, `?lat=&lng=` in the URL |
+| Recognised by the API but no centroid either way | Location **without a pin** — no marker and no coords in the URL, but city/state, zone, ecoregion and plant results are all unaffected |
 | Not recognised by the API at all | Throws a message naming the ZIP |
 
 The pin-less state exists because a ZIP like `00501` is a real place the app simply can't put on a map; dropping the search entirely would be worse than showing it un-pinned. `searchLocation` signals it by returning `lat`/`lon` as `null`.
@@ -205,13 +205,23 @@ Two consequences of deferring to the API's substitution are worth knowing:
 - **The API answers for any 5-digit string** — `00000` returns "Mt Meadows Area, California" — so typos resolve to real-looking places instead of erroring. In practice the third row above is unreachable for well-formed input, and there is no client-side validation of whether a ZIP genuinely exists.
 - **A few substitutions cross state lines**: `00801` (US Virgin Islands) resolves to Agawam, Massachusetts, and `45999` (IRS Cincinnati, OH) to Alexandria, Indiana. These are backend matching issues; the client has no independent read on where an area-less ZIP sits.
 
-Both paths then resolve town/state via `GET /api/zip/{zipcode}` and build their result through the same helper, so a given ZIP always renders the same place name whether it was clicked or typed. A small number of ZIPs aren't in the metadata dataset — handled as ZIP-only, no town/state. State abbreviations are expanded to full names by [toFullStateName](src/lib/utils/usStates.ts).
+Both paths then call `GET /api/zip/{zipcode}` and build their result through the same helper, so a given ZIP always renders the same place whether it was clicked or typed. That one response supplies the town/state *and* the `hardiness_zone` / `ecoregions` used for both the info panel and the plant query. State abbreviations are expanded to full names by [toFullStateName](src/lib/utils/usStates.ts).
+
+**Why the endpoint, not the polygons.** The panel used to read the hardiness zone and ecoregion out of the map polygons under the pin, while the backend matched plants on its own ZIP data — so the two could describe different places. `01093` is the clearest case: it has no ZCTA of its own, the API substitutes `matched_zip: "01092"` about 30 miles east, and the pin therefore landed in a different ecoregion polygon (`5.3.1`) than the one the API resolved (`8.1.7`). Reading both the display and the query off the single ZIP response makes that class of mismatch impossible.
+
+**The `environment` field.** `SearchResult.environment` ([ZipEnvironment](src/lib/types/layer.ts)) carries `hardinessZone`, `ecoregionCode` and `ecoregionName`. Every recognised ZIP resolves all three of ecoregion, zone and state, so `null` is an error state, not a normal one: it is logged with `console.error`, the info panel says the location is unavailable, and no plant query is made. `ecoregions` comes back as a list; the first entry is the one used, since a ZIP matches plants against a single ecoregion.
 
 **ZIP centroid table.** [static/geodata/zip-centroids.json](static/geodata/zip-centroids.json) (~890 KB, ~290 KB gzipped) maps 33,791 ZIPs to `[lat, lon]` at 4-decimal precision. The coordinates are ZCTA *internal points* from the [2024 US Census Gazetteer](https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html) — guaranteed to fall inside the ZIP's own polygon rather than being true centroids, so each one round-trips back through `/api/zip` to the same ZIP and lands in the correct hardiness-zone and ecoregion polygon. Rebuild it from the Gazetteer's `GEOID`/`INTPTLAT`/`INTPTLONG` columns when refreshing to a newer vintage.
 
-### Spatial analysis — [src/lib/services/spatial-analysis.ts](src/lib/services/spatial-analysis.ts)
+### Ecoregion levels — [src/lib/ecoregions.ts](src/lib/ecoregions.ts)
 
-`SpatialAnalysisService.analyzePoint` loads the selected layer GeoJSON (converting TopoJSON if needed), runs a Turf `booleanPointInPolygon` test for a `[lon, lat]` point, and returns the first containing polygon's allowed properties per layer (allowed fields come from `properties.json`). Layer GeoJSON is cached after first fetch.
+The ZIP endpoint returns only the Level III ecoregion code and name, but the info panel shows all three levels. `resolveEcoregionLevels` looks the code up in [src/lib/data/ecoregion-levels.json](src/lib/data/ecoregion-levels.json), an 84-entry table of Level I/II/III codes and names generated from the bundled `static/geodata/ecoregions.json` layer. Regenerate it from that layer's `NA_L*CODE` / `NA_L*NAME` properties when the ecoregion data is refreshed.
+
+The API's code is always the authority; the table only supplies labels for it. Its Level III name also wins over the endpoint's, because some names come back truncated (`8.3.1` is returned as `"Northern Piedmon"`). A code missing from the table still renders — Level I and II codes are derived by splitting (`8.1.7` → `8`, `8.1`), with the endpoint's own name used for Level III.
+
+### Hardiness zone display — [src/lib/hardiness.ts](src/lib/hardiness.ts)
+
+The endpoint reports the zone as a bare integer (`6`), never a half-zone (`6b`), so the panel shows the integer — the same value sent to the plants API. `zoneTempRange` derives the temperature band from it arithmetically (each zone spans 10°F from -60°F at zone 1) rather than reading a polygon's `trange`, which is why the panel shows zone 6 as `-10 to 0°F` rather than a half-zone's narrower band.
 
 ### USDA Plant Hardiness Zones (PHZ)
 
@@ -222,7 +232,7 @@ Processed GeoJSON: `static/geodata/phz.geojson` / `static/geodata/phz.json`
 |-------------|-------------|
 | `Id`        | Internal record identifier. |
 | `gridcode`  | Numeric grid code corresponding to the zone. |
-| `zone`      | Zone label (e.g. `"7b"`). Sent as the `hardiness_zone` query parameter, reduced to its leading integer. |
+| `zone`      | Zone label (e.g. `"7b"`). Map display only — the queried zone comes from the ZIP endpoint. |
 | `trange`    | Average annual extreme minimum temperature range for this zone (°F). |
 | `zonetitle` | Full human-readable zone title. |
 
@@ -237,7 +247,7 @@ Processed GeoJSON: `static/geodata/ecoregions.geojson` / `static/geodata/ecoregi
 |--------------|-------------|
 | `US_L3CODE`  | US Level III ecoregion code (e.g. `"1"`). |
 | `US_L3NAME`  | US Level III ecoregion name. |
-| `NA_L3CODE`  | North American Level III ecoregion code (e.g. `"7.1.8"`). Used as the `ecoregion` query parameter. |
+| `NA_L3CODE`  | North American Level III ecoregion code (e.g. `"7.1.8"`). Map display only; the queried ecoregion comes from the ZIP endpoint. Also the key of the generated [ecoregion-levels.json](src/lib/data/ecoregion-levels.json) table. |
 | `NA_L3NAME`  | North American Level III ecoregion name. |
 | `NA_L2CODE`  | North American Level II ecoregion code (parent of Level III). |
 | `NA_L2NAME`  | North American Level II ecoregion name. |
@@ -258,7 +268,6 @@ Processed GeoJSON: `static/geodata/ecoregions.geojson` / `static/geodata/ecoregi
 | File | Description |
 |------|-------------|
 | `static/layers-list.json` | Available map overlay layers (name, GeoJSON path, description). Loaded by `+page.ts`. |
-| `static/properties.json` | Allowed attribute field names per layer (`phz`, `ecoregions`), used to filter polygon properties. |
 | `static/geodata/phz.json` / `phz.geojson` | Processed PHZ feature data served to the browser. |
 | `static/geodata/ecoregions.json` / `ecoregions.geojson` | Processed ecoregion feature data served to the browser. |
 | `static/geodata-big/` | Full-resolution GeoJSON (used for processing; not loaded by the app). |

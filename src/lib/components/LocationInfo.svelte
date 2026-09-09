@@ -1,16 +1,19 @@
 <script lang="ts">
-	import type { LayerOption, LocationAddress } from '$lib/types/layer.js';
+	import type { LayerOption, LocationAddress, ZipEnvironment } from '$lib/types/layer.js';
 	import { getCityStateLabel } from '$lib/types/layer.js';
+	import { resolveEcoregionLevels } from '$lib/ecoregions.js';
+	import { zoneTempRange } from '$lib/hardiness.js';
 	import InfoModal from './InfoModal.svelte';
 
 	interface LocationInfoProps {
 		searchResultAddress: LocationAddress | null;
-		pointLayerData: Record<string, Record<string, any>>;
+		/** Ecoregion + zone from the ZIP endpoint; null is the error state. */
+		environment: ZipEnvironment | null;
 		layers: LayerOption[];
 		onEditLocation?: () => void;
 	}
 
-	let { searchResultAddress, pointLayerData, layers, onEditLocation }: LocationInfoProps = $props();
+	let { searchResultAddress, environment, layers, onEditLocation }: LocationInfoProps = $props();
 
 	function toTitleCase(str: string): string {
 		return str
@@ -24,6 +27,15 @@
 
 	const phzLayer = $derived(layers.find(l => l.path === 'geodata/phz.json'));
 	const ecoregionsLayer = $derived(layers.find(l => l.path === 'geodata/ecoregions.json'));
+
+	// Level I/II labels for the code the endpoint returned. The endpoint gives only
+	// Level III, so the wider levels come from the bundled layer's names.
+	const ecoregion = $derived(
+		resolveEcoregionLevels(environment?.ecoregionCode, environment?.ecoregionName)
+	);
+	const tempRange = $derived(
+		environment ? zoneTempRange(environment.hardinessZone) : null
+	);
 
 	let infoModalLayer: LayerOption | null = $state(null);
 </script>
@@ -46,56 +58,59 @@
 <div class="w-full h-full flex flex-col sm:flex-row text-left">
 
 
-	{#if Object.keys(pointLayerData).length > 0}
+	{#if environment}
 		<!-- USDA Hardiness Zone column -->
 		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
-			{#if pointLayerData.phz}
-				<h2 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
-					USDA 2023 Plant Hardiness Zone
-					{@render infoButton(phzLayer)}
-				</h2>
-				{#if pointLayerData.phz.zone}
-					<div class="font-mono text-3xl font-bold leading-none text-stone-800 mt-1">{pointLayerData.phz.zone}</div>
-				{/if}
-				{#if pointLayerData.phz.trange}
-					<div class="mt-2">
-						<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Avg. Annual Lowest Temp</div>
-						<div class="font-mono text-sm font-bold leading-tight text-stone-800">{pointLayerData.phz.trange}°F</div>
-					</div>
-				{/if}
-				<a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="text-[11px] mt-2">About Hardiness Zones →</a>
+			<h2 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
+				USDA 2023 Plant Hardiness Zone
+				{@render infoButton(phzLayer)}
+			</h2>
+			<div class="font-mono text-3xl font-bold leading-none text-stone-800 mt-1">{environment.hardinessZone}</div>
+			{#if tempRange}
+				<div class="mt-2">
+					<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Avg. Annual Lowest Temp</div>
+					<div class="font-mono text-sm font-bold leading-tight text-stone-800">{tempRange}°F</div>
+				</div>
 			{/if}
+			<a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="text-[11px] mt-2">About Hardiness Zones →</a>
 		</div>
 
 		<!-- Ecoregion column -->
 		<div class="flex-1 min-w-0 p-4 flex flex-col gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
-			{#if pointLayerData.ecoregions}
+			{#if ecoregion}
 				<h2 class="font-semibold text-base tracking-wide leading-tight flex items-center gap-1">
 					North American Ecoregions - Level III
 					{@render infoButton(ecoregionsLayer)}
 				</h2>
-				{#if pointLayerData.ecoregions.NA_L3NAME}
-					<div class="mt-1 flex flex-col gap-2">
-						<div class="hidden sm:block">
-							<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 1</div>
-							<div class="font-mono text-sm font-bold leading-tight text-stone-800">{pointLayerData.ecoregions.NA_L1CODE} {toTitleCase(pointLayerData.ecoregions.NA_L1NAME)}</div>
-						</div>
-						<div class="hidden sm:block">
-							<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 2</div>
-							<div class="font-mono text-sm font-bold leading-tight text-stone-800">{pointLayerData.ecoregions.NA_L2CODE} {toTitleCase(pointLayerData.ecoregions.NA_L2NAME)}</div>
-						</div>
-						<div>
-							<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 3</div>
-							<div class="font-mono text-sm font-bold leading-tight text-stone-800">{pointLayerData.ecoregions.NA_L3CODE} {toTitleCase(pointLayerData.ecoregions.NA_L3NAME)}</div>
-						</div>
+				<div class="mt-1 flex flex-col gap-2">
+					<div class="hidden sm:block">
+						<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 1</div>
+						<div class="font-mono text-sm font-bold leading-tight text-stone-800">{ecoregion.l1Code} {toTitleCase(ecoregion.l1Name)}</div>
 					</div>
-					<a href="https://sgi-gardenlibrary.maps.arcgis.com/sharing/rest/content/items/79bca4b771a04cb0b61176cf6f778565/data" target="_blank" rel="noopener noreferrer" class="text-[11px] mt-2">View detailed Ecoregion Descriptions →</a>
-				{/if}
+					<div class="hidden sm:block">
+						<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 2</div>
+						<div class="font-mono text-sm font-bold leading-tight text-stone-800">{ecoregion.l2Code} {toTitleCase(ecoregion.l2Name)}</div>
+					</div>
+					<div>
+						<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Level 3</div>
+						<div class="font-mono text-sm font-bold leading-tight text-stone-800">{ecoregion.l3Code} {toTitleCase(ecoregion.l3Name)}</div>
+					</div>
+				</div>
+				<a href="https://sgi-gardenlibrary.maps.arcgis.com/sharing/rest/content/items/79bca4b771a04cb0b61176cf6f778565/data" target="_blank" rel="noopener noreferrer" class="text-[11px] mt-2">View detailed Ecoregion Descriptions →</a>
 			{/if}
 		</div>
 	{:else if searchResultAddress}
-		<div class="flex-1 min-w-0 p-4 flex items-center border-t sm:border-t-0 sm:border-l border-stone-400">
-			<p class="text-[11px] italic text-stone-600">No polygon matches at this point.</p>
+		<!-- The endpoint resolves ecoregion, zone and state for every recognised ZIP, so
+		     reaching here means it returned an incomplete record. Say so rather than
+		     showing plants matched on a partial location. -->
+		<div class="flex-1 min-w-0 p-4 flex flex-col justify-center gap-1 border-t sm:border-t-0 sm:border-l border-stone-400">
+			<p class="text-sm font-semibold text-stone-800">
+				Location data unavailable{searchResultAddress.postcode ? ` for ${searchResultAddress.postcode}` : ''}.
+			</p>
+			<p class="text-[11px] italic text-stone-600">
+				We couldn't resolve the hardiness zone and ecoregion for this location, so we can't
+				list plants for it. Try a nearby ZIP code.
+			</p>
 		</div>
 	{/if}
 

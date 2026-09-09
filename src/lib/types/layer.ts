@@ -7,6 +7,20 @@ export interface LocationAddress {
   postcode?: string;
 }
 
+/**
+ * Ecoregion + hardiness zone the ZIP endpoint resolves for a location. These are
+ * authoritative: they are what the plants API matches on, so the UI displays the
+ * same values it queries with rather than re-deriving them from map polygons.
+ */
+export interface ZipEnvironment {
+  /** USDA hardiness zone as a bare integer, e.g. 6. The API has no half-zone. */
+  hardinessZone: number;
+  /** North American Level III ecoregion code, e.g. "8.1.7". */
+  ecoregionCode: string;
+  /** Level III name as the API spells it; display prefers the bundled layer's. */
+  ecoregionName: string;
+}
+
 export interface LayerOption {
   name: string;
   path: string;
@@ -33,6 +47,11 @@ export interface SearchResult {
   lat: number | null;
   lon: number | null;
   address: LocationAddress;
+  /**
+   * null only when the ZIP lookup failed or came back incomplete. Every recognised
+   * ZIP resolves all three fields, so null is an error state, not a normal one.
+   */
+  environment: ZipEnvironment | null;
   display_name: string;
 }
 

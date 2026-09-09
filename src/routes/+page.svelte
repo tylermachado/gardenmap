@@ -14,7 +14,6 @@
 	import { createPlantFilters, clearPlantFilters, countActiveFilters } from '$lib/plant-filters.js';
 
 	import { GeocodingService } from '$lib/services/geocoding.js';
-	import { SpatialAnalysisService } from '$lib/services/spatial-analysis.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
@@ -24,7 +23,12 @@
 
 	import type * as L from 'leaflet';
 	import type { PageData } from './$types';
-	import type { LayerOption, LocationAddress, SearchResult } from '$lib/types/layer.js';
+	import type {
+		LayerOption,
+		LocationAddress,
+		SearchResult,
+		ZipEnvironment
+	} from '$lib/types/layer.js';
 	import { isLayerSelected } from '$lib/types/layer.js';
 
 	let { data }: { data: PageData } = $props();
@@ -64,8 +68,8 @@
 	}
 
 	// A location added (or changed) after a plant search already ran needs the suitability
-	// verdicts re-fetched. Keyed on the resolved query rather than the raw location, so the
-	// ecoregion/zone arriving after the ZIP (point-in-polygon runs later) also refreshes them.
+	// verdicts re-fetched. Keyed on the resolved query rather than the raw location, so a
+	// location that resolves to the same ecoregion/zone/state doesn't re-fetch needlessly.
 	let verdictLocationKey: string | undefined;
 	$effect(() => {
 		const key = buildLocationParams(plantLocation).toString();
@@ -102,27 +106,25 @@
 		currentCoords === null && searchResultAddress === null && !urlHasCoords && !plantSearchActive
 	);
 
-	// New state for per-point polygon lookup results
-	let pointLayerData: Record<string, Record<string, any>> = $state({});
-	const propertiesConfig = data.propertiesConfig;
+	// Ecoregion + hardiness zone as resolved by the ZIP endpoint. This is the single
+	// source for both the info panel and the plant query, so the two can't disagree —
+	// they used to, because the panel read map polygons at the pin while the endpoint
+	// may have resolved the ZIP somewhere else entirely (e.g. 01093 → 01092).
+	let zipEnvironment = $state<ZipEnvironment | null>(null);
 
-	// How a point is matched to plants: ecoregion + hardiness zone + state. The ZIP is
-	// carried as the fallback for locations with no polygon data (see locationParams).
-	const plantLocation = $derived<PlantLocation>({
-		ecoregion: pointLayerData.ecoregions?.NA_L3CODE,
-		zone: pointLayerData.phz?.zone,
-		state: searchResultAddress?.state,
-		zipcode: searchResultAddress?.postcode
-	});
-
-	async function resolvePointData(lat: number, lon: number) {
-		try {
-			const results = await SpatialAnalysisService.analyzePoint(lat, lon, layers, propertiesConfig);
-			pointLayerData = results;
-		} catch (e) {
-			console.error('Failed resolving point data', e);
-		}
-	}
+	// How a point is matched to plants: ecoregion + hardiness zone + state, all from the
+	// same ZIP response. An incomplete response leaves the query empty rather than
+	// falling back to a partial location — see LocationInfo for the message shown.
+	const plantLocation = $derived<PlantLocation>(
+		zipEnvironment
+			? {
+					ecoregion: zipEnvironment.ecoregionCode,
+					zone: String(zipEnvironment.hardinessZone),
+					state: searchResultAddress?.state,
+					zipcode: searchResultAddress?.postcode
+				}
+			: {}
+	);
 
 	function updateUrlWithLocation(lat: number, lng: number, zoom?: number): void {
 		const map = mapRef?.getMap();
@@ -297,20 +299,20 @@
 			return;
 		}
 
-		const { lat, lon, address } = result;
+		const { lat, lon, address, environment } = result;
 
-		// A real ZIP with no mappable area: keep the location so plants still
-		// load by zipcode, but there's no point to pin or analyze.
+		// A real ZIP with no mappable area: the endpoint still resolves its ecoregion
+		// and zone, so plants load normally — there's just no point to pin.
 		if (lat === null || lon === null) {
 			searchResultAddress = address;
+			zipEnvironment = environment;
 			currentCoords = null;
-			pointLayerData = {};
 			mapRef?.removeSearchMarker();
 			clearUrlLocation();
 			return;
 		}
 
-		await setLocation(lat, lon, address);
+		await setLocation(lat, lon, address, environment);
 		const map: L.Map | null = mapRef?.getMap() ?? null;
 		if (map) {
 			map.setView([lat, lon], 6);
@@ -320,24 +322,31 @@
 	async function setLocation(
 		lat: number,
 		lng: number,
-		address?: LocationAddress | null
+		address?: LocationAddress | null,
+		environment?: ZipEnvironment | null
 	): Promise<void> {
-		const resolved =
-			address !== undefined
-				? address
-				: (await GeocodingService.reverseGeocode(lat, lng))?.address ?? null;
-		searchResultAddress = resolved;
+		// Address and environment always travel together: both come from the one ZIP
+		// response, so a caller that didn't already have them re-resolves both here.
+		let resolvedAddress = address ?? null;
+		let resolvedEnvironment = environment ?? null;
+		if (address === undefined) {
+			const result = await GeocodingService.reverseGeocode(lat, lng);
+			resolvedAddress = result?.address ?? null;
+			resolvedEnvironment = result?.environment ?? null;
+		}
+
+		searchResultAddress = resolvedAddress;
+		zipEnvironment = resolvedEnvironment;
 		currentCoords = { lat, lng };
 		mapRef?.addSearchMarker(lat, lng);
 		updateUrlWithLocation(lat, lng);
-		await resolvePointData(lat, lng);
 	}
 
 	async function handleMapClick(lat: number, lng: number) {
 		const result = await GeocodingService.reverseGeocode(lat, lng);
 		if (!result) return; // not a US address, ignore the click
 		searchQuery = '';
-		await setLocation(lat, lng, result.address);
+		await setLocation(lat, lng, result.address, result.environment);
 	}
 
 	function handleZoomChange(zoomLevel: number) {
@@ -349,8 +358,8 @@
 
 	function resetLocationState() {
 		searchResultAddress = null;
+		zipEnvironment = null;
 		currentCoords = null;
-		pointLayerData = {};
 		searchQuery = '';
 		clearPlantFilters(plantFilters);
 		showSplashFilters = false;
@@ -577,7 +586,7 @@
 				<div class="sm:w-2/5 flex flex-col bg-stone-200 sm:border-l border-stone-700 overflow-y-auto">
 					<LocationInfo
 						searchResultAddress={searchResultAddress}
-						pointLayerData={pointLayerData}
+						environment={zipEnvironment}
 						layers={layers}
 						onEditLocation={handleLocationReset}
 					/>

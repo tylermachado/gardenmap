@@ -27,7 +27,7 @@
 		phzZone?: string;
 		/** Full state name (e.g. "Connecticut"); the API rejects abbreviations. */
 		stateName?: string;
-		/** Location identity + the fallback query for points with no polygon data. */
+		/** Location identity only; the query itself is the ecoregion/zone/state triple. */
 		zipcode?: string;
 		/** Shared filter selection, owned by the parent so splash pre-selections survive. */
 		filters?: PlantFilterState;
@@ -97,7 +97,7 @@
 
 	const activeFilterCount = $derived(countActiveFilters(filters));
 
-	// Matched by ecoregion + hardiness zone + state.
+	// Matched by ecoregion + hardiness zone + state, all resolved by the ZIP endpoint.
 	function locationParams(): URLSearchParams {
 		return buildLocationParams({ ecoregion, zone: phzZone, state: stateName, zipcode });
 	}
