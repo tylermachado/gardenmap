@@ -1,0 +1,590 @@
+{
+  "5.2.1": {
+    "l1Code": "5",
+    "l1Name": "NORTHERN FORESTS",
+    "l2Code": "5.2",
+    "l2Name": "MIXED WOOD SHIELD",
+    "l3Name": "Northern Lakes and Forests"
+  },
+  "5.2.2": {
+    "l1Code": "5",
+    "l1Name": "NORTHERN FORESTS",
+    "l2Code": "5.2",
+    "l2Name": "MIXED WOOD SHIELD",
+    "l3Name": "Northern Minnesota Wetlands"
+  },
+  "5.3.1": {
+    "l1Code": "5",
+    "l1Name": "NORTHERN FORESTS",
+    "l2Code": "5.3",
+    "l2Name": "ATLANTIC HIGHLANDS",
+    "l3Name": "Northern Appalachian and Atlantic Maritime Highlands"
+  },
+  "5.3.3": {
+    "l1Code": "5",
+    "l1Name": "NORTHERN FORESTS",
+    "l2Code": "5.3",
+    "l2Name": "ATLANTIC HIGHLANDS",
+    "l3Name": "North Central Appalachians"
+  },
+  "6.2.3": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Columbia Mountains/Northern Rockies"
+  },
+  "6.2.4": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Canadian Rockies"
+  },
+  "6.2.5": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "North Cascades"
+  },
+  "6.2.7": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Cascades"
+  },
+  "6.2.8": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Eastern Cascades Slopes and Foothills"
+  },
+  "6.2.9": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Blue Mountains"
+  },
+  "6.2.10": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Middle Rockies"
+  },
+  "6.2.11": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Klamath Mountains"
+  },
+  "6.2.12": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Sierra Nevada"
+  },
+  "6.2.13": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Wasatch and Uinta Mountains"
+  },
+  "6.2.14": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Southern Rockies"
+  },
+  "6.2.15": {
+    "l1Code": "6",
+    "l1Name": "NORTHWESTERN FORESTED MOUNTAINS",
+    "l2Code": "6.2",
+    "l2Name": "WESTERN CORDILLERA",
+    "l3Name": "Idaho Batholith"
+  },
+  "7.1.7": {
+    "l1Code": "7",
+    "l1Name": "MARINE WEST COAST FOREST",
+    "l2Code": "7.1",
+    "l2Name": "MARINE WEST COAST FOREST",
+    "l3Name": "Strait of Georgia/Puget Lowland"
+  },
+  "7.1.8": {
+    "l1Code": "7",
+    "l1Name": "MARINE WEST COAST FOREST",
+    "l2Code": "7.1",
+    "l2Name": "MARINE WEST COAST FOREST",
+    "l3Name": "Coast Range"
+  },
+  "7.1.9": {
+    "l1Code": "7",
+    "l1Name": "MARINE WEST COAST FOREST",
+    "l2Code": "7.1",
+    "l2Name": "MARINE WEST COAST FOREST",
+    "l3Name": "Willamette Valley"
+  },
+  "8.1.1": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.1",
+    "l2Name": "MIXED WOOD PLAINS",
+    "l3Name": "Eastern Great Lakes Lowlands"
+  },
+  "8.1.3": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.1",
+    "l2Name": "MIXED WOOD PLAINS",
+    "l3Name": "Northern Allegheny Plateau"
+  },
+  "8.1.4": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.1",
+    "l2Name": "MIXED WOOD PLAINS",
+    "l3Name": "North Central Hardwood Forests"
+  },
+  "8.1.5": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.1",
+    "l2Name": "MIXED WOOD PLAINS",
+    "l3Name": "Driftless Area"
+  },
+  "8.1.6": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.1",
+    "l2Name": "MIXED WOOD PLAINS",
+    "l3Name": "Southern Michigan/Northern Indiana Drift Plains"
+  },
+  "8.1.7": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.1",
+    "l2Name": "MIXED WOOD PLAINS",
+    "l3Name": "Northeastern Coastal Zone"
+  },
+  "8.1.8": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.1",
+    "l2Name": "MIXED WOOD PLAINS",
+    "l3Name": "Acadian Plains and Hills"
+  },
+  "8.1.10": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.1",
+    "l2Name": "MIXED WOOD PLAINS",
+    "l3Name": "Erie Drift Plain"
+  },
+  "8.2.1": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.2",
+    "l2Name": "CENTRAL USA PLAINS",
+    "l3Name": "Southeastern Wisconsin Till Plains"
+  },
+  "8.2.2": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.2",
+    "l2Name": "CENTRAL USA PLAINS",
+    "l3Name": "Huron/Erie Lake Plains"
+  },
+  "8.2.3": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.2",
+    "l2Name": "CENTRAL USA PLAINS",
+    "l3Name": "Central Corn Belt Plains"
+  },
+  "8.2.4": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.2",
+    "l2Name": "CENTRAL USA PLAINS",
+    "l3Name": "Eastern Corn Belt Plains"
+  },
+  "8.3.1": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.3",
+    "l2Name": "SOUTHEASTERN USA PLAINS",
+    "l3Name": "Northern Piedmont"
+  },
+  "8.3.2": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.3",
+    "l2Name": "SOUTHEASTERN USA PLAINS",
+    "l3Name": "Interior River Valleys and Hills"
+  },
+  "8.3.3": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.3",
+    "l2Name": "SOUTHEASTERN USA PLAINS",
+    "l3Name": "Interior Plateau"
+  },
+  "8.3.4": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.3",
+    "l2Name": "SOUTHEASTERN USA PLAINS",
+    "l3Name": "Piedmont"
+  },
+  "8.3.5": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.3",
+    "l2Name": "SOUTHEASTERN USA PLAINS",
+    "l3Name": "Southeastern Plains"
+  },
+  "8.3.6": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.3",
+    "l2Name": "SOUTHEASTERN USA PLAINS",
+    "l3Name": "Mississippi Valley Loess Plains"
+  },
+  "8.3.7": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.3",
+    "l2Name": "SOUTHEASTERN USA PLAINS",
+    "l3Name": "South Central Plains"
+  },
+  "8.3.8": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.3",
+    "l2Name": "SOUTHEASTERN USA PLAINS",
+    "l3Name": "East Central Texas Plains"
+  },
+  "8.4.1": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Ridge and Valley"
+  },
+  "8.4.2": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Central Appalachians"
+  },
+  "8.4.3": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Western Allegheny Plateau"
+  },
+  "8.4.4": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Blue Ridge"
+  },
+  "8.4.5": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Ozark Highlands"
+  },
+  "8.4.6": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Boston Mountains"
+  },
+  "8.4.7": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Arkansas Valley"
+  },
+  "8.4.8": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Ouachita Mountains"
+  },
+  "8.4.9": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.4",
+    "l2Name": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+    "l3Name": "Southwestern Appalachians"
+  },
+  "8.5.1": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.5",
+    "l2Name": "MISSISSIPPI ALLUVIAL AND SOUTHEAST USA COASTAL PLAINS",
+    "l3Name": "Middle Atlantic Coastal Plain"
+  },
+  "8.5.2": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.5",
+    "l2Name": "MISSISSIPPI ALLUVIAL AND SOUTHEAST USA COASTAL PLAINS",
+    "l3Name": "Mississippi Alluvial Plain"
+  },
+  "8.5.3": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.5",
+    "l2Name": "MISSISSIPPI ALLUVIAL AND SOUTHEAST USA COASTAL PLAINS",
+    "l3Name": "Southern Coastal Plain"
+  },
+  "8.5.4": {
+    "l1Code": "8",
+    "l1Name": "EASTERN TEMPERATE FORESTS",
+    "l2Code": "8.5",
+    "l2Name": "MISSISSIPPI ALLUVIAL AND SOUTHEAST USA COASTAL PLAINS",
+    "l3Name": "Atlantic Coastal Pine Barrens"
+  },
+  "9.2.1": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.2",
+    "l2Name": "TEMPERATE PRAIRIES",
+    "l3Name": "Aspen Parkland/Northern Glaciated Plains"
+  },
+  "9.2.2": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.2",
+    "l2Name": "TEMPERATE PRAIRIES",
+    "l3Name": "Lake Manitoba and Lake Agassiz Plain"
+  },
+  "9.2.3": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.2",
+    "l2Name": "TEMPERATE PRAIRIES",
+    "l3Name": "Western Corn Belt Plains"
+  },
+  "9.2.4": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.2",
+    "l2Name": "TEMPERATE PRAIRIES",
+    "l3Name": "Central Irregular Plains"
+  },
+  "9.3.1": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.3",
+    "l2Name": "WEST-CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Northwestern Glaciated Plains"
+  },
+  "9.3.3": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.3",
+    "l2Name": "WEST-CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Northwestern Great Plains"
+  },
+  "9.3.4": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.3",
+    "l2Name": "WEST-CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Nebraska Sand Hills"
+  },
+  "9.4.1": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.4",
+    "l2Name": "SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "High Plains"
+  },
+  "9.4.2": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.4",
+    "l2Name": "SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Central Great Plains"
+  },
+  "9.4.3": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.4",
+    "l2Name": "SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Southwestern Tablelands"
+  },
+  "9.4.4": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.4",
+    "l2Name": "SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Flint Hills"
+  },
+  "9.4.5": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.4",
+    "l2Name": "SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Cross Timbers"
+  },
+  "9.4.6": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.4",
+    "l2Name": "SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Edwards Plateau"
+  },
+  "9.4.7": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.4",
+    "l2Name": "SOUTH CENTRAL SEMI-ARID PRAIRIES",
+    "l3Name": "Texas Blackland Prairies"
+  },
+  "9.5.1": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.5",
+    "l2Name": "TEXAS-LOUISIANA COASTAL PLAIN",
+    "l3Name": "Western Gulf Coastal Plain"
+  },
+  "9.6.1": {
+    "l1Code": "9",
+    "l1Name": "GREAT PLAINS",
+    "l2Code": "9.6",
+    "l2Name": "TAMAULIPAS-TEXAS SEMIARID PLAIN",
+    "l3Name": "Southern Texas Plains/Interior Plains and Hills with Xerophytic Shrub and Oak Forest"
+  },
+  "10.1.2": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.1",
+    "l2Name": "COLD DESERTS",
+    "l3Name": "Columbia Plateau"
+  },
+  "10.1.3": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.1",
+    "l2Name": "COLD DESERTS",
+    "l3Name": "Northern Basin and Range"
+  },
+  "10.1.4": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.1",
+    "l2Name": "COLD DESERTS",
+    "l3Name": "Wyoming Basin"
+  },
+  "10.1.5": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.1",
+    "l2Name": "COLD DESERTS",
+    "l3Name": "Central Basin and Range"
+  },
+  "10.1.6": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.1",
+    "l2Name": "COLD DESERTS",
+    "l3Name": "Colorado Plateaus"
+  },
+  "10.1.7": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.1",
+    "l2Name": "COLD DESERTS",
+    "l3Name": "Arizona/New Mexico Plateau"
+  },
+  "10.1.8": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.1",
+    "l2Name": "COLD DESERTS",
+    "l3Name": "Snake River Plain"
+  },
+  "10.2.1": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.2",
+    "l2Name": "WARM DESERTS",
+    "l3Name": "Mojave Basin and Range"
+  },
+  "10.2.2": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.2",
+    "l2Name": "WARM DESERTS",
+    "l3Name": "Sonoran Desert"
+  },
+  "10.2.4": {
+    "l1Code": "10",
+    "l1Name": "NORTH AMERICAN DESERTS",
+    "l2Code": "10.2",
+    "l2Name": "WARM DESERTS",
+    "l3Name": "Chihuahuan Desert"
+  },
+  "11.1.1": {
+    "l1Code": "11",
+    "l1Name": "MEDITERRANEAN CALIFORNIA",
+    "l2Code": "11.1",
+    "l2Name": "MEDITERRANEAN CALIFORNIA",
+    "l3Name": "California Coastal Sage, Chaparral, and Oak Woodlands"
+  },
+  "11.1.2": {
+    "l1Code": "11",
+    "l1Name": "MEDITERRANEAN CALIFORNIA",
+    "l2Code": "11.1",
+    "l2Name": "MEDITERRANEAN CALIFORNIA",
+    "l3Name": "Central California Valley"
+  },
+  "11.1.3": {
+    "l1Code": "11",
+    "l1Name": "MEDITERRANEAN CALIFORNIA",
+    "l2Code": "11.1",
+    "l2Name": "MEDITERRANEAN CALIFORNIA",
+    "l3Name": "Southern and Baja California Pine-Oak Mountains"
+  },
+  "12.1.1": {
+    "l1Code": "12",
+    "l1Name": "SOUTHERN SEMI-ARID HIGHLANDS",
+    "l2Code": "12.1",
+    "l2Name": "WESTERN SIERRA MADRE PIEDMONT",
+    "l3Name": "Madrean Archipelago"
+  },
+  "13.1.1": {
+    "l1Code": "13",
+    "l1Name": "TEMPERATE SIERRAS",
+    "l2Code": "13.1",
+    "l2Name": "UPPER GILA MOUNTAINS",
+    "l3Name": "Arizona/New Mexico Mountains"
+  },
+  "15.4.1": {
+    "l1Code": "15",
+    "l1Name": "TROPICAL WET FORESTS",
+    "l2Code": "15.4",
+    "l2Name": "EVERGLADES",
+    "l3Name": "Southern Florida Coastal Plain"
+  }
+}
