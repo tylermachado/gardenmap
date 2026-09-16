@@ -180,6 +180,7 @@ export class GeocodingService {
     const zone = data?.hardiness_zone;
     const ecoregion = Array.isArray(data?.ecoregions) ? data.ecoregions[0] : undefined;
     const code: unknown = ecoregion?.code;
+		const subzone = data?.hardiness_subzone;
 
     if (typeof zone !== 'number' || typeof code !== 'string' || !code) {
       console.error(`ZIP ${zipcode} returned an incomplete ecoregion/zone`, data);
@@ -189,7 +190,8 @@ export class GeocodingService {
     return {
       hardinessZone: zone,
       ecoregionCode: code,
-      ecoregionName: typeof ecoregion?.name === 'string' ? ecoregion.name : ''
+      ecoregionName: typeof ecoregion?.name === 'string' ? ecoregion.name : '',
+			hardinessSubzone: subzone
     };
   }
 }

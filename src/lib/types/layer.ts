@@ -19,6 +19,8 @@ export interface ZipEnvironment {
   ecoregionCode: string;
   /** Level III name as the API spells it; display prefers the bundled layer's. */
   ecoregionName: string;
+	/** USDA hardiness subzone as a string, this is the letter that follow the broader zone (e.g. a, b)*/
+	hardinessSubzone: string;
 }
 
 export interface LayerOption {
