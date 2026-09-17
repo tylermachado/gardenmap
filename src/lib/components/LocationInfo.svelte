@@ -65,7 +65,7 @@
 				USDA 2023 Plant Hardiness Zone
 				{@render infoButton(phzLayer)}
 			</h2>
-			<div class="font-mono text-3xl font-bold leading-none text-stone-800 mt-1">{environment.hardinessZone}</div>
+			<div class="font-mono text-3xl font-bold leading-none text-stone-800 mt-1">{environment.hardinessZone}{environment.hardinessSubzone}</div>
 			{#if tempRange}
 				<div class="mt-2">
 					<div class="text-[10px] uppercase tracking-wide leading-tight text-stone-500">Avg. Annual Lowest Temp</div>
