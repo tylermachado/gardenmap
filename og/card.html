@@ -1,0 +1,194 @@
+<!doctype html>
+<!--
+	Source for the Open Graph / social share image.
+
+	This file is the design; the PNG/JPEG in static/img is a build artifact.
+	Edit here, then run `npm run og` to re-render static/img/og.jpg.
+
+	Canvas is exactly 1200x630 — the ratio Facebook, LinkedIn, Slack and X all
+	crop to for large summary cards.
+-->
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Faculty+Glyphic&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=block"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				/* Pulled from the app: lime-950, stone-100, stone-300, lime-400 */
+				--lime-950: #1a2e05;
+				--stone-100: #f5f5f4;
+				--stone-300: #d6d3d1;
+				--lime-400: #a3e635;
+
+				/*
+					Scrim stops, matched to the homepage splash overlay in
+					src/routes/+page.svelte. Deep green at the top falling to
+					near-black at the bottom.
+
+					To go darker overall: raise the two alpha values (last number).
+					To go greener: push --scrim-top toward rgb(20, 50, 20) and raise
+					the green channel of --scrim-bottom off zero.
+				*/
+				--scrim-top: rgba(20, 50, 20, 0.72);
+				--scrim-bottom: rgba(0, 0, 0, 0.92);
+				/* Extra wash on the left so the headline never sits on busy foliage. */
+				--scrim-left: rgba(10, 26, 10, 0.55);
+				--font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+				--font-serif: 'Faculty Glyphic', ui-serif, Georgia, serif;
+			}
+
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				width: 1200px;
+				height: 630px;
+				overflow: hidden;
+			}
+
+			.card {
+				position: relative;
+				width: 1200px;
+				height: 630px;
+				background: var(--lime-950);
+				font-family: var(--font-sans);
+				overflow: hidden;
+			}
+
+			.photo {
+				position: absolute;
+				inset: 0;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: center top;
+			}
+
+			/*
+				Base layer is the homepage splash gradient verbatim; the left-hand wash
+				sits on top of it to buy contrast for the headline block without
+				flattening the photo on the right.
+			*/
+			.scrim {
+				position: absolute;
+				inset: 0;
+				background:
+					linear-gradient(to right, var(--scrim-left) 0%, rgba(10, 26, 10, 0) 68%),
+					linear-gradient(to bottom, var(--scrim-top) 0%, var(--scrim-bottom) 100%);
+			}
+
+			.content {
+				position: relative;
+				height: 100%;
+				padding: 64px 72px;
+				display: flex;
+				flex-direction: column;
+				justify-content: space-between;
+				align-items: flex-start;
+			}
+
+			.logos {
+				display: flex;
+				align-items: center;
+				gap: 26px;
+			}
+
+			/*
+				The logo SVGs are unfilled paths, so they render black by default.
+				brightness(0) invert(1) flattens them to solid white. The app header
+				uses a CSS mask for the same effect, but masks don't resolve reliably
+				against file:// URLs in headless Chrome.
+			*/
+			.logo {
+				display: block;
+				width: auto;
+				filter: brightness(0) invert(1);
+			}
+
+			.logo--sgi {
+				height: 54px;
+			}
+
+			.logo--wff {
+				height: 62px;
+			}
+
+			.rule {
+				width: 1px;
+				height: 46px;
+				background: rgba(245, 245, 244, 0.35);
+			}
+
+			.title {
+				font-family: var(--font-serif);
+				font-weight: 400;
+				font-size: 92px;
+				line-height: 0.98;
+				letter-spacing: -0.015em;
+				color: var(--stone-100);
+				max-width: 15ch;
+				text-wrap: balance;
+			}
+
+			.tagline {
+				margin-top: 26px;
+				font-size: 24px;
+				line-height: 1.35;
+				font-weight: 400;
+				color: var(--stone-300);
+				max-width: 36ch;
+			}
+
+			.domain {
+				margin-top: 34px;
+				display: inline-flex;
+				align-items: center;
+				gap: 12px;
+				font-size: 22px;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: var(--lime-400);
+			}
+
+			.domain::before {
+				content: '';
+				width: 34px;
+				height: 3px;
+				border-radius: 2px;
+				background: var(--lime-400);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="card">
+			<img class="photo" src="../static/img/splash.jpg" alt="" />
+			<div class="scrim"></div>
+
+			<div class="content">
+				<div class="logos">
+					<img class="logo logo--sgi" src="../static/logos/sgi.svg" alt="" />
+					<span class="rule"></span>
+					<img class="logo logo--wff" src="../static/logos/wff.svg" alt="" />
+				</div>
+
+				<div class="headline">
+					<h1 class="title">My Native Plant List</h1>
+					<p class="tagline">
+						Find plants native to your ecoregion, hardy in your USDA zone, and commercially available.
+					</p>
+					<span class="domain">mynativeplantlist.com</span>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
