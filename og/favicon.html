@@ -2,19 +2,23 @@
 <!--
 	Source for the favicon / app icon set.
 
-	Rendered at several square sizes by og/render-icons.sh (`npm run icons`),
-	which drives this page at different viewport sizes — everything below is
-	sized in vmin so one template covers 32px through 512px.
+	An MNPL monogram, one letter per quadrant, set in Faculty Glyphic — the
+	same face as --font-serif in src/app.css, which the app uses for headings.
 
-	The plant path is inlined (rather than <img src="plant.svg">) because
-	static/logos/plant.svg carries opacity="0.5" on its root element for its
-	use as a placeholder thumbnail in the app. That file is shared by four
-	components, so it is left alone and the mark is restated here at full
-	strength.
+	Rendered by og/render-icons.sh (`npm run icons`), which drives this page at
+	1024x1024 and downsamples. Everything is sized in vmin so the layout is
+	resolution-independent.
 -->
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<!-- display=block, not swap: a fallback face must never win the screenshot race. -->
+		<link
+			href="https://fonts.googleapis.com/css2?family=Faculty+Glyphic&display=block"
+			rel="stylesheet"
+		/>
 		<style>
 			* {
 				margin: 0;
@@ -35,32 +39,64 @@
 				/* lime-950, matching the app header. Fully opaque: iOS rejects
 				   transparency in apple-touch-icon and composites it onto black. */
 				background: #1a2e05;
+
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				grid-template-rows: 1fr 1fr;
+
+				/*
+					Tight padding on purpose. At 32px each letter only gets ~14px of
+					its own, so the monogram has to run close to the edge to stay
+					legible — but not so close that iOS clips it when rounding the
+					corners of the apple-touch-icon.
+				*/
+				padding: 5vmin;
+			}
+
+			.letter {
 				display: flex;
 				align-items: center;
-				justify-content: center;
+
+				font-family: 'Faculty Glyphic', ui-serif, Georgia, serif;
+				font-size: 44vmin;
+				color: #f5f5f4;
+
+				/*
+					Sub-1 line-height shrinks each line box so the two rows close up
+					on each other. The glyphs overflow their boxes, which is fine —
+					cap height is well under 1em.
+				*/
+				line-height: 0.8;
+
+				/*
+					No letter-spacing here. Each letter is its own flex item, so it
+					has no letters to space against — all it does is add trailing
+					advance after the glyph, which shoves the right-aligned column
+					off-centre.
+				*/
 			}
 
 			/*
-				The mark is a wide 163.7x122.9 shape, so it is width-constrained.
-				76vmin leaves enough margin that the leaves don't touch the edge
-				once iOS rounds the corners off.
+				Align to the block rather than centring each letter in its own cell.
+				Centring makes the narrow P and L sit visibly indented from the wider
+				M and N; flushing the left column left and the right column right
+				squares the four letters into one mass.
 			*/
-			.mark {
-				width: 76vmin;
-				height: auto;
-				display: block;
-				fill: #f5f5f4;
+			.letter:nth-child(odd) {
+				justify-content: flex-start;
+			}
+
+			.letter:nth-child(even) {
+				justify-content: flex-end;
 			}
 		</style>
 	</head>
 	<body>
 		<div class="tile">
-			<svg class="mark" viewBox="0 0 163.7 122.9" xmlns="http://www.w3.org/2000/svg">
-				<path
-					fill-rule="evenodd"
-					d="M52.9,104.2c.5-11,11.9-16.6,22.9-11.8,2-2.2,4.4-3.7,6.9-4.7-7.7-18.3-15-26.6-20.4-29C14.5,78.7,22,42.7,0,27.7c42.6-14.3,63.1-15.1,66.5,25.7,7,7,13.7,13.5,20.6,28.4,8.7-31.6,34.4-56.7,67.4-73.7-32.3,14.1-46.1,23.7-59.6,45.2C78.5-4.3,132.2,14.1,163.7,0c-15.6,30-13.1,77.7-58.5,59.9-4.8,5.3-10.2,15.9-12.3,27.3,5.1,1.4,9.3,5.3,10.4,11.3,8-5.8,18.3,0,17.4,9.7,5.5-2,13.2,5.1,2.7,5.8-23.6,1.4-26,8.9-39.6,8.9s-5.9-5.2-30.9-8.1c-17.4-2-3.5-11.1.1-10.6Z"
-				/>
-			</svg>
+			<span class="letter">M</span>
+			<span class="letter">N</span>
+			<span class="letter">P</span>
+			<span class="letter">L</span>
 		</div>
 	</body>
 </html>

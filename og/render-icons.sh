@@ -56,6 +56,7 @@ echo "Rendering og/favicon.html with $(basename "$chrome")..."
 	--disable-gpu \
 	--hide-scrollbars \
 	--window-size="$render,$render" \
+	--virtual-time-budget=10000 \
 	--screenshot="$master" \
 	"file://$src" >/dev/null 2>&1
 
@@ -64,8 +65,8 @@ if [ ! -f "$master" ]; then
 	exit 1
 fi
 
-# A blank tile means the mark did not render; catch it here rather than
-# shipping four green squares.
+# A blank tile means the monogram did not render; catch it here rather
+# than shipping four green squares.
 if [ "$(stat -f%z "$master" 2>/dev/null || stat -c%s "$master")" -lt 2000 ]; then
 	echo "error: render looks blank (master is suspiciously small)" >&2
 	rm -f "$master"
