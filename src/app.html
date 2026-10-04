@@ -2,11 +2,48 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" sizes="32x32" type="image/png" />
+		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
+		<link rel="manifest" href="%sveltekit.assets%/site.webmanifest" />
+		<meta name="theme-color" content="#1a2e05" />
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Faculty+Glyphic&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<title>My Native Plant List</title>
+		<meta
+			name="description"
+			content="Find plants native to your ecoregion, hardy in your USDA zone, and commercially available. A free tool from The Sustainable Gardening Institute and White Flower Farm."
+		/>
+		<link rel="canonical" href="https://www.mynativeplantlist.com/" />
+
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="My Native Plant List" />
+		<meta property="og:title" content="My Native Plant List" />
+		<meta
+			property="og:description"
+			content="Find plants native to your ecoregion, hardy in your USDA zone, and commercially available."
+		/>
+		<meta property="og:url" content="https://www.mynativeplantlist.com/" />
+		<meta property="og:image" content="https://www.mynativeplantlist.com/img/og.jpg" />
+		<meta property="og:image:secure_url" content="https://www.mynativeplantlist.com/img/og.jpg" />
+		<meta property="og:image:type" content="image/jpeg" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="My Native Plant List — find plants native to your ecoregion, hardy in your zone, and actually available." />
+
+		<!-- Twitter Card -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="My Native Plant List" />
+		<meta
+			name="twitter:description"
+			content="Find plants native to your ecoregion, hardy in your USDA zone, and commercially available."
+		/>
+		<meta name="twitter:image" content="https://www.mynativeplantlist.com/img/og.jpg" />
+		<meta name="twitter:image:alt" content="My Native Plant List — find plants native to your ecoregion, hardy in your zone, and actually available." />
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
