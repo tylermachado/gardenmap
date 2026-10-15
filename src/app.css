@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+@theme {
+  /* Brand palette: dark, earthy red (brick / red clay) */
+  --color-clay: #8a2a22;
+}
+
 @layer base {
   :root {
     --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;

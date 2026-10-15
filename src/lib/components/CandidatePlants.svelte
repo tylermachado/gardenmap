@@ -202,7 +202,7 @@
 
 <div class="w-full items-start p-4 text-left">
 	<h3 class="w-full items-start text-left">Native Plant Species</h3>
-	<p>Plants native to this ecoregion <em>and</em> generally considered winter hardy in this zone</p>
+	<p>Plants native to this <a href="https://www.epa.gov/eco-research/ecoregions" target="_blank" rel="noopener noreferrer" class="text-clay no-underline hover:underline">ecoregion</a> <em>and</em> generally considered winter hardy in this <a href="https://planthardiness.ars.usda.gov/" target="_blank" rel="noopener noreferrer" class="text-clay no-underline hover:underline">zone</a></p>
 
 	{#if loading}
 		<p class="mt-2 text-[11px] italic text-stone-600">Loading plants…</p>
